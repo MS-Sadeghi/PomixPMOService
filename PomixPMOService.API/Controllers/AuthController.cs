@@ -7,7 +7,7 @@ using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models;
 using System.Security.Claims;
 
-namespace ServiceUIPomixPMO.API.Controllers
+namespace PomixPMOService.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

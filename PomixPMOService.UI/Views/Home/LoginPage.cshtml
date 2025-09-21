@@ -1,0 +1,138 @@
+﻿@model PomixPMOService.UI.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "ورود به سامانه";
+    Layout = "~/Views/Shared/_LayoutAuth.cshtml";
+}
+
+<div class="page">
+    <div class="container-login100">
+        <div class="wrap-login100 p-6">
+           
+            <form asp-controller="Home" asp-action="LoginPage" method="post" class="login100-form validate-form" autocomplete="off">
+                <span class="login100-form-title">ورود به سیستم</span>
+
+                <!-- User Type Selection -->
+                <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا نوع کاربری را انتخاب کنید">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="mdi mdi-account" aria-hidden="true"></i>
+                    </a>
+                    <select class="input100 border-start-0 ms-0 form-control" name="userType" id="userType" required>
+                        <option value="1" selected>کاربر احراز هویت</option>
+                        <option value="2">کاربر متقاضی خدمت</option>
+                    </select>
+                </div>
+
+                <!-- Username Input -->
+                <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا نام کاربری را وارد کنید">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="mdi mdi-account" aria-hidden="true"></i>
+                    </a>
+                    <input asp-for="Username" class="input100 border-start-0 ms-0 form-control" placeholder="نام کاربری" required />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <!-- Password Input -->
+                <div class="wrap-input100 validate-input input-group" id="Password-toggle" data-bs-validate="لطفا رمز عبور را وارد کنید">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-eye" aria-hidden="true"></i>
+                    </a>
+                    <input asp-for="Password" type="password" class="input100 border-start-0 ms-0 form-control" placeholder="کلمه عبور" required />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <!-- Two-Factor Authentication Type -->
+                <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا روش تأیید دو عاملی را انتخاب کنید">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-key" aria-hidden="true"></i>
+                    </a>
+                    <select class="input100 border-start-0 ms-0 form-control" name="twoFactorType" id="twoFactorType" required>
+                        <option value="1" selected>پیامک</option>
+                        <option value="2">Google Authenticator</option>
+                    </select>
+                </div>
+
+                <!-- SMS Section -->
+                <div id="smsSection" class="wrap-input100 validate-input input-group" data-bs-validate="لطفا شماره موبایل را وارد کنید">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-phone" aria-hidden="true"></i>
+                    </a>
+                    <input class="input100 border-start-0 ms-0 form-control" style="flex: 2;" type="tel" id="mobileNumber" name="mobileNumber" placeholder="شماره موبایل" />
+                    <button type="button" class="btn btn-primary ms-2" style="flex: 1;" onclick="sendSMS()">ارسال کد</button>
+                </div>
+                <div id="smsCodeSection" class="wrap-input100 validate-input input-group" data-bs-validate="لطفا کد تأیید را وارد کنید" style="display: none;">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-key" aria-hidden="true"></i>
+                    </a>
+                    <input class="input100 border-start-0 ms-0 form-control" type="text" id="smsCode" name="smsCode" placeholder="کد تأیید پیامک" />
+                </div>
+
+                <!-- Google Authenticator Section -->
+                <div id="googleAuthSection" style="display: none;">
+                    <div class="wrap-input100 validate-input input-group">
+                        <img id="captchaImage" src="https://via.placeholder.com/150x50/000000/ffffff?text=CAPTCHA" alt="CAPTCHA Image" style="width: 150px; height: 50px; margin-bottom: 10px;">
+                    </div>
+                    <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
+                        <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                            <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
+                        </a>
+                        <input class="input100 border-start-0 ms-0 form-control" type="text" id="googleAuthCode" name="googleAuthCode" placeholder="کد Google Authenticator" />
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="container-login100-form-btn mt-4">
+                    <button type="submit" class="login100-form-btn btn-primary">ورود به سامانه</button>
+                </div>
+
+                <!-- Error Message -->
+                @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                {
+                    <div class="text-danger">@ViewBag.ErrorMessage</div>
+                }
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Toggle visibility and required attributes based on twoFactorType selection
+        document.getElementById('twoFactorType').addEventListener('change', function() {
+            const smsSection = document.getElementById('smsSection');
+            const smsCodeSection = document.getElementById('smsCodeSection');
+            const googleAuthSection = document.getElementById('googleAuthSection');
+            const mobileNumberInput = document.getElementById('mobileNumber');
+            const smsCodeInput = document.getElementById('smsCode');
+            const googleAuthCodeInput = document.getElementById('googleAuthCode');
+
+            if (this.value === '1') { // SMS
+                smsSection.style.display = 'flex';
+                googleAuthSection.style.display = 'none';
+                mobileNumberInput.setAttribute('required', 'required');
+                googleAuthCodeInput.removeAttribute('required');
+            } else { // Google Authenticator
+                smsSection.style.display = 'none';
+                smsCodeSection.style.display = 'none';
+                googleAuthSection.style.display = 'block';
+                mobileNumberInput.removeAttribute('required');
+                smsCodeInput.removeAttribute('required');
+                googleAuthCodeInput.setAttribute('required', 'required');
+            }
+        });
+
+        // Placeholder function for sending SMS
+        function sendSMS() {
+            const mobileNumber = document.getElementById('mobileNumber').value;
+            if (mobileNumber) {
+                document.getElementById('smsCodeSection').style.display = 'flex';
+                document.getElementById('smsCode').setAttribute('required', 'required');
+                alert('کد تأیید به شماره ' + mobileNumber + ' ارسال شد.');
+                // Add actual SMS sending logic here (e.g., API call)
+            } else {
+                alert('لطفا شماره موبایل را وارد کنید.');
+            }
+        }
+    </script>
+}

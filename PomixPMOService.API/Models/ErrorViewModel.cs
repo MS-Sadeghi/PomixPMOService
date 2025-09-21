@@ -1,4 +1,4 @@
-namespace ServiceUIPomixPMO.Models
+namespace PomixPMOService.Models
 {
     public class ErrorViewModel
     {

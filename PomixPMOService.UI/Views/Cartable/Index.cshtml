@@ -1,0 +1,326 @@
+﻿@model IEnumerable<PomixPMOService.UI.ViewModels.CartableItemViewModel>
+@{
+    ViewData["Title"] = "کارتابل";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="input-group mb-5">
+    <input type="text" class="form-control" placeholder="جستجو">
+    <div class="input-group-text btn btn-primary">
+        <i class="fa fa-search" aria-hidden="true"></i>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">درخواست‌ها</h2>
+        <button id="AddDoc" type="button" class="btn btn-primary btn-pill left-btn" data-bs-toggle="modal" data-bs-target="#scrollingmodal">سند جدید</button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <div id="basic-datatable_wrapper" class="dataTables_wrapper dt-bootstrap5 no-footer">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <table id="cartableTable" class="table table-bordered text-nowrap border-bottom">
+                            <thead>
+                                <tr role="row">
+                                    <th class="wd-15p border-bottom-0 sorting sorting_asc">شماره درخواست</th>
+                                    <th class="wd-15p border-bottom-0 sorting">کد ملی</th>
+                                    <th class="wd-20p border-bottom-0 sorting">شماره همراه</th>
+                                    <th class="wd-15p border-bottom-0 sorting">شناسه سند</th>
+                                    <th class="wd-10p border-bottom-0 sorting">رمز تصدیق</th>
+                                    <th class="wd-10p border-bottom-0 sorting">وضعیت احراز هویت</th>
+                                    <th class="wd-10p border-bottom-0 sorting">وجود سند</th>
+                                    <th class="wd-15p border-bottom-0 sorting">بررسی سند</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null && Model.Any())
+                                {
+                                    foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>@item.RequestId</td>
+                                            <td>@item.NationalId</td>
+                                            <td>@item.MobileNumber</td>
+                                            <td>@item.DocumentNumber</td>
+                                            <td>@item.VerificationCode</td>
+                                            <td>
+                                                <i class="fas fa-check-circle text-success" title="تأیید شده" style="@(item.IdentityVerified ? "" : "display: none;")"></i>
+                                            </td>
+                                            <td>
+                                                <i class="fas fa-file-alt text-success" title="سند موجود" style="@(item.DocumentExists ? "" : "display: none;")"></i>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary verify-btn" data-document-id="@item.DocumentNumber" data-status="@item.Status" onclick="verifyDocument(this)">
+                                                    بررسی
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center">درخواستی یافت نشد.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content modal-content-demo">
+            <div class="modal-header">
+                <h6 class="modal-title" id="scrollingmodalLabel">سند جدید</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="wizardForm">
+                            <!-- انتخاب سرویس -->
+                            <div class="mb-3">
+                                <label>انتخاب سرویس:</label>
+                                <select id="serviceSelect" class="form-select">
+                                    <option value="shahkar" selected>سامانه شاهکار</option>
+                                    <option value="documentAuth">احراز اصالت سند</option>
+                                </select>
+                            </div>
+
+                            <div class="list-group">
+                                <!-- مرحله 1: شاهکار -->
+                                <div class="list-group-item" data-acc-step id="shahkarStep">
+                                    <h5 class="mb-0 d-flex" data-acc-title>
+                                        <span class="acc-step-number badge rounded-pill bg-primary me-1">1</span>
+                                        <span class="form-wizard-title">تایید هویت (شاهکار)</span>
+                                    </h5>
+                                    <div data-acc-content class="my-3">
+                                        <div class="form-group">
+                                            <label for="nationalId">کد ملی</label>
+                                            <input type="text" id="nationalId" class="form-control" maxlength="10" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="mobileNumber">شماره موبایل</label>
+                                            <input type="text" id="mobileNumber" class="form-control" maxlength="11" required>
+                                        </div>
+                                        <div id="shahkarFeedback" class="mt-2"></div>
+                                        <div id="loadingSpinner" class="spinner-border text-primary mt-2" role="status" style="display: none;">
+                                            <span class="visually-hidden">در حال بارگذاری...</span>
+                                        </div>
+                                        <button type="button" id="verifyShahkarBtn" class="btn btn-primary mt-2">استعلام</button>
+                                    </div>
+                                </div>
+
+                                <!-- مرحله 2: احراز اصالت سند -->
+                                <div class="list-group-item" data-acc-step id="documentStep" style="display:none;">
+                                    <h5 class="mb-0 d-flex" data-acc-title>
+                                        <span class="acc-step-number badge rounded-pill bg-primary me-1">2</span>
+                                        <span class="form-wizard-title">ورود اطلاعات سند</span>
+                                    </h5>
+                                    <div data-acc-content class="my-3">
+                                        <div class="form-group">
+                                            <label for="verificationCode">رمز تصدیق</label>
+                                            <input type="text" id="verificationCode" class="form-control" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="documentId">شناسه سند</label>
+                                            <input type="text" id="documentId" class="form-control" required>
+                                        </div>
+                                        <div class="form-group mt-2">
+                                            <button type="button" id="showDocumentBtn" class="btn btn-primary">نمایش سند</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- مرحله 3: جزئیات سند -->
+                                <div class="list-group-item" data-acc-step id="detailsStep" style="display:none;">
+                                    <h5 class="mb-0 d-flex" data-acc-title>
+                                        <span class="acc-step-number badge rounded-pill bg-primary me-1">3</span>
+                                        <span class="form-wizard-title">جزئیات سند</span>
+                                    </h5>
+                                    <div data-acc-content class="my-3">
+                                        <div id="documentDetails">
+                                            <p><strong>شماره ثبت:</strong> <span id="nationalRegisterNo"></span></p>
+                                            <p><strong>نوع سند:</strong> <span id="docType"></span></p>
+                                            <p><strong>تاریخ سند:</strong> <span id="docDate"></span></p>
+                                            <p><strong>دفترخانه:</strong> <span id="scriptoriumName"></span></p>
+                                        </div>
+                                        <button type="button" class="btn btn-primary" id="confirmBtn">تأیید</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" type="button" data-bs-dismiss="modal">بستن</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const serviceSelect = document.getElementById('serviceSelect');
+        const shahkarStep = document.getElementById('shahkarStep');
+        const documentStep = document.getElementById('documentStep');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const verifyShahkarBtn = document.getElementById('verifyShahkarBtn');
+        const shahkarFeedback = document.getElementById('shahkarFeedback');
+
+        // مدیریت نمایش مراحل
+        serviceSelect.addEventListener('change', () => {
+            if (serviceSelect.value === 'shahkar') {
+                shahkarStep.style.display = 'block';
+                documentStep.style.display = 'none';
+                document.getElementById('detailsStep').style.display = 'none';
+            } else {
+                shahkarStep.style.display = 'none';
+                documentStep.style.display = 'block';
+                document.getElementById('detailsStep').style.display = 'none';
+            }
+            shahkarFeedback.innerHTML = '';
+            loadingSpinner.style.display = 'none';
+        });
+
+        // مدیریت استعلام
+        verifyShahkarBtn.addEventListener('click', async () => {
+            const nationalId = document.getElementById('nationalId').value.trim();
+            const mobileNumber = document.getElementById('mobileNumber').value.trim();
+
+            // اعتبارسنجی
+            if (!nationalId || !mobileNumber) {
+                shahkarFeedback.innerHTML = "<span class='text-danger'>لطفاً همه فیلدها را پر کنید</span>";
+                return;
+            }
+            if (nationalId.length !== 10 || !/^\d{10}$/.test(nationalId)) {
+                shahkarFeedback.innerHTML = "<span class='text-danger'>کد ملی باید 10 رقمی و عددی باشد</span>";
+                return;
+            }
+            if (mobileNumber.length !== 11 || !/^\d{11}$/.test(mobileNumber)) {
+                shahkarFeedback.innerHTML = "<span class='text-danger'>شماره موبایل باید 11 رقمی و عددی باشد</span>";
+                return;
+            }
+
+            loadingSpinner.style.display = 'inline-block';
+            verifyShahkarBtn.disabled = true;
+            shahkarFeedback.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/Verification/CheckMobileNationalCode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        NationalId: nationalId,
+                        MobileNumber: mobileNumber
+                    })
+                });
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch {
+                    result = { message: 'پاسخ سرور نامعتبر است' };
+                }
+
+                loadingSpinner.style.display = 'none';
+                verifyShahkarBtn.disabled = false;
+
+                if (response.ok) {
+                    if (result.IsMatch) {
+                        shahkarFeedback.innerHTML = "<span class='text-success'>تطابق موفق</span>";
+                        documentStep.style.display = 'block';
+                    } else {
+                        shahkarFeedback.innerHTML = "<span class='text-danger'>عدم تطابق: " + (result.Message || "کد ملی و شماره موبایل همخوانی ندارند.") + "</span>";
+                    }
+                } else {
+                    let errorMsg = result.message || result.title || 'خطای ناشناخته';
+                    if (response.status === 401) {
+                        errorMsg = "سشن شما منقضی شده است. در حال هدایت به صفحه لاگین...";
+                        shahkarFeedback.innerHTML = `<span class='text-danger'>${errorMsg}</span>`;
+                        setTimeout(() => {
+                            window.location.href = '/Account/Login';
+                        }, 2000);
+                    } else {
+                        if (result.traceId) {
+                            errorMsg += ` (Trace ID: ${result.traceId})`;
+                        }
+                        shahkarFeedback.innerHTML = `<span class='text-danger'>خطا: ${errorMsg}</span>`;
+                    }
+                }
+            } catch (err) {
+                loadingSpinner.style.display = 'none';
+                verifyShahkarBtn.disabled = false;
+                shahkarFeedback.innerHTML = "<span class='text-danger'>خطا در ارتباط با سرور: " + err.message + "</span>";
+                console.error(err);
+            }
+        });
+
+        // تابع بررسی سند
+        async function verifyDocument(button) {
+            const documentId = button.getAttribute('data-document-id');
+            const verificationCode = document.getElementById('verificationCode')?.value.trim() || '';
+            const feedbackDiv = document.getElementById('shahkarFeedback');
+
+            if (!documentId) {
+                feedbackDiv.innerHTML = "<span class='text-danger'>شناسه سند نامعتبر است</span>";
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/Verification/VerifyDocument', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        DocumentNumber: documentId,
+                        VerificationCode: verificationCode
+                    })
+                });
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch {
+                    result = { message: 'پاسخ سرور نامعتبر است' };
+                }
+
+                if (response.ok && result.isSuccessful) {
+                    feedbackDiv.innerHTML = "<span class='text-success'>سند با موفقیت بررسی شد</span>";
+                } else {
+                    let errorMsg = result.errorDescription || result.message || 'خطای ناشناخته';
+                    if (response.status === 401) {
+                        errorMsg = "سشن شما منقضی شده است. در حال هدایت به صفحه لاگین...";
+                        feedbackDiv.innerHTML = `<span class='text-danger'>${errorMsg}</span>`;
+                        setTimeout(() => {
+                            window.location.href = '/Account/Login';
+                        }, 2000);
+                    } else {
+                        if (result.traceId) {
+                            errorMsg += ` (Trace ID: ${result.traceId})`;
+                        }
+                        feedbackDiv.innerHTML = `<span class='text-danger'>خطا: ${errorMsg}</span>`;
+                    }
+                }
+            } catch (err) {
+                feedbackDiv.innerHTML = "<span class='text-danger'>خطا در ارتباط با سرور: " + err.message + "</span>";
+                console.error(err);
+            }
+        }
+    </script>
+}

@@ -1,25 +1,59 @@
+﻿using Microsoft.EntityFrameworkCore;
+using PomixPMOService.API.Controllers;
+using ServicePomixPMO.API.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// --- DbContext ---
+builder.Services.AddDbContext<PomixServiceContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// --- Services ---
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
+builder.Services.Configure<ShahkarServiceOptions>(builder.Configuration.GetSection("Shahkar"));
+
+// --- Swagger ---
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "ServicePomixPMO API", Version = "v1" });
+});
+
+// --- CORS ---
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", builder =>
+    {
+        builder.WithOrigins("http://localhost:3000")
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+               .AllowCredentials();
+    });
+});
+
+// --- Authentication & Authorization قبل از Build ---
+builder.Services.AddAuthentication("CustomScheme")
+    .AddCookie("CustomScheme", options =>
+    {
+        options.LoginPath = "/api/auth/login";
+        options.AccessDeniedPath = "/api/auth/denied";
+    });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
+// --- Middleware ---
+app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.UseCors("AllowFrontend");
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ServicePomixPMO API V1");
+    c.RoutePrefix = "swagger";
+});
 
+app.MapControllers();
 app.Run();

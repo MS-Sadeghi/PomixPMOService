@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PomixPMOService.API\PomixPMOService.API.csproj" />
+  </ItemGroup>
+
 </Project>

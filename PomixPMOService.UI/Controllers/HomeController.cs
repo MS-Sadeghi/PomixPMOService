@@ -54,5 +54,15 @@ namespace PomixPMOService.UI.Controllers
         {
             return View("~/Views/Cartable/Cartable.cshtml", new List<object>());
         }
+
+        public IActionResult Users()
+        {
+            return View();
+        }
+
+        public IActionResult EditProfile()
+        {
+            return View();
+        }
     }
 }

@@ -352,28 +352,17 @@ namespace PomixPMOService.API.Controllers
                 bool GetBool(string key) => data.TryGetProperty(key, out var val) && val.ValueKind == JsonValueKind.True;
 
                 // Log to database
+                // Log to database - only essential info and full JSON response
                 var log = new ServicePomixPMO.API.Models.VerifyDocLog
                 {
-                    DocumentNumber = model.DocumentNumber ?? "",
-                    VerificationCode = model.VerificationCode ?? "",
-                    DocType = GetString("DocType"),
-                    DocType_Code = GetString("DocType_code"),
-                    HasPermission = GetBool("HasPermission"),
-                    ExistDoc = GetBool("ExistDoc"),
-                    Desc = GetString("Desc"),
-                    ScriptoriumName = GetString("ScriptoriumName"),
-                    SignGetterTitle = GetString("SignGetterTitle"),
-                    SignSubject = GetString("SignSubject"),
-                    DocDate = GetString("DocDate"),
-                    CaseClasifyNo = GetString("CaseClasifyNo"),
-                    ImpotrtantAnnexText = GetString("ImpotrtantAnnexText"),
-                    ADVOCACYENDDATE = GetString("ADVOCACYENDDATE"),
-                    LstFindPersonInQuery = data.TryGetProperty("lstFindPersonInQuery", out var list) && list.ValueKind != JsonValueKind.Null ? list.GetRawText() : null,
-                    ResponseText = responseString,
-                    ExpertId = userId,
-                    CreatedAt = DateTime.UtcNow
+                    DocumentNumber = model.DocumentNumber ?? "",         // NationalRegisterNo
+                    VerificationCode = model.VerificationCode ?? "",     // SecretNo
+                    ResponseText = responseString,                       // Full JSON response
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = User.Identity?.Name ?? "Unknown",       // Or use userId if preferred
                 };
 
+                // Save log
                 _context.VerifyDocLog.Add(log);
                 try
                 {
@@ -386,6 +375,7 @@ namespace PomixPMOService.API.Controllers
                     var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
                     return StatusCode(500, $"خطای دیتابیس: {innerMessage}");
                 }
+
 
                 // Construct response
                 var result = new

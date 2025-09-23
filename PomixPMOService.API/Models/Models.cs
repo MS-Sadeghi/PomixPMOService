@@ -251,38 +251,22 @@ namespace ServicePomixPMO.API.Models
     public class VerifyDocLog
     {
         [Key]
-        public long VerifyDocLogId { get; set; }
+        public int VerifyDocLogId { get; set; }
 
-        // FK به ShahkarLog (اختیاری)
-        public long? ShahkarLogId { get; set; }
-        public ShahkarLog? ShahkarLog { get; set; }
-
-        // مقادیر ورودی
+        // لاگ اصلی: کل JSON پاسخ سرویس
         [Required]
-        public string DocumentNumber { get; set; } = null!;  // شناسه یکتا سند
+        public string ResponseText { get; set; } = null!;
+
+        // مقادیر ورودی که بعدا برای تطابق کارتابل استفاده میشن
+        [Required]
+        public string DocumentNumber { get; set; } = null!;  // NationalRegisterNo
 
         [Required]
         public string VerificationCode { get; set; } = null!; // SecretNo
 
-        // اطلاعات سند از سرویس
-        public string? DocType { get; set; }
-        public string? DocType_Code { get; set; }
-        public string? DocDate { get; set; }
-        public string? ScriptoriumName { get; set; }
-        public string? SignGetterTitle { get; set; }
-        public string? SignSubject { get; set; }
-        public string? CaseClasifyNo { get; set; }
-        public string? ImpotrtantAnnexText { get; set; }
-        public string? ADVOCACYENDDATE { get; set; }
-        public string? LstFindPersonInQuery { get; set; } // ذخیره به صورت JSON
-
-        public bool HasPermission { get; set; }
-        public bool ExistDoc { get; set; }
-        public string? Desc { get; set; }
-
-        // لاگ اصلی
-        public string ResponseText { get; set; } = null!;
-        public long ExpertId { get; set; }
+        // تاریخ و کاربر ایجاد کننده
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [Required]
+        public string CreatedBy { get; set; } = null!;
     }
 }

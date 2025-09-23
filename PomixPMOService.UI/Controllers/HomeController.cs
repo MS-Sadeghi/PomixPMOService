@@ -64,5 +64,10 @@ namespace PomixPMOService.UI.Controllers
         {
             return View();
         }
+        
+        public IActionResult Shahkar()
+        {
+            return View();
+        }
     }
 }

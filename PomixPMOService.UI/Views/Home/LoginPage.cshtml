@@ -50,23 +50,30 @@
                 </div>
 
                 <div>
-                    <dnt-captcha asp-captcha-generator-max="9999"
-                                                 asp-captcha-generator-min="1000"
-                                                 asp-captcha-generator-language="English"
-                                                 asp-captcha-generator-display-mode="ShowDigits"
-                                                 asp-use-relative-urls="true"
-                                                 asp-placeholder="کد امنیتی را وارد کنید"
-                                                 asp-validation-error-message=" "
-                                                 asp-too-many-requests-error-message="Too many requests! Please wait a minute!"
-                                                 asp-font-name="Tahoma"
-                                                 asp-font-size="30"
-                                                 asp-fore-color="#3333333"
-                                                 asp-back-color="#FCF6F5FF"
-                                                 asp-text-box-class="form-control captchaInput"
-                                                 asp-text-box-template="<div class='form-group'>{0}</div>"
-                                                 asp-validation-message-class="text-danger"
-                                                 asp-refresh-button-class="bx bx-sync btn "
-                                                 asp-show-refresh-button="true" /> 
+                     <br />
+                     <br />
+                     <br />
+                     <br />
+                     <br />
+                    <dnt-captcha 
+        asp-captcha-generator-max="9999" 
+        asp-captcha-generator-min="1000" 
+        asp-captcha-generator-language="English" 
+        asp-captcha-generator-display-mode="ShowDigits" 
+        asp-use-relative-urls="true" 
+        asp-placeholder="کد امنیتی را وارد کنید" 
+        asp-validation-error-message="کد امنیتی اشتباه است" 
+        asp-too-many-requests-error-message="Too many requests! Please wait a minute!" 
+        asp-font-name="Tahoma" 
+        asp-font-size="30" 
+        asp-fore-color="#333333" 
+        asp-back-color="#FCF6F5" 
+        asp-text-box-class="form-control captchaInput" 
+        asp-text-box-template="<div class='form-group'>{0}</div>" 
+        asp-validation-message-class="text-danger" 
+        asp-refresh-button-class="bx bx-sync btn" 
+        asp-show-refresh-button="true"> 
+    </dnt-captcha>
                 </div>
 
                 <!-- Two-Factor Authentication Type -->
@@ -98,23 +105,30 @@
 
                 <!-- Google Authenticator Section -->
                  <div id="googleAuthSection" class="wrap-input100 validate-input input-group" style="display: none;" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
-                    <dnt-captcha asp-captcha-generator-max="9999"
-                                 asp-captcha-generator-min="1000"
-                                 asp-captcha-generator-language="English"
-                                 asp-captcha-generator-display-mode="ShowDigits"
-                                 asp-use-relative-urls="true"
-                                 asp-placeholder="کد امنیتی را وارد کنید"
-                                 asp-validation-error-message=" "
-                                 asp-too-many-requests-error-message="Too many requests! Please wait a minute!"
-                                 asp-font-name="Tahoma"
-                                 asp-font-size="30"
-                                 asp-fore-color="#3333333"
-                                 asp-back-color="#FCF6F5FF"
-                                 asp-text-box-class="form-control captchaInput"
-                                 asp-text-box-template="<div class='form-group'>{0}</div>"
-                                 asp-validation-message-class="text-danger"
-                                 asp-refresh-button-class="bx bx-sync btn "
-                                 asp-show-refresh-button="true" />
+                     <br />
+                     <br />
+                     <br />
+                     <br />
+                     <br />
+                    @* <dnt-captcha 
+        asp-captcha-generator-max="9999" 
+        asp-captcha-generator-min="1000" 
+        asp-captcha-generator-language="English" 
+        asp-captcha-generator-display-mode="ShowDigits" 
+        asp-use-relative-urls="true" 
+        asp-placeholder="کد امنیتی را وارد کنید" 
+        asp-validation-error-message="کد امنیتی اشتباه است" 
+        asp-too-many-requests-error-message="Too many requests! Please wait a minute!" 
+        asp-font-name="Tahoma" 
+        asp-font-size="30" 
+        asp-fore-color="#333333" 
+        asp-back-color="#FCF6F5" 
+        asp-text-box-class="form-control captchaInput" 
+        asp-text-box-template="<div class='form-group'>{0}</div>" 
+        asp-validation-message-class="text-danger" 
+        asp-refresh-button-class="bx bx-sync btn" 
+        asp-show-refresh-button="true"> 
+    </dnt-captcha> *@
                     
                     <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
                         <a href="javascript:void(0)" class="input-group-text bg-white text-muted">

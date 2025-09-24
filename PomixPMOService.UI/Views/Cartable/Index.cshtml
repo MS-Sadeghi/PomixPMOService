@@ -82,163 +82,101 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
             </div>
             <div class="modal-body">
-                <div class="card">
-                    <div class="card-body">
-                        <form class="needs-validation" novalidate="">
-                            <div class="form-row">
-                                <div class="col-xl-6 mb-3">
-                                    <label for="validationCustom01">کد ملی</label>
-                                    <input type="text" class="form-control" id="validationCustom01" value="" required="">
+                <div id="wizard2" role="application" class="wizard clearfix">
+                    <!-- مراحل -->
+                    <div class="steps clearfix">
+                        <ul role="tablist">
+                            <li role="tab" class="first current" aria-disabled="false" aria-selected="true">
+                                <a id="wizard2-t-0" href="#wizard2-h-0" aria-controls="wizard2-p-0">
+                                    <span class="current-info audible">current step: </span>
+                                    <span class="number">1</span>
+                                    <span class="title">احراز هویت</span>
+                                </a>
+                            </li>
+                            <li role="tab" class="disabled" aria-disabled="true">
+                                <a id="wizard2-t-1" href="#wizard2-h-1" aria-controls="wizard2-p-1">
+                                    <span class="number">2</span>
+                                    <span class="title">احراز سند</span>
+                                </a>
+                            </li>
+                            <li role="tab" class="disabled last" aria-disabled="true">
+                                <a id="wizard2-t-2" href="#wizard2-h-2" aria-controls="wizard2-p-2">
+                                    <span class="number">3</span>
+                                    <span class="title">تطابق کد ملی</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="content clearfix">
+                        <!-- Step 1 -->
+                        <section id="wizard2-p-0" role="tabpanel" aria-labelledby="wizard2-h-0" class="body current" aria-hidden="false">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-control-label">کد ملی:</label>
+                                    <input class="form-control" id="national_code" name="national_code" placeholder="کد ملی را وارد کنید" required type="text">
                                 </div>
-                                <div class="col-xl-6 mb-3">
-                                    <label for="validationCustom02">شماره موبایل</label>
-                                    <input type="text" class="form-control" id="validationCustom02" value="09xxxxxxxxx" required="">
+                                <div class="col-md-6 mg-t-20 mg-md-t-0">
+                                    <label class="form-control-label">شماره موبایل:</label>
+                                    <input class="form-control" id="mobile_number" name="mobile_number" placeholder="09xxxxxxxxx" required type="text">
                                 </div>
                             </div>
-                            <div class="form-row">
-                                <div class="col-xl-6 mb-3">
-                                    <label for="validationCustom03">رمز تصدیق</label>
-                                    <input type="text" class="form-control" id="validationCustom03" required="">
+                            <button type="submit" class="btn btn-primary mt-1" form="needs-validation-form">تایید</button>
+                            <button class="btn btn-primary my-1 loading-btn" type="button" style="display:none;">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span class="visually-hidden">Loading...</span>
+                            </button>
+                        </section>
+
+                        <!-- Step 2 -->
+                        <section id="wizard2-p-1" role="tabpanel" aria-labelledby="wizard2-h-1" class="body" aria-hidden="true" style="display:none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-control-label">رمز تصدیق:</label>
+                                    <input class="form-control" id="verify_code" name="verify_code" placeholder="رمز تصدیق را وارد کنید" required type="text">
                                 </div>
-                                <div class="col-xl-6 mb-3">
-                                    <label for="validationCustom05">شماره سند</label>
-                                    <input type="text" class="form-control" id="validationCustom05" required="">
+                                <div class="col-md-6">
+                                    <label class="form-control-label">شماره سند:</label>
+                                    <input class="form-control" id="document_number" name="document_number" placeholder="شماره سند را وارد کنید" required type="text">
                                 </div>
                             </div>
-                        </form>
+                            <button type="submit" class="btn btn-primary mt-1" form="needs-validation-form">تایید</button>
+                            <button class="btn btn-primary my-1 loading-btn mt-1" type="button" style="display:none;">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span class="visually-hidden">Loading...</span>
+                            </button>
+                        </section>
+
+                        <!-- Step 3 -->
+                        <section id="wizard2-p-2" role="tabpanel" aria-labelledby="wizard2-h-2" class="body" aria-hidden="true" style="display:none;" >
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-control-label">کد ملی موکل:</label>
+                                    <input class="form-control" id="client_national_code" name="client_national_code" placeholder="کد ملی موکل را وارد کنید" required type="text">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-1" form="needs-validation-form">تایید</button>
+                            <button class="btn btn-primary my-1 loading-btn" type="button" style="display:none;">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span class="visually-hidden">Loading...</span>
+                            </button>
+                        </section>
+                    </div>
+
+                    <!-- دکمه‌ها -->
+                    <div class="actions clearfix">
+                        <ul role="menu" aria-label="Pagination">
+                            <li class="btn btn-sm disabled" aria-disabled="true"><a href="#previous" role="menuitem">قبلی</a></li>
+                            <li class="btn btn-sm" aria-hidden="false" aria-disabled="false"><a href="#next" role="menuitem">بعدی</a></li>
+                            <li class="btn btn-sm" aria-hidden="true" style="display:none;"><a href="#finish" role="menuitem">ثبت</a></li>
+                        </ul>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary" form="needs-validation-form">ثبت</button>
-                <button type="button" class="btn btn-default" data-bs-dismiss="modal">بستن</button>
             </div>
         </div>
     </div>
 </div>
 
-
 @section Scripts {
-    <script>
-            document.addEventListener('DOMContentLoaded', function () {
-            // اعتبارسنجی فرم
-            const form = document.querySelector('.needs-validation');
-            const submitButton = document.querySelector('.modal-content .btn-primary');
-
-            submitButton.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-
-                if (!form.checkValidity()) {
-                    form.classList.add('was-validated');
-                    return;
-                }
-
-                // جمع‌آوری اطلاعات فرم
-                const nationalId = document.getElementById('validationCustom01').value;
-                const mobileNumber = document.getElementById('validationCustom02').value;
-                const verificationCode = document.getElementById('validationCustom03').value;
-                const documentNumber = document.getElementById('validationCustom05').value;
-
-                // ایجاد مدل برای درخواست‌های API
-                const mobileCheckModel = {
-                    NationalId: nationalId,
-                    MobileNumber: mobileNumber
-                };
-
-                const documentVerifyModel = {
-                    DocumentNumber: documentNumber,
-                    VerificationCode: verificationCode
-                };
-
-                // ارسال درخواست به API برای بررسی کد ملی و شماره موبایل
-                fetch('/api/ShahkarService/CheckMobileNationalCode', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // اگر توکن احراز هویت لازم است، اینجا اضافه کنید
-                        // 'Authorization': 'Bearer ' + yourToken
-                    },
-                    body: JSON.stringify(mobileCheckModel)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(error => { throw new Error(error.Message || 'خطا در بررسی کد ملی و شماره موبایل'); });
-                    }
-                    return response.json();
-                })
-                .then(mobileCheckResult => {
-                    // ارسال درخواست برای بررسی سند
-                    return fetch('/api/ShahkarService/VerifyDocument', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            // اگر توکن احراز هویت لازم است، اینجا اضافه کنید
-                            // 'Authorization': 'Bearer ' + yourToken
-                        },
-                        body: JSON.stringify(documentVerifyModel)
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(error => { throw new Error(error.errorDescription || 'خطا در بررسی سند'); });
-                        }
-                        return response.json();
-                    })
-                    .then(verifyDocResult => {
-                        // اضافه کردن ردیف جدید به جدول
-                        const tableBody = document.querySelector('#cartableTable tbody');
-                        const newRow = document.createElement('tr');
-
-                        newRow.innerHTML = `
-                            <td>${mobileCheckResult.RequestCode || 'نامشخص'}</td>
-                            <td>${nationalId}</td>
-                            <td>${mobileNumber}</td>
-                            <td>${documentNumber}</td>
-                            <td>${verificationCode}</td>
-                            <td>
-                                <i class="fas fa-check-circle text-success" title="تأیید شده" style="${mobileCheckResult.IsMatch ? '' : 'display: none;'}"></i>
-                            </td>
-                            <td>
-                                <i class="fas fa-file-alt text-success" title="سند موجود" style="${verifyDocResult.isSuccessful && verifyDocResult.responseText.includes('ExistDoc":true') ? '' : 'display: none;'}"></i>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-primary verify-btn" data-document-id="${documentNumber}" data-status="pending" onclick="verifyDocument(this)">
-                                    بررسی
-                                </button>
-                            </td>
-                        `;
-
-                        // حذف پیام "درخواستی یافت نشد" اگر وجود داشته باشد
-                        const noDataRow = tableBody.querySelector('tr td[colspan="8"]');
-                        if (noDataRow) {
-                            noDataRow.parentElement.remove();
-                        }
-
-                        tableBody.insertBefore(newRow, tableBody.firstChild);
-
-                        // بستن مودال و ریست فرم
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('scrollingmodal'));
-                        modal.hide();
-                        form.reset();
-                        form.classList.remove('was-validated');
-
-                        // نمایش پیام موفقیت
-                        alert('درخواست با موفقیت ثبت شد.');
-                    });
-                })
-                .catch(error => {
-                    console.error('خطا:', error);
-                    alert('خطا در ثبت درخواست: ' + error.message);
-                });
-            });
-
-            // تابع بررسی سند (برای دکمه‌های بررسی در جدول)
-            window.verifyDocument = function (button) {
-                const documentId = button.getAttribute('data-document-id');
-                const status = button.getAttribute('data-status');
-                alert(`بررسی سند با شناسه: ${documentId}, وضعیت: ${status}`);
-                // اینجا می‌توانید منطق بررسی سند را اضافه کنید
-            };
-        });
-    </script>
+    
 }

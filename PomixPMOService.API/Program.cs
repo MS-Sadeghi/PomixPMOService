@@ -1,6 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using PomixPMOService.API.Controllers;
 using ServicePomixPMO.API.Data;
+using ServicePomixPMO.API.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,12 +16,65 @@ builder.Services.AddDbContext<PomixServiceContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
+builder.Services.AddScoped<TokenService, TokenService>();
 builder.Services.Configure<ShahkarServiceOptions>(builder.Configuration.GetSection("Shahkar"));
+
+// --- Authentication & Authorization ---
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CanAccessShahkar", policy =>
+        policy.RequireClaim("Permission", "CanAccessShahkar"));
+});
 
 // --- Swagger ---
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "ServicePomixPMO API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "لطفاً توکن JWT را وارد کنید: Bearer {token}",
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 // --- CORS ---
@@ -33,7 +90,7 @@ builder.Services.AddSwaggerGen(c =>
 //});
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", builder =>
+    options.AddPolicy("AllowFrontend", policy =>
     {
         builder.WithOrigins("https://localhost:7031") 
                .AllowAnyMethod()
@@ -42,22 +99,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// --- Authentication & Authorization قبل از Build ---
-builder.Services.AddAuthentication("CustomScheme")
-    .AddCookie("CustomScheme", options =>
-    {
-        options.LoginPath = "/api/auth/login";
-        options.AccessDeniedPath = "/api/auth/denied";
-    });
-builder.Services.AddAuthorization();
-
 var app = builder.Build();
 
 // --- Middleware ---
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseCors("AllowFrontend");
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -65,5 +109,13 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
+app.UseRouting();
+
+app.UseCors("AllowFrontend");
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();

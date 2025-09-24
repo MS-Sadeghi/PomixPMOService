@@ -33,37 +33,8 @@
                                     <th class="wd-15p border-bottom-0 sorting">بررسی سند</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @if (Model != null && Model.Any())
-                                {
-                                    foreach (var item in Model)
-                                    {
-                                        <tr>
-                                            <td>@item.RequestId</td>
-                                            <td>@item.NationalId</td>
-                                            <td>@item.MobileNumber</td>
-                                            <td>@item.DocumentNumber</td>
-                                            <td>@item.VerificationCode</td>
-                                            <td>
-                                                <i class="fas fa-check-circle text-success" title="تأیید شده" style="@(item.IdentityVerified ? "" : "display: none;")"></i>
-                                            </td>
-                                            <td>
-                                                <i class="fas fa-file-alt text-success" title="سند موجود" style="@(item.DocumentExists ? "" : "display: none;")"></i>
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-primary verify-btn" data-document-id="@item.DocumentNumber" data-status="@item.Status" onclick="verifyDocument(this)">
-                                                    بررسی
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="8" class="text-center">درخواستی یافت نشد.</td>
-                                    </tr>
-                                }
+                            <tbody id="cartableBody">
+                                <!-- داده‌ها به‌صورت داینامیک با JavaScript پر می‌شوند -->
                             </tbody>
                         </table>
                     </div>
@@ -73,13 +44,13 @@
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal for Adding New Document -->
 <div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content modal-content-demo">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
             <div class="modal-header">
-                <h6 class="modal-title" id="scrollingmodalLabel">سند جدید</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+                <h5 class="modal-title" id="scrollingmodalLabel">ایجاد درخواست جدید</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div id="wizard2" role="application" class="wizard clearfix">

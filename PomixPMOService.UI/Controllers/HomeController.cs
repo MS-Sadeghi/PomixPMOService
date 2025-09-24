@@ -1,15 +1,21 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DNTCaptcha.Core;
+using Microsoft.AspNetCore.Mvc;
 using PomixPMOService.UI.ViewModels;
 
 namespace PomixPMOService.UI.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly IDNTCaptchaValidatorService _captchaValidatorService;
         private readonly HttpClient _client;
 
-        public HomeController(IHttpClientFactory httpClientFactory)
+        public HomeController(
+            IHttpClientFactory httpClientFactory,
+            IDNTCaptchaValidatorService captchaValidatorService
+        )
         {
             _client = httpClientFactory.CreateClient("PomixApi");
+            _captchaValidatorService = captchaValidatorService ?? throw new ArgumentNullException(nameof(captchaValidatorService));
         }
 
         [HttpGet]
@@ -21,6 +27,12 @@ namespace PomixPMOService.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> LoginPage(LoginViewModel model)
         {
+            if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
+            {
+                ModelState.AddModelError("", "کد امنیتی اشتباه است.");
+                return View(model);
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.ErrorMessage = "لطفا همه فیلدها را وارد کنید.";
@@ -64,7 +76,7 @@ namespace PomixPMOService.UI.Controllers
         {
             return View();
         }
-        
+
         public IActionResult Shahkar()
         {
             return View();

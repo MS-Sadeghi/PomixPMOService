@@ -1,8 +1,18 @@
-﻿@model PomixPMOService.UI.ViewModels.LoginViewModel
+﻿@using DNTCaptcha.Core
+@model PomixPMOService.UI.ViewModels.LoginViewModel
 @{
     ViewData["Title"] = "ورود به سامانه";
     Layout = "~/Views/Shared/_LayoutAuth.cshtml";
 }
+
+<style>
+    .captchaInput, .dnt-captcha-img {
+        display: block !important;
+        visibility: visible !important;
+        width: 200px;
+        height: 80px;
+    }
+</style>
 
 <div class="page">
     <div class="container-login100">
@@ -39,6 +49,26 @@
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
 
+                <div>
+                    <dnt-captcha asp-captcha-generator-max="9999"
+                                                 asp-captcha-generator-min="1000"
+                                                 asp-captcha-generator-language="English"
+                                                 asp-captcha-generator-display-mode="ShowDigits"
+                                                 asp-use-relative-urls="true"
+                                                 asp-placeholder="کد امنیتی را وارد کنید"
+                                                 asp-validation-error-message=" "
+                                                 asp-too-many-requests-error-message="Too many requests! Please wait a minute!"
+                                                 asp-font-name="Tahoma"
+                                                 asp-font-size="30"
+                                                 asp-fore-color="#3333333"
+                                                 asp-back-color="#FCF6F5FF"
+                                                 asp-text-box-class="form-control captchaInput"
+                                                 asp-text-box-template="<div class='form-group'>{0}</div>"
+                                                 asp-validation-message-class="text-danger"
+                                                 asp-refresh-button-class="bx bx-sync btn "
+                                                 asp-show-refresh-button="true" /> 
+                </div>
+
                 <!-- Two-Factor Authentication Type -->
                 <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا روش تأیید دو عاملی را انتخاب کنید">
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
@@ -67,15 +97,34 @@
                 </div>
 
                 <!-- Google Authenticator Section -->
-                <div id="googleAuthSection" class="wrap-input100 validate-input input-group" style="display: none;" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
-                    <img src="https://via.placeholder.com/150x50/000000/ffffff?text=CAPTCHA" alt="CAPTCHA Image" style="width: 150px; height: 50px; margin-bottom: 10px;">
+                 <div id="googleAuthSection" class="wrap-input100 validate-input input-group" style="display: none;" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
+                    <dnt-captcha asp-captcha-generator-max="9999"
+                                 asp-captcha-generator-min="1000"
+                                 asp-captcha-generator-language="English"
+                                 asp-captcha-generator-display-mode="ShowDigits"
+                                 asp-use-relative-urls="true"
+                                 asp-placeholder="کد امنیتی را وارد کنید"
+                                 asp-validation-error-message=" "
+                                 asp-too-many-requests-error-message="Too many requests! Please wait a minute!"
+                                 asp-font-name="Tahoma"
+                                 asp-font-size="30"
+                                 asp-fore-color="#3333333"
+                                 asp-back-color="#FCF6F5FF"
+                                 asp-text-box-class="form-control captchaInput"
+                                 asp-text-box-template="<div class='form-group'>{0}</div>"
+                                 asp-validation-message-class="text-danger"
+                                 asp-refresh-button-class="bx bx-sync btn "
+                                 asp-show-refresh-button="true" />
+                    
                     <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
                         <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                             <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
                         </a>
                         <input class="input100 border-start-0 ms-0 form-control" type="text" id="googleAuthCode" name="googleAuthCode" placeholder="کد Google Authenticator" />
                     </div>
-                </div>
+                </div> 
+
+              
 
                 <!-- Submit Button -->
                 <div class="container-login100-form-btn mt-4">

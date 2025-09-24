@@ -1,6 +1,8 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
 using PomixPMOService.UI.ViewModels;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -11,8 +13,7 @@ namespace PomixPMOService.UI.Controllers
 
         public HomeController(
             IHttpClientFactory httpClientFactory,
-            IDNTCaptchaValidatorService captchaValidatorService
-        )
+            IDNTCaptchaValidatorService captchaValidatorService)
         {
             _client = httpClientFactory.CreateClient("PomixApi");
             _captchaValidatorService = captchaValidatorService ?? throw new ArgumentNullException(nameof(captchaValidatorService));
@@ -46,8 +47,17 @@ namespace PomixPMOService.UI.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // اگر توکن یا info دیگه میخوای میتونی اینجا ذخیره کنی
-                    return RedirectToAction("Index", "Cartable");
+                    var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                    if (loginResponse?.Tokens?.AccessToken == null)
+                    {
+                        ViewBag.ErrorMessage = "خطا: توکن دریافت نشد.";
+                        return View(model);
+                    }
+
+                    // ارسال توکن و پیام به View
+                    ViewBag.JwtToken = loginResponse.Tokens.AccessToken;
+                    ViewBag.SuccessMessage = loginResponse.Message;
+                    return View("LoginSuccess", model);
                 }
                 else
                 {
@@ -56,9 +66,9 @@ namespace PomixPMOService.UI.Controllers
                     return View(model);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                ViewBag.ErrorMessage = "خطا در ارتباط با سرور.";
+                ViewBag.ErrorMessage = "خطا در ارتباط با سرور: " + ex.Message;
                 return View(model);
             }
         }
@@ -82,5 +92,27 @@ namespace PomixPMOService.UI.Controllers
         {
             return View();
         }
+    }
+
+    public class LoginResponse
+    {
+        public string Message { get; set; }
+        public UserInfo User { get; set; }
+        public TokenInfo Tokens { get; set; }
+    }
+
+    public class UserInfo
+    {
+        public long UserId { get; set; }
+        public string Username { get; set; }
+        public string Name { get; set; }
+        public string LastName { get; set; }
+        public string Role { get; set; }
+    }
+
+    public class TokenInfo
+    {
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
     }
 }

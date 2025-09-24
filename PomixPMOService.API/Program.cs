@@ -78,24 +78,14 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // --- CORS ---
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("AllowFrontend", builder =>
-//    {
-//        builder.WithOrigins("http://localhost:3000")
-//               .AllowAnyMethod()
-//               .AllowAnyHeader()
-//               .AllowCredentials();
-//    });
-//});
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        builder.WithOrigins("https://localhost:7031") 
-               .AllowAnyMethod()
-               .AllowAnyHeader()
-               .AllowCredentials(); 
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 

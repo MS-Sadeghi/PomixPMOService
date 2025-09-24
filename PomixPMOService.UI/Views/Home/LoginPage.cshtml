@@ -1,5 +1,5 @@
-﻿@using DNTCaptcha.Core
-@model PomixPMOService.UI.ViewModels.LoginViewModel
+﻿@model PomixPMOService.UI.ViewModels.LoginViewModel
+@using DNTCaptcha.Core
 @{
     ViewData["Title"] = "ورود به سامانه";
     Layout = "~/Views/Shared/_LayoutAuth.cshtml";
@@ -12,12 +12,15 @@
         width: 200px;
         height: 80px;
     }
+    .form-group, .wrap-input100 {
+        margin-bottom: 1rem;
+    }
 </style>
 
 <div class="page">
     <div class="container-login100">
         <div class="wrap-login100 p-6">
-            <form id="loginForm" class="login100-form validate-form" autocomplete="off">
+            <form id="loginForm" asp-action="LoginPage" method="post" class="login100-form validate-form" autocomplete="off">
                 <span class="login100-form-title">ورود به سیستم</span>
 
                 <!-- User Type Selection -->
@@ -25,10 +28,11 @@
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                         <i class="mdi mdi-account" aria-hidden="true"></i>
                     </a>
-                    <select class="input100 border-start-0 ms-0 form-control" name="userType" id="userType" required>
+                   @*  <select asp-for="UserType" class="input100 border-start-0 ms-0 form-control" id="userType" required>
                         <option value="1" selected>کاربر احراز هویت</option>
                         <option value="2">کاربر متقاضی خدمت</option>
                     </select>
+                    <span asp-validation-for="UserType" class="text-danger"></span> *@
                 </div>
 
                 <!-- Username Input -->
@@ -49,42 +53,16 @@
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
 
-                <div>
-                     <br />
-                     <br />
-                     <br />
-                     <br />
-                     <br />
-                    <dnt-captcha 
-        asp-captcha-generator-max="9999" 
-        asp-captcha-generator-min="1000" 
-        asp-captcha-generator-language="English" 
-        asp-captcha-generator-display-mode="ShowDigits" 
-        asp-use-relative-urls="true" 
-        asp-placeholder="کد امنیتی را وارد کنید" 
-        asp-validation-error-message="کد امنیتی اشتباه است" 
-        asp-too-many-requests-error-message="Too many requests! Please wait a minute!" 
-        asp-font-name="Tahoma" 
-        asp-font-size="30" 
-        asp-fore-color="#333333" 
-        asp-back-color="#FCF6F5" 
-        asp-text-box-class="form-control captchaInput" 
-        asp-text-box-template="<div class='form-group'>{0}</div>" 
-        asp-validation-message-class="text-danger" 
-        asp-refresh-button-class="bx bx-sync btn" 
-        asp-show-refresh-button="true"> 
-    </dnt-captcha>
-                </div>
-
                 <!-- Two-Factor Authentication Type -->
                 <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا روش تأیید دو عاملی را انتخاب کنید">
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                         <i class="zmdi zmdi-key" aria-hidden="true"></i>
                     </a>
-                    <select class="input100 border-start-0 ms-0 form-control" name="twoFactorType" id="twoFactorType" required>
+                   @*  <select asp-for="TwoFactorType" class="input100 border-start-0 ms-0 form-control" id="twoFactorType" required>
                         <option value="1" selected>پیامک</option>
                         <option value="2">Google Authenticator</option>
                     </select>
+                    <span asp-validation-for="TwoFactorType" class="text-danger"></span> *@
                 </div>
 
                 <!-- SMS Section -->
@@ -92,53 +70,45 @@
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                         <i class="zmdi zmdi-smartphone" aria-hidden="true"></i>
                     </a>
-                    <input class="input100 border-start-0 ms-0 form-control" type="text" id="mobileNumber" name="mobileNumber" placeholder="شماره موبایل" />
+                  @*   <input asp-for="MobileNumber" class="input100 border-start-0 ms-0 form-control" type="text" id="mobileNumber" placeholder="شماره موبایل" />
                     <button type="button" onclick="sendSMS()" class="btn btn-primary">ارسال کد</button>
+                    <span asp-validation-for="MobileNumber" class="text-danger"></span> *@
                 </div>
 
                 <div id="smsCodeSection" class="wrap-input100 validate-input input-group" style="display: none;" data-bs-validate="لطفا کد تأیید را وارد کنید">
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                         <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
                     </a>
-                    <input class="input100 border-start-0 ms-0 form-control" type="text" id="smsCode" name="smsCode" placeholder="کد تأیید" />
+                   @*  <input asp-for="SmsCode" class="input100 border-start-0 ms-0 form-control" type="text" id="smsCode" placeholder="کد تأیید" />
+                    <span asp-validation-for="SmsCode" class="text-danger"></span> *@
                 </div>
 
                 <!-- Google Authenticator Section -->
-                 <div id="googleAuthSection" class="wrap-input100 validate-input input-group" style="display: none;" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
-                     <br />
-                     <br />
-                     <br />
-                     <br />
-                     <br />
-                    @* <dnt-captcha 
-        asp-captcha-generator-max="9999" 
-        asp-captcha-generator-min="1000" 
-        asp-captcha-generator-language="English" 
-        asp-captcha-generator-display-mode="ShowDigits" 
-        asp-use-relative-urls="true" 
-        asp-placeholder="کد امنیتی را وارد کنید" 
-        asp-validation-error-message="کد امنیتی اشتباه است" 
-        asp-too-many-requests-error-message="Too many requests! Please wait a minute!" 
-        asp-font-name="Tahoma" 
-        asp-font-size="30" 
-        asp-fore-color="#333333" 
-        asp-back-color="#FCF6F5" 
-        asp-text-box-class="form-control captchaInput" 
-        asp-text-box-template="<div class='form-group'>{0}</div>" 
-        asp-validation-message-class="text-danger" 
-        asp-refresh-button-class="bx bx-sync btn" 
-        asp-show-refresh-button="true"> 
-    </dnt-captcha> *@
-                    
-                    <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
-                        <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                            <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
-                        </a>
-                        <input class="input100 border-start-0 ms-0 form-control" type="text" id="googleAuthCode" name="googleAuthCode" placeholder="کد Google Authenticator" />
-                    </div>
-                </div> 
+                <div id="googleAuthSection" class="wrap-input100 validate-input input-group" style="display: none;" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
+                    </a>
+                   @*  <input asp-for="GoogleAuthCode" class="input100 border-start-0 ms-0 form-control" type="text" id="googleAuthCode" placeholder="کد Google Authenticator" />
+                    <span asp-validation-for="GoogleAuthCode" class="text-danger"></span> *@
+                </div>
 
-              
+                 <dnt-captcha asp-captcha-generator-max="9999"
+              asp-captcha-generator-min="1000"                    
+              asp-captcha-generator-language="English"
+              asp-captcha-generator-display-mode="ShowDigits"
+              asp-use-relative-urls="true"
+              asp-placeholder="کد امنیتی را وارد کنید"
+              asp-validation-error-message=" "
+              asp-too-many-requests-error-message="Too many requests! Please wait a minute!"
+              asp-font-name="Tahoma"
+              asp-font-size="30"
+              asp-fore-color="#3333333"
+              asp-back-color="#FCF6F5FF"
+              asp-text-box-class="form-control captchaInput"
+              asp-text-box-template="<div class='form-group'>{0}</div>"
+              asp-validation-message-class="text-danger"
+              asp-refresh-button-class="bx bx-sync btn "
+              asp-show-refresh-button="true" />
 
                 <!-- Submit Button -->
                 <div class="container-login100-form-btn mt-4">
@@ -157,10 +127,13 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
 
     <script>
         // Toggle visibility and required attributes based on twoFactorType selection
-        document.getElementById('twoFactorType').addEventListener('change', function() {
+        document.getElementById('twoFactorType').addEventListener('change', function () {
             const smsSection = document.getElementById('smsSection');
             const smsCodeSection = document.getElementById('smsCodeSection');
             const googleAuthSection = document.getElementById('googleAuthSection');
@@ -183,68 +156,34 @@
             }
         });
 
-        // Placeholder function for sending SMS
+        // Function for sending SMS
         function sendSMS() {
             const mobileNumber = document.getElementById('mobileNumber').value;
             if (mobileNumber) {
-                document.getElementById('smsCodeSection').style.display = 'flex';
-                document.getElementById('smsCode').setAttribute('required', 'required');
-                alert('کد تأیید به شماره ' + mobileNumber + ' ارسال شد.');
-                // اینجا منطق واقعی ارسال SMS را اضافه کنید
-            } else {
-                alert('لطفا شماره موبایل را وارد کنید.');
-            }
-        }
-
-        // مدیریت فرم لاگین
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const form = this;
-            if (!form.checkValidity()) {
-                form.classList.add('was-validated');
-                return;
-            }
-
-            const username = document.getElementById('Username').value;
-            const password = document.getElementById('Password').value;
-            const twoFactorType = document.getElementById('twoFactorType').value;
-            const mobileNumber = document.getElementById('mobileNumber').value;
-            const smsCode = document.getElementById('smsCode').value;
-            const googleAuthCode = document.getElementById('googleAuthCode').value;
-
-            try {
-                const response = await fetch('http://localhost:5066/api/auth/login', {
+                fetch('/Home/SendSmsCode', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        username,
-                        password
-                        // اگر احراز هویت دو مرحله‌ای فعال است، اینجا اضافه کنید
-                        // twoFactorType,
-                        // mobileNumber,
-                        // smsCode,
-                        // googleAuthCode
-                    })
+                    body: JSON.stringify({ mobileNumber })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('smsCodeSection').style.display = 'flex';
+                        document.getElementById('smsCode').setAttribute('required', 'required');
+                        alert(data.message);
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('خطا در ارتباط با سرور.');
+                    console.error(error);
                 });
-
-                const result = await response.json();
-                if (!response.ok) {
-                    document.getElementById('errorMessage').innerText = result.message || 'خطا در ورود';
-                    return;
-                }
-
-                // ذخیره توکن‌ها در localStorage
-                localStorage.setItem('accessToken', result.tokens.accessToken);
-                localStorage.setItem('refreshToken', result.tokens.refreshToken);
-
-                // هدایت به صفحه اصلی
-                window.location.href = '/Home/Index';
-            } catch (error) {
-                document.getElementById('errorMessage').innerText = 'خطا در ارتباط با سرور';
-                console.error(error);
+            } else {
+                alert('لطفا شماره موبایل را وارد کنید.');
             }
-        });
+        }
     </script>
 }

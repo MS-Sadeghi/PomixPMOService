@@ -25,6 +25,7 @@ namespace PomixPMOService.UI.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginPage(LoginViewModel model)
         {
             if (!_captchaValidatorService.HasRequestValidCaptchaEntry())

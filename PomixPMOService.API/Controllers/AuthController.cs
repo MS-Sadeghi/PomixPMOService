@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PomixPMOService.API.Models.ViewModels;
 using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models;
-using System.Security.Claims;
+using ServicePomixPMO.API.Services;
+using PomixPMOService.API.Models.ViewModels;
+using System.Threading.Tasks;
 
 namespace PomixPMOService.API.Controllers
 {
@@ -14,10 +14,12 @@ namespace PomixPMOService.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly PomixServiceContext _context;
+        private readonly TokenService _tokenService;
 
-        public AuthController(PomixServiceContext context)
+        public AuthController(PomixServiceContext context, TokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
 
         [HttpPost("login")]
@@ -37,17 +39,9 @@ namespace PomixPMOService.API.Controllers
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
-            // ساخت ClaimsIdentity
-            var claims = new List<Claim>
-            {
-                  new Claim("UserId", user.UserId.ToString()),
-                  new Claim("Username", user.Username)
-            };
+            var tokens = await _tokenService.GenerateTokensAsync(user);
 
-            var identity = new ClaimsIdentity(claims, "Custom");
-            var principal = new ClaimsPrincipal(identity);
-
-            await HttpContext.SignInAsync("CustomScheme", principal);
+            await LogAction(user.UserId, "Login_Success", user.Username, "User logged in with JWT");
 
             return Ok(new
             {
@@ -59,28 +53,47 @@ namespace PomixPMOService.API.Controllers
                     user.Name,
                     user.LastName,
                     user.Role
-                }
+                },
+                Tokens = tokens
             });
         }
 
+        [HttpPost("refresh")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequestViewModel model)
+        {
+            var refreshToken = await _tokenService.GetRefreshTokenAsync(model.RefreshToken);
+            if (refreshToken == null)
+                return Unauthorized("Refresh Token نامعتبر یا منقضی شده است.");
+
+            var user = await _context.Users.FindAsync(refreshToken.UserId);
+            if (user == null)
+                return Unauthorized("کاربر یافت نشد.");
+
+            object value = await _tokenService.RevokeRefreshTokenAsync(model.RefreshToken);
+            var newTokens = await _tokenService.GenerateTokensAsync(user);
+
+            await LogAction(user.UserId, "Refresh_Success", user.Username, "Token refreshed");
+
+            return Ok(new
+            {
+                Message = "توکن با موفقیت تمدید شد",
+                Tokens = newTokens
+            });
+        }
 
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<ActionResult<UserViewModel>> Register(CreateUserViewModel viewModel)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             if (await _context.Users.AnyAsync(u => u.Username == viewModel.Username))
-            {
                 return BadRequest("نام کاربری قبلاً ثبت شده است.");
-            }
+
             if (await _context.Users.AnyAsync(u => u.NationalId == viewModel.NationalId))
-            {
                 return BadRequest("کد ملی قبلاً ثبت شده است.");
-            }
 
             var user = new User
             {
@@ -105,16 +118,17 @@ namespace PomixPMOService.API.Controllers
                 LastName = user.LastName,
                 Role = user.Role,
                 CreatedAt = user.CreatedAt,
-                LastLogin = user.LastLogin,
-                IsActive = user.IsActive
+                LastLogin = user.LastLogin
             };
-            return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, result);
+
+            return CreatedAtAction(nameof(GetUsers), new { id = user.UserId }, result);
         }
 
-        [HttpGet("users")]
+        [HttpGet]
+        [Authorize(Policy = "CanManageAccess")]
         public async Task<ActionResult<IEnumerable<UserViewModel>>> GetUsers()
         {
-            return await _context.Users
+            var users = await _context.Users
                 .Select(u => new UserViewModel
                 {
                     UserId = u.UserId,
@@ -124,65 +138,35 @@ namespace PomixPMOService.API.Controllers
                     LastName = u.LastName,
                     Role = u.Role,
                     CreatedAt = u.CreatedAt,
-                    LastLogin = u.LastLogin,
-                    IsActive = u.IsActive
+                    LastLogin = u.LastLogin
                 })
                 .ToListAsync();
-        }
 
-        [HttpGet("users/{id}")]
-        public async Task<ActionResult<UserViewModel>> GetUser(long id)
-        {
-            var user = await _context.Users
-                .Select(u => new UserViewModel
-                {
-                    UserId = u.UserId,
-                    NationalId = u.NationalId,
-                    Username = u.Username,
-                    Name = u.Name,
-                    LastName = u.LastName,
-                    Role = u.Role,
-                    CreatedAt = u.CreatedAt,
-                    LastLogin = u.LastLogin,
-                    IsActive = u.IsActive
-                })
-                .FirstOrDefaultAsync(u => u.UserId == id);
-            if (user == null)
-                return NotFound();
-            return user;
+            return Ok(users);
         }
 
         [HttpPost("grant-access")]
+        [Authorize(Policy = "CanManageAccess")]
         public async Task<IActionResult> GrantAccess([FromBody] GrantAccessViewModel model)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             var user = await _context.Users.FindAsync(model.UserId);
             if (user == null)
-            {
                 return NotFound("کاربر یافت نشد.");
-            }
 
-            var callerUserIdObj = HttpContext.Items["UserId"];
-            if (callerUserIdObj == null || !long.TryParse(callerUserIdObj.ToString(), out long callerUserId))
-            {
+            var callerUserId = long.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            if (callerUserId == 0)
                 return Unauthorized("کاربر شناسایی نشد.");
-            }
 
             var isAdmin = await _context.UserAccesses
                 .AnyAsync(ua => ua.UserId == callerUserId && ua.Permission == "CanManageAccess");
             if (!isAdmin)
-            {
                 return Forbid("شما دسترسی لازم برای مدیریت دسترسی‌ها را ندارید.");
-            }
 
             if (await _context.UserAccesses.AnyAsync(ua => ua.UserId == model.UserId && ua.Permission == model.Permission))
-            {
                 return BadRequest("این دسترسی قبلاً برای کاربر ثبت شده است.");
-            }
 
             var userAccess = new UserAccess
             {
@@ -197,32 +181,25 @@ namespace PomixPMOService.API.Controllers
         }
 
         [HttpDelete("revoke-access")]
+        [Authorize(Policy = "CanManageAccess")]
         public async Task<IActionResult> RevokeAccess([FromBody] GrantAccessViewModel model)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
-            var callerUserIdObj = HttpContext.Items["UserId"];
-            if (callerUserIdObj == null || !long.TryParse(callerUserIdObj.ToString(), out long callerUserId))
-            {
+            var callerUserId = long.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            if (callerUserId == 0)
                 return Unauthorized("کاربر شناسایی نشد.");
-            }
 
             var isAdmin = await _context.UserAccesses
                 .AnyAsync(ua => ua.UserId == callerUserId && ua.Permission == "CanManageAccess");
             if (!isAdmin)
-            {
                 return Forbid("شما دسترسی لازم برای مدیریت دسترسی‌ها را ندارید.");
-            }
 
             var userAccess = await _context.UserAccesses
                 .FirstOrDefaultAsync(ua => ua.UserId == model.UserId && ua.Permission == model.Permission);
             if (userAccess == null)
-            {
                 return NotFound("دسترسی یافت نشد.");
-            }
 
             _context.UserAccesses.Remove(userAccess);
             await _context.SaveChangesAsync();
@@ -232,7 +209,7 @@ namespace PomixPMOService.API.Controllers
             return Ok($"دسترسی {model.Permission} از کاربر {user?.Username ?? "Unknown"} حذف شد.");
         }
 
-        private async Task LogAction(long userId, string action, string username, string result)
+        private async Task LogAction(long userId, string action, string? username, string result)
         {
             try
             {
@@ -251,6 +228,10 @@ namespace PomixPMOService.API.Controllers
                 Console.WriteLine($"Error saving UserLog: {ex}");
             }
         }
+    }
 
+    public class RefreshRequestViewModel
+    {
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

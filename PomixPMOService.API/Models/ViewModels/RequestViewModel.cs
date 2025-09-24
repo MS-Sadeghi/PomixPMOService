@@ -45,5 +45,6 @@ namespace PomixPMOService.API.Models.ViewModels
         [StringLength(50)]
         public string? VerificationCode { get; set; }
         public string? DocumentText { get; set; }
+        public string MobileNumber { get; internal set; }
     }
 }

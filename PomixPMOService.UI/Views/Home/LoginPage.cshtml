@@ -7,8 +7,7 @@
 <div class="page">
     <div class="container-login100">
         <div class="wrap-login100 p-6">
-           
-            <form asp-controller="Home" asp-action="LoginPage" method="post" class="login100-form validate-form" autocomplete="off">
+            <form id="loginForm" class="login100-form validate-form" autocomplete="off">
                 <span class="login100-form-title">ورود به سیستم</span>
 
                 <!-- User Type Selection -->
@@ -54,23 +53,22 @@
                 <!-- SMS Section -->
                 <div id="smsSection" class="wrap-input100 validate-input input-group" data-bs-validate="لطفا شماره موبایل را وارد کنید">
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                        <i class="zmdi zmdi-phone" aria-hidden="true"></i>
+                        <i class="zmdi zmdi-smartphone" aria-hidden="true"></i>
                     </a>
-                    <input class="input100 border-start-0 ms-0 form-control" style="flex: 2;" type="tel" id="mobileNumber" name="mobileNumber" placeholder="شماره موبایل" />
-                    <button type="button" class="btn btn-primary ms-2" style="flex: 1;" onclick="sendSMS()">ارسال کد</button>
+                    <input class="input100 border-start-0 ms-0 form-control" type="text" id="mobileNumber" name="mobileNumber" placeholder="شماره موبایل" />
+                    <button type="button" onclick="sendSMS()" class="btn btn-primary">ارسال کد</button>
                 </div>
-                <div id="smsCodeSection" class="wrap-input100 validate-input input-group" data-bs-validate="لطفا کد تأیید را وارد کنید" style="display: none;">
+
+                <div id="smsCodeSection" class="wrap-input100 validate-input input-group" style="display: none;" data-bs-validate="لطفا کد تأیید را وارد کنید">
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                        <i class="zmdi zmdi-key" aria-hidden="true"></i>
+                        <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
                     </a>
-                    <input class="input100 border-start-0 ms-0 form-control" type="text" id="smsCode" name="smsCode" placeholder="کد تأیید پیامک" />
+                    <input class="input100 border-start-0 ms-0 form-control" type="text" id="smsCode" name="smsCode" placeholder="کد تأیید" />
                 </div>
 
                 <!-- Google Authenticator Section -->
-                <div id="googleAuthSection" style="display: none;">
-                    <div class="wrap-input100 validate-input input-group">
-                        <img id="captchaImage" src="https://via.placeholder.com/150x50/000000/ffffff?text=CAPTCHA" alt="CAPTCHA Image" style="width: 150px; height: 50px; margin-bottom: 10px;">
-                    </div>
+                <div id="googleAuthSection" class="wrap-input100 validate-input input-group" style="display: none;" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
+                    <img src="https://via.placeholder.com/150x50/000000/ffffff?text=CAPTCHA" alt="CAPTCHA Image" style="width: 150px; height: 50px; margin-bottom: 10px;">
                     <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
                         <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                             <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
@@ -129,10 +127,61 @@
                 document.getElementById('smsCodeSection').style.display = 'flex';
                 document.getElementById('smsCode').setAttribute('required', 'required');
                 alert('کد تأیید به شماره ' + mobileNumber + ' ارسال شد.');
-                // Add actual SMS sending logic here (e.g., API call)
+                // اینجا منطق واقعی ارسال SMS را اضافه کنید
             } else {
                 alert('لطفا شماره موبایل را وارد کنید.');
             }
         }
+
+        // مدیریت فرم لاگین
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            const username = document.getElementById('Username').value;
+            const password = document.getElementById('Password').value;
+            const twoFactorType = document.getElementById('twoFactorType').value;
+            const mobileNumber = document.getElementById('mobileNumber').value;
+            const smsCode = document.getElementById('smsCode').value;
+            const googleAuthCode = document.getElementById('googleAuthCode').value;
+
+            try {
+                const response = await fetch('http://localhost:5066/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password
+                        // اگر احراز هویت دو مرحله‌ای فعال است، اینجا اضافه کنید
+                        // twoFactorType,
+                        // mobileNumber,
+                        // smsCode,
+                        // googleAuthCode
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    document.getElementById('errorMessage').innerText = result.message || 'خطا در ورود';
+                    return;
+                }
+
+                // ذخیره توکن‌ها در localStorage
+                localStorage.setItem('accessToken', result.tokens.accessToken);
+                localStorage.setItem('refreshToken', result.tokens.refreshToken);
+
+                // هدایت به صفحه اصلی
+                window.location.href = '/Home/Index';
+            } catch (error) {
+                document.getElementById('errorMessage').innerText = 'خطا در ارتباط با سرور';
+                console.error(error);
+            }
+        });
     </script>
 }

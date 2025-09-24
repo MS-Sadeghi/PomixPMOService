@@ -269,4 +269,29 @@ namespace ServicePomixPMO.API.Models
         [Required]
         public string CreatedBy { get; set; } = null!;
     }
+
+    [Table("RefreshTokens", Schema = "Sec")]
+    public class RefreshToken
+    {
+        [Key]
+        public long Id { get; set; }
+
+        [Required]
+        public long UserId { get; set; }
+
+        [Required]
+        [StringLength(255)]
+        public string Token { get; set; } = string.Empty;
+
+        [Required]
+        public DateTime ExpiryDate { get; set; }
+
+        public bool IsRevoked { get; set; }
+
+        [Required]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [ForeignKey("UserId")]
+        public User? User { get; set; }
+    }
 }

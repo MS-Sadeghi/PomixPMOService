@@ -33,37 +33,8 @@
                                     <th class="wd-15p border-bottom-0 sorting">بررسی سند</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @if (Model != null && Model.Any())
-                                {
-                                    foreach (var item in Model)
-                                    {
-                                        <tr>
-                                            <td>@item.RequestId</td>
-                                            <td>@item.NationalId</td>
-                                            <td>@item.MobileNumber</td>
-                                            <td>@item.DocumentNumber</td>
-                                            <td>@item.VerificationCode</td>
-                                            <td>
-                                                <i class="fas fa-check-circle text-success" title="تأیید شده" style="@(item.IdentityVerified ? "" : "display: none;")"></i>
-                                            </td>
-                                            <td>
-                                                <i class="fas fa-file-alt text-success" title="سند موجود" style="@(item.DocumentExists ? "" : "display: none;")"></i>
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-primary verify-btn" data-document-id="@item.DocumentNumber" data-status="@item.Status" onclick="verifyDocument(this)">
-                                                    بررسی
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="8" class="text-center">درخواستی یافت نشد.</td>
-                                    </tr>
-                                }
+                            <tbody id="cartableBody">
+                                <!-- داده‌ها به‌صورت داینامیک با JavaScript پر می‌شوند -->
                             </tbody>
                         </table>
                     </div>
@@ -73,172 +44,322 @@
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal for Adding New Document -->
 <div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content modal-content-demo">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
             <div class="modal-header">
-                <h6 class="modal-title" id="scrollingmodalLabel">سند جدید</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+                <h5 class="modal-title" id="scrollingmodalLabel">ایجاد درخواست جدید</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="card">
-                    <div class="card-body">
-                        <form class="needs-validation" novalidate="">
-                            <div class="form-row">
-                                <div class="col-xl-6 mb-3">
-                                    <label for="validationCustom01">کد ملی</label>
-                                    <input type="text" class="form-control" id="validationCustom01" value="" required="">
-                                </div>
-                                <div class="col-xl-6 mb-3">
-                                    <label for="validationCustom02">شماره موبایل</label>
-                                    <input type="text" class="form-control" id="validationCustom02" value="09xxxxxxxxx" required="">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="col-xl-6 mb-3">
-                                    <label for="validationCustom03">رمز تصدیق</label>
-                                    <input type="text" class="form-control" id="validationCustom03" required="">
-                                </div>
-                                <div class="col-xl-6 mb-3">
-                                    <label for="validationCustom05">شماره سند</label>
-                                    <input type="text" class="form-control" id="validationCustom05" required="">
-                                </div>
-                            </div>
-                        </form>
+                <form id="newDocForm" class="row g-3 needs-validation" novalidate>
+                    <div class="col-md-6">
+                        <label for="NationalId" class="form-label">کد ملی</label>
+                        <input type="text" class="form-control" id="NationalId" required>
+                        <div class="invalid-feedback">لطفا کد ملی را وارد کنید.</div>
                     </div>
-                </div>
+                    <div class="col-md-6">
+                        <label for="mobileNumber" class="form-label">شماره همراه</label>
+                        <input type="text" class="form-control" id="mobileNumber" required>
+                        <div class="invalid-feedback">لطفا شماره همراه را وارد کنید.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="documentNumber" class="form-label">شناسه سند</label>
+                        <input type="text" class="form-control" id="documentNumber" required>
+                        <div class="invalid-feedback">لطفا شناسه سند را وارد کنید.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="verificationCode" class="form-label">رمز تصدیق</label>
+                        <input type="text" class="form-control" id="verificationCode" required>
+                        <div class="invalid-feedback">لطفا رمز تصدیق را وارد کنید.</div>
+                    </div>
+                    <div class="col-md-12">
+                        <label for="documentText" class="form-label">متن سند</label>
+                        <textarea class="form-control" id="documentText" rows="4"></textarea>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
-                <button type="submit" class="btn btn-primary" form="needs-validation-form">ثبت</button>
-                <button type="button" class="btn btn-default" data-bs-dismiss="modal">بستن</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                <button type="button" class="btn btn-primary" onclick="submitNewDocument()">ثبت درخواست</button>
             </div>
         </div>
     </div>
 </div>
 
-
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
     <script>
-            document.addEventListener('DOMContentLoaded', function () {
-            // اعتبارسنجی فرم
-            const form = document.querySelector('.needs-validation');
-            const submitButton = document.querySelector('.modal-content .btn-primary');
+        // URL پایه API
+        const API_BASE_URL = 'http://localhost:5066/api';
 
-            submitButton.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
+        // تابع برای دریافت توکن و مدیریت تمدید آن
+        async function getAccessToken() {
+            let accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) {
+                window.location.href = '/Home/LoginPage';
+                throw new Error('No access token found');
+            }
 
-                if (!form.checkValidity()) {
-                    form.classList.add('was-validated');
+            // بررسی انقضای توکن (اختیاری، اگر تاریخ انقضا ذخیره شده باشد)
+            const expiresIn = localStorage.getItem('expiresIn');
+            if (expiresIn && new Date(expiresIn) < new Date()) {
+                // توکن منقضی شده، تلاش برای تمدید
+                const refreshToken = localStorage.getItem('refreshToken');
+                if (!refreshToken) {
+                    window.location.href = '/Home/LoginPage';
+                    throw new Error('No refresh token found');
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ refreshToken })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to refresh token');
+                    }
+
+                    const result = await response.json();
+                    localStorage.setItem('accessToken', result.tokens.accessToken);
+                    localStorage.setItem('refreshToken', result.tokens.refreshToken);
+                    localStorage.setItem('expiresIn', result.tokens.expiresIn);
+                    accessToken = result.tokens.accessToken;
+                } catch (error) {
+                    console.error('Error refreshing token:', error);
+                    window.location.href = '/Home/LoginPage';
+                    throw error;
+                }
+            }
+
+            return accessToken;
+        }
+
+        // تابع برای دریافت UserId از localStorage یا توکن
+        function getUserId() {
+            return localStorage.getItem('userId'); // فرض می‌کنیم UserId در زمان لاگین ذخیره شده
+        }
+
+        // تابع برای دریافت داده‌های کارتابل
+        async function loadCartable() {
+            const userId = getUserId();
+            if (!userId) {
+                alert('کاربر شناسایی نشد. لطفا دوباره وارد شوید.');
+                window.location.href = '/Home/LoginPage';
+                return;
+            }
+
+            try {
+                const accessToken = await getAccessToken();
+                const response = await fetch(`${API_BASE_URL}/cartables/user/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        // تلاش برای تمدید توکن
+                        await getAccessToken();
+                        return loadCartable(); // دوباره تلاش کنید
+                    }
+                    throw new Error('Failed to load cartable');
+                }
+
+                const cartableItems = await response.json();
+                const tableBody = document.getElementById('cartableBody');
+                tableBody.innerHTML = '';
+
+                if (cartableItems.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="8" class="text-center">درخواستی یافت نشد.</td></tr>';
                     return;
                 }
 
-                // جمع‌آوری اطلاعات فرم
-                const nationalId = document.getElementById('validationCustom01').value;
-                const mobileNumber = document.getElementById('validationCustom02').value;
-                const verificationCode = document.getElementById('validationCustom03').value;
-                const documentNumber = document.getElementById('validationCustom05').value;
+                cartableItems.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.requestId}</td>
+                        <td>${item.NationalId}</td>
+                        <td>${item.MobileNumber || ''}</td>
+                        <td>${item.DocumentNumber}</td>
+                        <td>${item.VerificationCode}</td>
+                        <td>
+                            <i class="fas fa-check-circle text-success" title="تأیید شده" style="${item.identityVerified ? '' : 'display: none;'}"></i>
+                        </td>
+                        <td>
+                            <i class="fas fa-file-alt text-success" title="سند موجود" style="${item.documentVerified ? '' : 'display: none;'}"></i>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary verify-btn" data-document-id="${item.documentNumber}" data-status="${item.status}" onclick="verifyDocument(this)">
+                                بررسی
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading cartable:', error);
+                alert('خطا در بارگذاری کارتابل: ' + error.message);
+            }
+        }
 
-                // ایجاد مدل برای درخواست‌های API
-                const mobileCheckModel = {
-                    NationalId: nationalId,
-                    MobileNumber: mobileNumber
-                };
+        // تابع برای ثبت سند جدید
+        async function submitNewDocument() {
+            const form = document.getElementById('newDocForm');
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
 
-                const documentVerifyModel = {
-                    DocumentNumber: documentNumber,
-                    VerificationCode: verificationCode
-                };
+            const nationalId = document.getElementById('nationalId').value;
+            const mobileNumber = document.getElementById('mobileNumber').value;
+            const documentNumber = document.getElementById('documentNumber').value;
+            const verificationCode = document.getElementById('verificationCode').value;
+            const documentText = document.getElementById('documentText').value;
 
-                // ارسال درخواست به API برای بررسی کد ملی و شماره موبایل
-                fetch('/api/ShahkarService/CheckMobileNationalCode', {
+            try {
+                // بررسی کد ملی و شماره همراه
+                const accessToken = await getAccessToken();
+                const mobileCheckModel = { nationalId, mobileNumber };
+                const mobileCheckResponse = await fetch(`${API_BASE_URL}/ShahkarService/CheckMobileNationalCode`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        // اگر توکن احراز هویت لازم است، اینجا اضافه کنید
-                        // 'Authorization': 'Bearer ' + yourToken
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(mobileCheckModel)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(error => { throw new Error(error.Message || 'خطا در بررسی کد ملی و شماره موبایل'); });
-                    }
-                    return response.json();
-                })
-                .then(mobileCheckResult => {
-                    // ارسال درخواست برای بررسی سند
-                    return fetch('/api/ShahkarService/VerifyDocument', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            // اگر توکن احراز هویت لازم است، اینجا اضافه کنید
-                            // 'Authorization': 'Bearer ' + yourToken
-                        },
-                        body: JSON.stringify(documentVerifyModel)
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(error => { throw new Error(error.errorDescription || 'خطا در بررسی سند'); });
-                        }
-                        return response.json();
-                    })
-                    .then(verifyDocResult => {
-                        // اضافه کردن ردیف جدید به جدول
-                        const tableBody = document.querySelector('#cartableTable tbody');
-                        const newRow = document.createElement('tr');
-
-                        newRow.innerHTML = `
-                            <td>${mobileCheckResult.RequestCode || 'نامشخص'}</td>
-                            <td>${nationalId}</td>
-                            <td>${mobileNumber}</td>
-                            <td>${documentNumber}</td>
-                            <td>${verificationCode}</td>
-                            <td>
-                                <i class="fas fa-check-circle text-success" title="تأیید شده" style="${mobileCheckResult.IsMatch ? '' : 'display: none;'}"></i>
-                            </td>
-                            <td>
-                                <i class="fas fa-file-alt text-success" title="سند موجود" style="${verifyDocResult.isSuccessful && verifyDocResult.responseText.includes('ExistDoc":true') ? '' : 'display: none;'}"></i>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-primary verify-btn" data-document-id="${documentNumber}" data-status="pending" onclick="verifyDocument(this)">
-                                    بررسی
-                                </button>
-                            </td>
-                        `;
-
-                        // حذف پیام "درخواستی یافت نشد" اگر وجود داشته باشد
-                        const noDataRow = tableBody.querySelector('tr td[colspan="8"]');
-                        if (noDataRow) {
-                            noDataRow.parentElement.remove();
-                        }
-
-                        tableBody.insertBefore(newRow, tableBody.firstChild);
-
-                        // بستن مودال و ریست فرم
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('scrollingmodal'));
-                        modal.hide();
-                        form.reset();
-                        form.classList.remove('was-validated');
-
-                        // نمایش پیام موفقیت
-                        alert('درخواست با موفقیت ثبت شد.');
-                    });
-                })
-                .catch(error => {
-                    console.error('خطا:', error);
-                    alert('خطا در ثبت درخواست: ' + error.message);
                 });
-            });
 
-            // تابع بررسی سند (برای دکمه‌های بررسی در جدول)
-            window.verifyDocument = function (button) {
-                const documentId = button.getAttribute('data-document-id');
-                const status = button.getAttribute('data-status');
+                if (!mobileCheckResponse.ok) {
+                    if (mobileCheckResponse.status === 401) {
+                        await getAccessToken();
+                        return submitNewDocument();
+                    }
+                    const error = await mobileCheckResponse.json();
+                    throw new Error(error.errorDescription || 'خطا در بررسی کد ملی و شماره همراه');
+                }
+
+                const mobileCheckResult = await mobileCheckResponse.json();
+                if (!mobileCheckResult.isSuccessful) {
+                    throw new Error(mobileCheckResult.errorDescription || 'کد ملی و شماره همراه مطابقت ندارند');
+                }
+
+                // بررسی سند
+                const documentVerifyModel = { documentNumber, verificationCode };
+                const verifyDocResponse = await fetch(`${API_BASE_URL}/ShahkarService/VerifyDocument`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(documentVerifyModel)
+                });
+
+                if (!verifyDocResponse.ok) {
+                    if (verifyDocResponse.status === 401) {
+                        await getAccessToken();
+                        return submitNewDocument();
+                    }
+                    const error = await verifyDocResponse.json();
+                    throw new Error(error.errorDescription || 'خطا در بررسی سند');
+                }
+
+                const verifyDocResult = await verifyDocResponse.json();
+
+                // ثبت درخواست
+                const requestModel = {
+                    nationalId,
+                    mobileNumber,
+                    documentNumber,
+                    verificationCode,
+                    documentText
+                };
+
+                const createRequestResponse = await fetch(`${API_BASE_URL}/requests`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestModel)
+                });
+
+                if (!createRequestResponse.ok) {
+                    if (createRequestResponse.status === 401) {
+                        await getAccessToken();
+                        return submitNewDocument();
+                    }
+                    const error = await createRequestResponse.json();
+                    throw new Error(error.message || 'خطا در ثبت درخواست');
+                }
+
+                // اضافه کردن ردیف جدید به جدول
+                const tableBody = document.getElementById('cartableBody');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${mobileCheckResult.requestId || 'نامشخص'}</td>
+                    <td>${nationalId}</td>
+                    <td>${mobileNumber}</td>
+                    <td>${documentNumber}</td>
+                    <td>${verificationCode}</td>
+                    <td>
+                        <i class="fas fa-check-circle text-success" title="تأیید شده" style="${mobileCheckResult.isSuccessful ? '' : 'display: none;'}"></i>
+                    </td>
+                    <td>
+                        <i class="fas fa-file-alt text-success" title="سند موجود" style="${verifyDocResult.isSuccessful ? '' : 'display: none;'}"></i>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary verify-btn" data-document-id="${documentNumber}" data-status="pending" onclick="verifyDocument(this)">
+                            بررسی
+                        </button>
+                    </td>
+                `;
+
+                const noDataRow = tableBody.querySelector('tr td[colspan="8"]');
+                if (noDataRow) {
+                    noDataRow.parentElement.remove();
+                }
+
+                tableBody.insertBefore(newRow, tableBody.firstChild);
+
+                // بستن مودال و ریست فرم
+                const modal = bootstrap.Modal.getInstance(document.getElementById('scrollingmodal'));
+                modal.hide();
+                form.reset();
+                form.classList.remove('was-validated');
+
+                alert('درخواست با موفقیت ثبت شد.');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('خطا در ثبت درخواست: ' + error.message);
+            }
+        }
+
+        // تابع بررسی سند
+        window.verifyDocument = async function(button) {
+            const documentId = button.getAttribute('data-document-id');
+            const status = button.getAttribute('data-status');
+            try {
+                const accessToken = await getAccessToken();
+                // اینجا می‌توانید منطق بررسی سند را پیاده‌سازی کنید
                 alert(`بررسی سند با شناسه: ${documentId}, وضعیت: ${status}`);
-                // اینجا می‌توانید منطق بررسی سند را اضافه کنید
-            };
+            } catch (error) {
+                console.error('Error verifying document:', error);
+                alert('خطا در بررسی سند: ' + error.message);
+            }
+        };
+
+        // بارگذاری اولیه کارتابل
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCartable();
         });
     </script>
 }

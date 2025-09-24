@@ -18,6 +18,7 @@ namespace ServicePomixPMO.API.Data
         public DbSet<UserAccess> UserAccesses { get; set; }
         public DbSet<ShahkarLog> ShahkarLog { get; set; } // اضافه شده
         public DbSet<VerifyDocLog> VerifyDocLog { get; set; } // اضافه شده
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,6 +30,7 @@ namespace ServicePomixPMO.API.Data
             modelBuilder.Entity<RequestLog>().ToTable("RequestLogs", "Log");
             modelBuilder.Entity<UserAccess>().ToTable("UserAccess", "Sec");
             modelBuilder.Entity<ShahkarLog>().ToTable("ShahkarLog", "Log"); // اضافه شده
+            modelBuilder.Entity<RefreshToken>().ToTable("RefreshTokens", "Sec"); // اضافه شده
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.NationalId)
@@ -73,6 +75,10 @@ namespace ServicePomixPMO.API.Data
 
             modelBuilder.Entity<VerifyDocLog>()
                 .HasIndex(vf => vf.VerifyDocLogId)
+                .IsUnique();
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(rt => rt.Token)
                 .IsUnique();
 
             base.OnModelCreating(modelBuilder);

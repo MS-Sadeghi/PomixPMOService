@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Polly;
 using Polly.Retry;
+using ServicePomixPMO;
 using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models; // اضافه کردن فضای نام مدل‌ها
 using System.Text;
@@ -129,12 +131,12 @@ namespace PomixPMOService.API.Controllers
                     service = "gsb-itoshahkar"
                 };
 
-                var content = new StringContent(JsonSerializer.Serialize(requestContent), Encoding.UTF8, "application/json");
+                var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(requestContent), Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Authorization = null;
 
                 _logger.LogInformation("Sending request to Shahkar: URL={Url}, RequestContent={RequestContent}",
-                    $"{_options.BaseUrl}", JsonSerializer.Serialize(requestContent));
+                    $"{_options.BaseUrl}", System.Text.Json.JsonSerializer.Serialize(requestContent));
 
                 var response = await _retryPolicy.ExecuteAsync(() =>
                     _httpClient.PostAsync($"{_options.BaseUrl}", content));
@@ -146,12 +148,12 @@ namespace PomixPMOService.API.Controllers
                 ShahkarResponse? result = null;
                 try
                 {
-                    result = JsonSerializer.Deserialize<ShahkarResponse>(responseContent, new JsonSerializerOptions
+                    result = System.Text.Json.JsonSerializer.Deserialize<ShahkarResponse>(responseContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
                 }
-                catch (JsonException ex)
+                catch (System.Text.Json.JsonException ex)
                 {
                     _logger.LogError(ex, "Failed to deserialize Shahkar response for {RequestId}: ResponseContent={ResponseContent}",
                         requestCode, responseContent);
@@ -168,7 +170,7 @@ namespace PomixPMOService.API.Controllers
                 bool isMatch = false;
                 try
                 {
-                    var internalResponse = JsonSerializer.Deserialize<InternalShahkarResponse>(result.ResponseText, new JsonSerializerOptions
+                    var internalResponse = System.Text.Json.JsonSerializer.Deserialize<InternalShahkarResponse>(result.ResponseText, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
@@ -191,7 +193,7 @@ namespace PomixPMOService.API.Controllers
                         });
                     }
                 }
-                catch (JsonException ex)
+                catch (System.Text.Json.JsonException ex)
                 {
                     _logger.LogError(ex, "Failed to parse internal Shahkar response: {ResponseText}", result.ResponseText);
                     return StatusCode(500, $"خطا در پردازش پاسخ داخلی سرویس شاهکار: {ex.Message}");
@@ -262,103 +264,187 @@ namespace PomixPMOService.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var userIdClaim = User.FindFirst("UserId")?.Value;
-            if (!long.TryParse(userIdClaim, out long expertId))
+            if (string.IsNullOrEmpty(model.DocumentNumber) || !model.DocumentNumber.All(char.IsDigit) || model.DocumentNumber.Length != 18 ||
+                string.IsNullOrEmpty(model.VerificationCode) || !model.VerificationCode.All(char.IsDigit) || model.VerificationCode.Length != 6)
             {
-                _logger.LogWarning("Could not extract UserId from JWT token.");
+                _logger.LogWarning("Invalid DocumentNumber or VerificationCode format: DocumentNumber={DocumentNumber}, VerificationCode={VerificationCode}",
+                    model.DocumentNumber, model.VerificationCode);
+                return BadRequest("شناسه یکتای سند باید 18 رقم و رمز تصدیق باید 6 رقم باشد.");
+            }
+
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
+            {
+                _logger.LogWarning("User ID not found or invalid in claims");
                 return Unauthorized("کاربر شناسایی نشد.");
             }
 
-            if (!await CanMakeShahkarRequest(expertId))
+            // Check request limit
+            if (!await CanMakeShahkarRequest(userId))
             {
-                _logger.LogWarning("Request limit exceeded for expert {ExpertId}", expertId);
-                return StatusCode(429, "تعداد درخواست‌های شما از حد مجاز گذشته است.");
+                _logger.LogWarning("Request limit exceeded for user {UserId}", userId);
+                return BadRequest("محدودیت تعداد درخواست‌ها: لطفاً بعداً تلاش کنید.");
             }
 
-            string cacheKey = $"VerifyDoc_{model.DocumentNumber}_{model.VerificationCode}";
-            if (_cache.TryGetValue(cacheKey, out ShahkarResponse? cachedResult) && cachedResult != null)
+            // Sanitize cache key
+            string cacheKey = $"VerifyDoc_{model.DocumentNumber}_{model.VerificationCode}".Replace(" ", "_");
+            if (_cache.TryGetValue(cacheKey, out var cachedResult))
             {
-                _logger.LogInformation("Returning cached result for {CacheKey}", cacheKey);
+                _logger.LogInformation("Cache hit for {CacheKey}", cacheKey);
                 return Ok(cachedResult);
             }
 
+            // Generate unique request code
+            var requestCode = GenerateRequestId();
+            _logger.LogInformation("Generated request ID {RequestId} for document {DocumentNumber}", requestCode, model.DocumentNumber);
+
+            // Prepare request body
+            var requestBody = new
+            {
+                credential = new
+                {
+                    code = _options.Credential.Code,
+                    password = _options.Credential.Password
+                },
+                parameters = new[]
+                {
+             new { parameterName = "NationalRegisterNo", parameterValue = model.DocumentNumber },
+             new { parameterName = "SecretNo", parameterValue = model.VerificationCode }
+         },
+                service = "gsb-Approval2-GetData"
+            };
+
+            var json = JsonConvert.SerializeObject(requestBody);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
             try
             {
-                string requestCode = GenerateRequestId();
-                var requestContent = new
+                var requestDate = DateTime.UtcNow;
+                _logger.LogInformation("Sending request to {BaseUrl} for document {DocumentNumber}", _options.BaseUrl, model.DocumentNumber);
+
+                // Execute HTTP request with retry policy
+                //var response = await _retryPolicy.ExecuteAsync(() => _httpClient.PostAsync(_options.BaseUrl, content));
+                var response = await _httpClient.PostAsync(_options.BaseUrl, content);
+                var responseString = await response.Content.ReadAsStringAsync();
+                var responseDate = DateTime.UtcNow;
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    NationalRegisterNo = model.DocumentNumber,
-                    SecretNo = model.VerificationCode,
-                    ProviderCode = _providerCode,
-                    RequestId = requestCode
-                };
+                    _logger.LogError("Service call failed with status {StatusCode}: {Response}", response.StatusCode, responseString);
+                    return StatusCode((int)response.StatusCode, $"خطا در ارتباط با سرویس: {responseString}");
+                }
 
-                var content = new StringContent(JsonSerializer.Serialize(requestContent), Encoding.UTF8, "application/json");
-
-                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
-                    "Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_options.Credential.Code}:{_options.Credential.Password}")));
-
-                _logger.LogInformation("Sending request to Shahkar: URL={Url}, RequestContent={RequestContent}",
-                    $"{_options.BaseUrl}/VerifyDocument", JsonSerializer.Serialize(requestContent));
-
-                var response = await _retryPolicy.ExecuteAsync(() =>
-                    _httpClient.PostAsync($"{_options.BaseUrl}/VerifyDocument", content));
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("Received response from Shahkar: StatusCode={StatusCode}, Content={ResponseContent}",
-                    response.StatusCode, responseContent);
-
-                ShahkarResponse? result = null;
+                JsonDocument jsonDoc;
                 try
                 {
-                    result = JsonSerializer.Deserialize<ShahkarResponse>(responseContent, new JsonSerializerOptions
+                    jsonDoc = JsonDocument.Parse(responseString);
+                }
+                catch (System.Text.Json.JsonException ex)
+                {
+                    _logger.LogError(ex, "Invalid JSON response from service: {Response}", responseString);
+                    return StatusCode(500, $"خطا: پاسخ سرویس JSON معتبر نیست - {ex.Message}");
+                }
+
+                if (!jsonDoc.RootElement.TryGetProperty("isSuccessful", out var isSuccessful))
+                {
+                    _logger.LogError("Invalid response structure: Missing 'isSuccessful' property in response: {Response}", responseString);
+                    return StatusCode(500, "خطا: ساختار پاسخ سرویس نامعتبر است - ویژگی 'isSuccessful' یافت نشد.");
+                }
+                if (!jsonDoc.RootElement.TryGetProperty("responseText", out var responseTextElement) || responseTextElement.ValueKind != JsonValueKind.String)
+                {
+                    _logger.LogError("Invalid response structure: Missing or invalid 'responseText' property in response: {Response}", responseString);
+                    return StatusCode(500, "خطا: ساختار پاسخ سرویس نامعتبر است - ویژگی 'responseText' یافت نشد یا معتبر نیست.");
+                }
+
+                // Parse the responseText string
+                JsonDocument responseTextDoc;
+                try
+                {
+                    responseTextDoc = JsonDocument.Parse(responseTextElement.GetString());
+                }
+                catch (System.Text.Json.JsonException ex)
+                {
+                    _logger.LogError(ex, "Invalid JSON in responseText: {ResponseText}", responseTextElement.GetString());
+                    return StatusCode(500, $"خطا: محتوای responseText JSON معتبر نیست - {ex.Message}");
+                }
+
+                if (!responseTextDoc.RootElement.TryGetProperty("result", out var resultElement))
+                {
+                    _logger.LogError("Invalid response structure: Missing 'result' property in responseText: {ResponseText}", responseTextElement.GetString());
+                    return StatusCode(500, "خطا: ساختار پاسخ سرویس نامعتبر است - ویژگی 'result' در responseText یافت نشد.");
+                }
+
+                if (!resultElement.TryGetProperty("data", out var data))
+                {
+                    _logger.LogError("Invalid response structure: Missing 'data' property in 'result': {ResponseText}", responseTextElement.GetString());
+                    return StatusCode(500, "خطا: ساختار پاسخ سرویس نامعتبر است - ویژگی 'data' در result یافت نشد.");
+                }
+
+                // Parse UsedQuotaStats
+                var quotaStats = new { hourlyUsed = 0, dailyUsed = 0, monthlyUsed = 0 };
+                if (jsonDoc.RootElement.TryGetProperty("UsedQuotaStats", out var quotaElement))
+                {
+                    quotaStats = new
                     {
-                        PropertyNameCaseInsensitive = true
-                    });
-                }
-                catch (JsonException ex)
-                {
-                    _logger.LogError(ex, "Failed to deserialize Shahkar response for {RequestId}: ResponseContent={ResponseContent}",
-                        requestCode, responseContent);
-                    return StatusCode(500, $"خطا در پردازش پاسخ سرویس شاهکار: {ex.Message}");
+                        hourlyUsed = quotaElement.TryGetProperty("hourlyUsed", out var h) ? h.GetInt32() : 0,
+                        dailyUsed = quotaElement.TryGetProperty("dailyUsed", out var d) ? d.GetInt32() : 0,
+                        monthlyUsed = quotaElement.TryGetProperty("monthlyUsed", out var m) ? m.GetInt32() : 0
+                    };
                 }
 
-                if (result == null)
-                {
-                    _logger.LogWarning("Shahkar response is null for {RequestId}", requestCode);
-                    return StatusCode(500, "پاسخ سرویس شاهکار خالی است.");
-                }
+                // Parse digital signature
+                string digitalSignature = jsonDoc.RootElement.TryGetProperty("digitalSignature", out var sig) ? sig.GetString() ?? "N/A" : "N/A";
 
-                var log = new VerifyDocLog // استفاده از ServicePomixPMO.API.Models.VerifyDocLog
+                // Helper functions for safe JSON extraction
+                string GetString(string key) => data.TryGetProperty(key, out var val) && val.ValueKind != JsonValueKind.Null ? val.GetString() ?? "" : "";
+                bool GetBool(string key) => data.TryGetProperty(key, out var val) && val.ValueKind == JsonValueKind.True;
+
+                // Log to database
+                // Log to database - only essential info and full JSON response
+                var log = new ServicePomixPMO.API.Models.VerifyDocLog
                 {
-                    ResponseText = responseContent,
-                    DocumentNumber = model.DocumentNumber,
-                    VerificationCode = model.VerificationCode,
-                    CreatedBy = expertId.ToString(),
-                    CreatedAt = DateTime.UtcNow
+                    DocumentNumber = model.DocumentNumber ?? "",         // NationalRegisterNo
+                    VerificationCode = model.VerificationCode ?? "",     // SecretNo
+                    ResponseText = responseString,                       // Full JSON response
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = User.Identity?.Name ?? "Unknown",       // Or use userId if preferred
                 };
 
+                // Save log
                 _context.VerifyDocLog.Add(log);
-                await _context.SaveChangesAsync();
-
-                if (!response.IsSuccessStatusCode || !result.IsSuccessful)
+                try
                 {
-                    _logger.LogWarning("VerifyDocument request failed for {RequestId}: Error={Error}, ErrorDescription={ErrorDescription}",
-                        requestCode, result.Error, result.ErrorDescription);
-                    return BadRequest(new { result.Error, ErrorDescription = result.ErrorDescription ?? "خطای نامشخص از سرویس شاهکار" });
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Logged verification details for document {DocumentNumber} to database", model.DocumentNumber);
+                }
+                catch (DbUpdateException dbEx)
+                {
+                    _logger.LogError(dbEx, "Database error while saving log for document {DocumentNumber}", model.DocumentNumber);
+                    var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
+                    return StatusCode(500, $"خطای دیتابیس: {innerMessage}");
                 }
 
-                string digitalSignature = response.Headers.TryGetValues("Digital-Signature", out var signatures) ? signatures.FirstOrDefault() ?? string.Empty : string.Empty;
 
-                result.ResponseStatusCode = (int)response.StatusCode;
-                result.RequestDate = DateTime.UtcNow.AddHours(-1).ToString("yyyy-MM-dd HH:mm:ss");
-                result.ResponseDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
-                result.ResponseHeaders = new ResponseHeaders
+                // Construct response
+                var result = new
                 {
-                    ContentType = response.Content.Headers.ContentType?.ToString() ?? "application/json;charset=UTF-8"
+                    isSuccessful = isSuccessful.GetBoolean(),
+                    error = jsonDoc.RootElement.TryGetProperty("error", out var err) ? err.GetInt32() : 0,
+                    errorDescription = jsonDoc.RootElement.TryGetProperty("errorDescription", out var desc) ? desc.GetString() ?? "" : "",
+                    UsedQuotaStats = quotaStats,
+                    description = jsonDoc.RootElement.TryGetProperty("description", out var desc2) ? desc2.GetString() ?? "" : "",
+                    responseStatusCode = (int)response.StatusCode,
+                    responseText = responseString,
+                    requestDate = jsonDoc.RootElement.TryGetProperty("requestDate", out var reqDate) ? reqDate.GetString() ?? requestDate.ToString("o") : requestDate.ToString("o"),
+                    responseDate = jsonDoc.RootElement.TryGetProperty("responseDate", out var resDate) ? resDate.GetString() ?? responseDate.ToString("o") : responseDate.ToString("o"),
+                    responseHeaders = new
+                    {
+                        ContentType = response.Content.Headers.ContentType?.ToString() ?? "application/json;charset=UTF-8"
+                    },
+                    cookies = response.Headers.TryGetValues("Set-Cookie", out var cookies) ? cookies.ToList() : null,
+                    digitalSignature,
+                    requestId = requestCode
                 };
-                result.DigitalSignature = digitalSignature;
-                result.RequestId = requestCode;
 
                 try
                 {
@@ -375,8 +461,8 @@ namespace PomixPMOService.API.Controllers
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "HTTP request failed for {DocumentNumber}", model.DocumentNumber);
-                return StatusCode(500, $"خطای ارتباط با سرویس شاهکار: {ex.Message}");
+                _logger.LogError(ex, "HTTP request failed for document {DocumentNumber}", model.DocumentNumber);
+                return StatusCode(500, $"خطای ارتباط با سرویس: {ex.Message}");
             }
             catch (Exception ex)
             {
@@ -384,6 +470,7 @@ namespace PomixPMOService.API.Controllers
                 return StatusCode(500, $"خطای سرور: {ex.Message}");
             }
         }
+
 
         private string GenerateRequestId()
         {

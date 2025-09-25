@@ -82,9 +82,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowUI", builder =>
     {
-        builder.WithOrigins("http://localhost:7031")
+        builder.WithOrigins("http://localhost:7031", "https://localhost:7031")
                .AllowAnyHeader()
-               .AllowAnyMethod();
+               .AllowAnyMethod()
+               .AllowCredentials();
+               
     });
 });
 //builder.Services.AddCors(options =>

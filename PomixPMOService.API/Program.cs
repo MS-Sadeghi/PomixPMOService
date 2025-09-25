@@ -80,14 +80,23 @@ builder.Services.AddSwaggerGen(c =>
 // --- CORS ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
+    options.AddPolicy("AllowUI", builder =>
     {
-        policy.WithOrigins("http://localhost:3000")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+        builder.WithOrigins("http://localhost:7031")
+               .AllowAnyHeader()
+               .AllowAnyMethod();
     });
 });
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowFrontend", policy =>
+//    {
+//        builder.WithOrigins("https://localhost:7031") 
+//               .AllowAnyMethod()
+//               .AllowAnyHeader()
+//               .AllowCredentials(); 
+//    });
+//});
 
 var app = builder.Build();
 
@@ -101,8 +110,8 @@ app.UseSwaggerUI(c =>
 
 app.UseRouting();
 
-app.UseCors("AllowFrontend");
-
+//app.UseCors("AllowFrontend");
+app.UseCors("AllowUI");
 app.UseAuthentication();
 app.UseAuthorization();
 

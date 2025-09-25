@@ -150,7 +150,7 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
+                $(document).ready(function () {
             // Wizard navigation variables
             let currentStep = 0;
             const steps = $('.wizard .content section');
@@ -163,7 +163,6 @@
             function showStep(stepIndex) {
                 if (stepIndex < 0 || stepIndex >= steps.length) return;
 
-                // Update tabs
                 tabs.removeClass('current disabled').attr('aria-disabled', 'true');
                 tabs.eq(stepIndex).addClass('current').attr('aria-disabled', 'false').attr('aria-selected', 'true');
                 for (let i = 0; i < stepIndex; i++) {
@@ -173,11 +172,9 @@
                     tabs.eq(i).addClass('disabled').attr('aria-disabled', 'true');
                 }
 
-                // Update content
                 steps.removeClass('current').attr('aria-hidden', 'true').hide();
                 steps.eq(stepIndex).addClass('current').attr('aria-hidden', 'false').show();
 
-                // Update buttons
                 prevBtn.parent().toggleClass('disabled', stepIndex === 0).attr('aria-disabled', stepIndex === 0);
                 nextBtn.parent().toggleClass('disabled', stepIndex === steps.length - 1).attr('aria-disabled', stepIndex === steps.length - 1);
                 nextBtn.parent().attr('aria-hidden', stepIndex === steps.length - 1);
@@ -201,79 +198,93 @@
                 showStep(currentStep - 1);
             });
 
-            // Finish button click (you can implement the final submission here)
+            // Finish button click
             finishBtn.on('click', function (e) {
                 e.preventDefault();
-                // Add your final registration logic here, e.g., submit all data
-                alert('ثبت نهایی انجام شد!'); // Placeholder
+                alert('ثبت نهایی انجام شد!');
                 $('#scrollingmodal').modal('hide');
             });
 
-            // Handle confirmation in Step 1 (احراز هویت)
-            const step1ConfirmBtn = $('#wizard2-p-0 button[type="submit"]');
-            const step1LoadingBtn = $('#wizard2-p-0 .loading-btn');
-            let resultMessage = $('<p class="mt-2 text-center"></p>'); // Element for showing result message
-            $('#wizard2-p-0').append(resultMessage); // Add to Step 1
+                // Handle confirmation in Step 1 (احراز هویت)
+        const step1ConfirmBtn = $('#wizard2-p-0 button[type="submit"]');
+        const step1LoadingBtn = $('#wizard2-p-0 .loading-btn');
+        let resultMessage = $('<p class="mt-2 text-center"></p>');
+        $('#wizard2-p-0').append(resultMessage);
 
-            step1ConfirmBtn.on('click', function (e) {
-                e.preventDefault();
+        step1ConfirmBtn.on('click', function (e) {
+            e.preventDefault();
 
-                const nationalCode = $('#national_code').val().trim();
-                const mobileNumber = $('#mobile_number').val().trim();
+            const nationalCode = $('#national_code').val().trim();
+            const mobileNumber = $('#mobile_number').val().trim();
 
-                // Basic validation
-                if (!nationalCode || nationalCode.length !== 10 || !/^\d{10}$/.test(nationalCode)) {
-                    resultMessage.text('کد ملی باید ۱۰ رقم باشد.').addClass('text-danger');
-                    return;
-                }
-                if (!mobileNumber || mobileNumber.length !== 11 || !/^09\d{9}$/.test(mobileNumber)) {
-                    resultMessage.text('شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود.').addClass('text-danger');
-                    return;
-                }
+            // Client-side validation
+            if (!nationalCode || nationalCode.length !== 10 || !/^\d{10}$/.test(nationalCode)) {
+                resultMessage.text('کد ملی باید ۱۰ رقم باشد.').addClass('text-danger').removeClass('text-success');
+                return;
+            }
+            if (!mobileNumber || mobileNumber.length !== 11 || !/^09\d{9}$/.test(mobileNumber)) {
+                resultMessage.text('شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود.').addClass('text-danger').removeClass('text-success');
+                return;
+            }
 
-                // Hide confirm button, show loading
-                step1ConfirmBtn.hide();
-                step1LoadingBtn.show();
-                resultMessage.text('').removeClass('text-success text-danger');
+            // Get JWT token
+            const token = localStorage.getItem('jwtToken');
+            console.log('Sending request with JWT Token:', token); // برای دیباگ
+            if (!token) {
+                resultMessage.text('لطفاً ابتدا وارد شوید.').addClass('text-danger').removeClass('text-success');
+                window.location.href = '/Home/LoginPage';
+                return;
+            }
 
-                // Send POST request to API
-                $.ajax({
-                    url: '/api/Service/CheckMobileNationalCode', // Adjust URL if needed (e.g., full URL if API is separate)
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        nationalId: nationalCode,
-                        mobileNumber: mobileNumber
-                    }),
-                    success: function (response) {
-                        // Assuming success means match (based on IsSuccessful)
-                        if (response.isSuccessful) {
-                            resultMessage.text('تایید شد').addClass('text-success');
-                            // Proceed to next step after a short delay
-                            setTimeout(() => {
-                                showStep(currentStep + 1);
-                            }, 1000);
-                        } else {
-                            resultMessage.text('شماره موبایل و کد ملی مطابقت ندارند.').addClass('text-danger');
-                        }
-                    },
-                    error: function (xhr) {
-                        let errorMsg = 'خطا در ارتباط با سرویس.';
-                        if (xhr.responseJSON && xhr.responseJSON.errorDescription) {
-                            errorMsg = xhr.responseJSON.errorDescription;
-                        }
-                        resultMessage.text(errorMsg).addClass('text-danger');
-                    },
-                    complete: function () {
-                        // Hide loading, show confirm button
-                        step1LoadingBtn.hide();
-                        step1ConfirmBtn.show();
+            // Show loading state
+            step1ConfirmBtn.hide();
+            step1LoadingBtn.show();
+            resultMessage.text('').removeClass('text-success text-danger');
+
+            // Send POST request to API
+            $.ajax({
+                url: 'http://localhost:5066/api/Service/CheckMobileNationalCode',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                data: JSON.stringify({
+                    nationalId: nationalCode,
+                    mobileNumber: mobileNumber
+                }),
+                success: function (response) {
+                    console.log('API response:', response); // برای دیباگ
+                    if (response.isSuccessful) {
+                        resultMessage.text('تایید شد').addClass('text-success').removeClass('text-danger');
+                        setTimeout(() => {
+                            showStep(currentStep + 1);
+                        }, 1000);
+                    } else {
+                        resultMessage.text(response.errorDescription || 'شماره موبایل و کد ملی مطابقت ندارند.').addClass('text-danger').removeClass('text-success');
                     }
-                });
+                },
+                error: function (xhr) {
+                    console.log('API error:', xhr); // برای دیباگ
+                    let errorMsg = 'خطا در ارتباط با سرویس.';
+                    if (xhr.status === 401) {
+                        errorMsg = 'عدم دسترسی: لطفاً دوباره وارد شوید.';
+                        window.location.href = '/Home/LoginPage';
+                    } else if (xhr.status === 429) {
+                        errorMsg = 'تعداد درخواست‌ها بیش از حد مجاز است.';
+                    } else if (xhr.responseJSON && xhr.responseJSON.errorDescription) {
+                        errorMsg = xhr.responseJSON.errorDescription;
+                    }
+                    resultMessage.text(errorMsg).addClass('text-danger').removeClass('text-success');
+                },
+                complete: function () {
+                    step1LoadingBtn.hide();
+                    step1ConfirmBtn.show();
+                }
             });
+        });
 
-            // Similarly, you can add handlers for Step 2 and Step 3 confirm buttons
-            // For Step 2 (احراز سند) - using VerifyDocument
+            // Handle confirmation in Step 2 (احراز سند)
             const step2ConfirmBtn = $('#wizard2-p-1 button[type="submit"]');
             const step2LoadingBtn = $('#wizard2-p-1 .loading-btn');
             let step2ResultMessage = $('<p class="mt-2 text-center"></p>');
@@ -285,39 +296,56 @@
                 const verifyCode = $('#verify_code').val().trim();
                 const documentNumber = $('#document_number').val().trim();
 
-                if (!verifyCode || !documentNumber) {
-                    step2ResultMessage.text('لطفاً تمام فیلدها را پر کنید.').addClass('text-danger');
+                // Client-side validation
+                if (!verifyCode || verifyCode.length !== 6 || !/^\d{6}$/.test(verifyCode)) {
+                    step2ResultMessage.text('رمز تصدیق باید ۶ رقم باشد.').addClass('text-danger').removeClass('text-success');
+                    return;
+                }
+                if (!documentNumber || documentNumber.length !== 18 || !/^\d{18}$/.test(documentNumber)) {
+                    step2ResultMessage.text('شناسه سند باید ۱۸ رقم باشد.').addClass('text-danger').removeClass('text-success');
                     return;
                 }
 
+                // Show loading state
                 step2ConfirmBtn.hide();
                 step2LoadingBtn.show();
                 step2ResultMessage.text('').removeClass('text-success text-danger');
 
+                // Get JWT token
+                const token = localStorage.getItem('jwtToken');
+
+                // Send POST request to API
                 $.ajax({
-                    url: '/api/Service/VerifyDocument',
+                    url: 'http://localhost:5066/api/Service/VerifyDocument', // پورت API
                     type: 'POST',
                     contentType: 'application/json',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
                     data: JSON.stringify({
                         verificationCode: verifyCode,
                         documentNumber: documentNumber
                     }),
                     success: function (response) {
                         if (response.isSuccessful) {
-                            step2ResultMessage.text('تایید شد').addClass('text-success');
+                            step2ResultMessage.text('تایید شد').addClass('text-success').removeClass('text-danger');
                             setTimeout(() => {
                                 showStep(currentStep + 1);
                             }, 1000);
                         } else {
-                            step2ResultMessage.text('اطلاعات سند مطابقت ندارد.').addClass('text-danger');
+                            step2ResultMessage.text(response.errorDescription || 'اطلاعات سند مطابقت ندارد.').addClass('text-danger').removeClass('text-success');
                         }
                     },
                     error: function (xhr) {
                         let errorMsg = 'خطا در ارتباط با سرویس.';
-                        if (xhr.responseJSON && xhr.responseJSON.errorDescription) {
+                        if (xhr.status === 401) {
+                            errorMsg = 'عدم دسترسی: لطفاً دوباره وارد شوید.';
+                        } else if (xhr.status === 429) {
+                            errorMsg = 'تعداد درخواست‌ها بیش از حد مجاز است.';
+                        } else if (xhr.responseJSON && xhr.responseJSON.errorDescription) {
                             errorMsg = xhr.responseJSON.errorDescription;
                         }
-                        step2ResultMessage.text(errorMsg).addClass('text-danger');
+                        step2ResultMessage.text(errorMsg).addClass('text-danger').removeClass('text-success');
                     },
                     complete: function () {
                         step2LoadingBtn.hide();
@@ -326,7 +354,7 @@
                 });
             });
 
-            // For Step 3 (تطابق کد ملی) - implement your logic here if needed
+            // Handle confirmation in Step 3 (تطابق کد ملی)
             const step3ConfirmBtn = $('#wizard2-p-2 button[type="submit"]');
             const step3LoadingBtn = $('#wizard2-p-2 .loading-btn');
             let step3ResultMessage = $('<p class="mt-2 text-center"></p>');
@@ -337,20 +365,20 @@
 
                 const clientNationalCode = $('#client_national_code').val().trim();
 
+                // Client-side validation
                 if (!clientNationalCode || clientNationalCode.length !== 10 || !/^\d{10}$/.test(clientNationalCode)) {
-                    step3ResultMessage.text('کد ملی باید ۱۰ رقم باشد.').addClass('text-danger');
+                    step3ResultMessage.text('کد ملی باید ۱۰ رقم باشد.').addClass('text-danger').removeClass('text-success');
                     return;
                 }
 
+                // Show loading state
                 step3ConfirmBtn.hide();
                 step3LoadingBtn.show();
                 step3ResultMessage.text('').removeClass('text-success text-danger');
 
-                // Placeholder for Step 3 logic - adjust as needed (e.g., another API call)
-                // For now, simulate success
+                // Placeholder for Step 3 logic
                 setTimeout(() => {
-                    step3ResultMessage.text('تایید شد').addClass('text-success');
-                    // Show finish button or auto-finish
+                    step3ResultMessage.text('تایید شد').addClass('text-success').removeClass('text-danger');
                     finishBtn.click();
                     step3LoadingBtn.hide();
                     step3ConfirmBtn.show();

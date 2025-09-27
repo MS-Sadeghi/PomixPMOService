@@ -10,7 +10,7 @@
 }
 
 <div class="input-group mb-5">
-    <input type="text" class="form-control" placeholder="جستجو">
+    <input type="text" class="form-control" placeholder="جستجو" id="searchInput">
     <div class="input-group-text btn btn-primary">
         <i class="fa fa-search" aria-hidden="true"></i>
     </div>
@@ -21,6 +21,14 @@
         <button id="AddUser" type="button" class="btn btn-primary btn-pill left-btn">افزودن کاربر</button>
     </div>
     <div class="card-body">
+        @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
+        {
+            <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+        }
+        @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+        {
+            <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+        }
         <div class="table-responsive">
             <table class="table table-bordered border text-nowrap mb-0" id="basic-edit">
                 <thead>

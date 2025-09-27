@@ -114,7 +114,7 @@
                 <!-- Error Message -->
                 @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
                 {
-                    <div class="text-danger">@ViewBag.ErrorMessage</div>
+                    <div class="text-danger text-center mt-3">@ViewBag.ErrorMessage</div>
                 }
             </form>
         </div>
@@ -124,57 +124,19 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Toggle visibility and required attributes based on twoFactorType selection
-        document.getElementById('twoFactorType').addEventListener('change', function () {
-            const smsSection = document.getElementById('smsSection');
-            const smsCodeSection = document.getElementById('smsCodeSection');
-            const googleAuthSection = document.getElementById('googleAuthSection');
-            const mobileNumberInput = document.getElementById('mobileNumber');
-            const smsCodeInput = document.getElementById('smsCode');
-            const googleAuthCodeInput = document.getElementById('googleAuthCode');
-
-            if (this.value === '1') { // SMS
-                smsSection.style.display = 'flex';
-                googleAuthSection.style.display = 'none';
-                mobileNumberInput.setAttribute('required', 'required');
-                googleAuthCodeInput.removeAttribute('required');
-            } else { // Google Authenticator
-                smsSection.style.display = 'none';
-                smsCodeSection.style.display = 'none';
-                googleAuthSection.style.display = 'block';
-                mobileNumberInput.removeAttribute('required');
-                smsCodeInput.removeAttribute('required');
-                googleAuthCodeInput.setAttribute('required', 'required');
-            }
-        });
-
-        // Function for sending SMS
-        function sendSMS() {
-            const mobileNumber = document.getElementById('mobileNumber').value;
-            if (mobileNumber) {
-                fetch('/Home/SendSmsCode', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ mobileNumber })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('smsCodeSection').style.display = 'flex';
-                        document.getElementById('smsCode').setAttribute('required', 'required');
-                        alert(data.message);
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => {
-                    alert('خطا در ارتباط با سرور.');
-                    console.error(error);
-                });
-            } else {
-                alert('لطفا شماره موبایل را وارد کنید.');
+        // ذخیره توکن و هدایت به کارتابل
+        const jwtToken = '@ViewBag.JwtToken';
+        if (jwtToken) {
+            try {
+                localStorage.setItem('jwtToken', jwtToken);
+                console.log('Token stored:', jwtToken);
+                console.log('Redirecting to /Cartable/Index...');
+                setTimeout(() => {
+                    window.location.href = '/Cartable/Index';
+                }, 1000);
+            } catch (error) {
+                console.error('Error in login script:', error);
+                alert('خطا در اجرای اسکریپت لاگین: ' + error.message);
             }
         }
     </script>

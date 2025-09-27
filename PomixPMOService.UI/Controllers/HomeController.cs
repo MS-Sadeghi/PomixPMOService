@@ -58,7 +58,8 @@ namespace PomixPMOService.UI.Controllers
                     // ارسال توکن و پیام به View
                     ViewBag.JwtToken = loginResponse.Tokens.AccessToken;
                     ViewBag.SuccessMessage = loginResponse.Message;
-                    return View("LoginSuccess", model);
+
+                    return View(model);
                 }
                 else
                 {

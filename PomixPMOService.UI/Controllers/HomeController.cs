@@ -57,7 +57,8 @@ namespace PomixPMOService.UI.Controllers
                     // ارسال توکن و پیام به View
                     ViewBag.JwtToken = loginResponse.Tokens.AccessToken;
                     ViewBag.SuccessMessage = loginResponse.Message;
-                    return View("LoginSuccess", model);
+
+                    return View(model);
                 }
                 else
                 {
@@ -78,9 +79,83 @@ namespace PomixPMOService.UI.Controllers
             return View("~/Views/Cartable/Cartable.cshtml", new List<object>());
         }
 
-        public IActionResult Users()
+        [HttpGet]
+        public async Task<IActionResult> Users()
         {
-            return View();
+            try
+            {
+                // دریافت توکن از Session یا localStorage (بسته به پیاده‌سازی)
+                var jwtToken = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return RedirectToAction("LoginPage"); // هدایت به صفحه لاگین در صورت عدم وجود توکن
+                }
+
+                // افزودن توکن به هدر درخواست
+                _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+
+                // درخواست به API برای دریافت لیست کاربران
+                var response = await _client.GetAsync("api/Auth");
+                if (response.IsSuccessStatusCode)
+                {
+                    var users = await response.Content.ReadFromJsonAsync<List<UserViewModel>>();
+                    return View(users);
+                }
+                else
+                {
+                    ViewBag.ErrorMessage = "خطا در دریافت لیست کاربران: " + await response.Content.ReadAsStringAsync();
+                    return View(new List<UserViewModel>());
+                }
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = "خطا در ارتباط با سرور: " + ex.Message;
+                return View(new List<UserViewModel>());
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateUser(CreateUserViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.ErrorMessage = "لطفا همه فیلدها را به درستی وارد کنید.";
+                return View("Users", new List<UserViewModel>());
+            }
+
+            try
+            {
+                var jwtToken = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return RedirectToAction("LoginPage");
+                }
+
+                _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+
+                var response = await _client.PostAsJsonAsync("api/Auth/register", model);
+                if (response.IsSuccessStatusCode)
+                {
+                    ViewBag.SuccessMessage = "کاربر با موفقیت ثبت شد.";
+                    // دریافت لیست کاربران به‌روز شده
+                    var usersResponse = await _client.GetAsync("api/Auth");
+                    var users = usersResponse.IsSuccessStatusCode
+                        ? await usersResponse.Content.ReadFromJsonAsync<List<UserViewModel>>()
+                        : new List<UserViewModel>();
+                    return View("Users", users);
+                }
+                else
+                {
+                    ViewBag.ErrorMessage = "خطا در ثبت کاربر: " + await response.Content.ReadAsStringAsync();
+                    return View("Users", new List<UserViewModel>());
+                }
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = "خطا در ارتباط با سرور: " + ex.Message;
+                return View("Users", new List<UserViewModel>());
+            }
         }
 
         public IActionResult EditProfile()

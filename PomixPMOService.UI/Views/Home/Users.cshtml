@@ -5,7 +5,7 @@
 }
 
 <div class="input-group mb-5">
-    <input type="text" class="form-control" placeholder="جستجو">
+    <input type="text" class="form-control" placeholder="جستجو" id="searchInput">
     <div class="input-group-text btn btn-primary">
         <i class="fa fa-search" aria-hidden="true"></i>
     </div>
@@ -16,27 +16,38 @@
         <button id="AddUser" type="button" class="btn btn-primary btn-pill left-btn">افزودن کاربر</button>
     </div>
     <div class="card-body">
+        @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
+        {
+            <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+        }
+        @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+        {
+            <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+        }
         <div class="table-responsive">
             <table class="table table-bordered border text-nowrap mb-0" id="basic-edit">
                 <thead>
                     <tr>
                         <th>نام</th>
                         <th>نام خانوادگی</th>
-                        <th>موقعیت </th>
-                        <th>تاریخ </th>
+                        <th>موقعیت</th>
+                        <th>تاریخ ثبت</th>
                         <th>شماره تماس</th>
-                        <th>ایمیل</th>
+                        <th>نام کاربری</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>بلا</td>
-                        <td>کلوئی</td>
-                        <td>توسعه‌دهنده سیستم</td>
-                        <td>1397/12/21</td>
-                        <td>654,765</td>
-                        <td>b.Chloe@datatables.net</td>
-                    </tr>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@user.Name</td>
+                            <td>@user.LastName</td>
+                            <td>@user.Role</td>
+                            <td>@user.CreatedAt.ToString("yyyy/MM/dd")</td>
+                            <td>@user.MobileNumber</td>
+                            <td>@user.Username</td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
@@ -52,22 +63,35 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body">
-                <form asp-controller="Users" asp-action="CreateUser" class="needs-validation" novalidate>
+                <form asp-controller="Home" asp-action="CreateUser" class="needs-validation" novalidate>
                     <div class="form-row">
                         <div class="col-xl-6 mb-3">
                             <label for="Name">نام</label>
-                            <input class="form-control" id="Name" required>
+                            <input class="form-control" id="Name" name="Name" required>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً نام را وارد کنید.</div>
                         </div>
                         <div class="col-xl-6 mb-3">
                             <label for="LastName">نام خانوادگی</label>
-                            <input class="form-control" id="LastName" required>
+                            <input class="form-control" id="LastName" name="LastName" required>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً نام خانوادگی را وارد کنید.</div>
                         </div>
                     </div>
-
+                    <div class="form-row">
+                        <div class="col-xl-6 mb-3">
+                            <label for="Username">نام کاربری</label>
+                            <input class="form-control" id="Username" name="Username" required>
+                            <div class="valid-feedback">معتبر است!</div>
+                            <div class="invalid-feedback">لطفاً نام کاربری را وارد کنید.</div>
+                        </div>
+                        <div class="col-xl-6 mb-3">
+                            <label for="NationalId">کد ملی</label>
+                            <input class="form-control" id="NationalId" name="NationalId" required>
+                            <div class="valid-feedback">معتبر است!</div>
+                            <div class="invalid-feedback">لطفاً کد ملی را وارد کنید.</div>
+                        </div>
+                    </div>
                     <div class="form-row">
                         <div class="col-xl-6 mb-3">
                             <label for="Password">رمز عبور</label>
@@ -75,12 +99,11 @@
                                 <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                                     <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
                                 </a>
-                                <input class="input100 form-control" type="password" id="Password" placeholder="رمز عبور" autocomplete="new-password" required>
+                                <input class="input100 form-control" type="password" id="Password" name="Password" placeholder="رمز عبور" autocomplete="new-password" required>
                             </div>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً رمز عبور را وارد کنید.</div>
                         </div>
-
                         <div class="col-xl-6 mb-3">
                             <label for="ConfirmPassword">تأیید رمز عبور</label>
                             <div class="wrap-input100 validate-input input-group" id="Password-toggle2">
@@ -94,7 +117,14 @@
                             <div id="passwordMismatch" class="invalid-feedback d-none">رمز عبور و تأیید رمز عبور باید یکسان باشند.</div>
                         </div>
                     </div>
-
+                    <div class="form-row">
+                        <div class="col-xl-6 mb-3">
+                            <label for="Role">نقش</label>
+                            <input class="form-control" id="Role" name="Role" required>
+                            <div class="valid-feedback">معتبر است!</div>
+                            <div class="invalid-feedback">لطفاً نقش را وارد کنید.</div>
+                        </div>
+                    </div>
                     <div class="modal-footer">
                         <button class="btn btn-primary" type="submit">ثبت کاربر</button>
                         <button class="btn btn-light" type="button" data-bs-dismiss="modal">بستن</button>
@@ -105,27 +135,39 @@
     </div>
 </div>
 
-
-<!-- JavaScript to trigger modal -->
-<script>
-    document.getElementById('AddUser').addEventListener('click', function() {
-        var modal = new bootstrap.Modal(document.getElementById('addUserModal'));
-        modal.show();
-    });
-
-    // Form validation script
-    (function () {
-        'use strict';
-        var forms = document.querySelectorAll('.needs-validation');
-        Array.prototype.slice.call(forms).forEach(function (form) {
-            form.addEventListener('submit', function (event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
+@section Scripts {
+    <script>
+        // باز کردن مودال
+        document.getElementById('AddUser').addEventListener('click', function () {
+            var modal = new bootstrap.Modal(document.getElementById('addUserModal'));
+            modal.show();
         });
-    })();
 
-</script>
+        // اعتبارسنجی فرم
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    var password = document.getElementById('Password').value;
+                    var confirmPassword = document.getElementById('ConfirmPassword').value;
+                    var passwordMismatch = document.getElementById('passwordMismatch');
+
+                    if (password !== confirmPassword) {
+                        passwordMismatch.classList.remove('d-none');
+                        event.preventDefault();
+                        event.stopPropagation();
+                    } else {
+                        passwordMismatch.classList.add('d-none');
+                    }
+
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
+}

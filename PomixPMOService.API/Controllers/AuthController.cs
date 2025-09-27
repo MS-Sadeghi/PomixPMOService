@@ -124,8 +124,8 @@ namespace PomixPMOService.API.Controllers
             return CreatedAtAction(nameof(GetUsers), new { id = user.UserId }, result);
         }
 
-        [HttpGet]
-        [Authorize(Policy = "CanManageAccess")]
+        [HttpGet("GetUsers")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<UserViewModel>>> GetUsers()
         {
             var users = await _context.Users
@@ -170,7 +170,7 @@ namespace PomixPMOService.API.Controllers
 
             var userAccess = new UserAccess
             {
-                UserId = model.UserId,
+                UserId = (int)model.UserId,
                 Permission = model.Permission
             };
             _context.UserAccesses.Add(userAccess);
@@ -215,7 +215,7 @@ namespace PomixPMOService.API.Controllers
             {
                 _context.UserLogs.Add(new UserLog
                 {
-                    UserId = userId,
+                    UserId = (int?)userId,
                     Action = $"{action}: Username={username}, Result={result}",
                     ActionTime = DateTime.UtcNow,
                     IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),

@@ -32,7 +32,7 @@ namespace PomixPMOService.UI.Models
         [StringLength(50)]
         public string? Role { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? LastLogin { get; set; }
 

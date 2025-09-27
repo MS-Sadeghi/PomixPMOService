@@ -77,7 +77,7 @@ namespace ServicePomixPMO.API.Controllers
             _context.RequestLogs.Add(new RequestLog
             {
                 RequestId = cartableItem.RequestId,
-                UserId = viewModel.AssignedTo,
+                UserId = (int?)viewModel.AssignedTo,
                 Action = "Assign",
                 Details = $"آیتم کارتابل به کاربر {viewModel.AssignedTo} تخصیص یافت",
                 ActionTime = DateTime.UtcNow

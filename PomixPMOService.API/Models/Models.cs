@@ -5,53 +5,18 @@ namespace ServicePomixPMO.API.Models
 {
     public class User
     {
-        [Key]
-        [Column("userid")]
+
         public long UserId { get; set; }
-
-        [Required]
-        [StringLength(10)]
-        [Column("national_code")] // Map به ستون دیتابیس
-        public string? NationalId { get; set; }
-
-        [Required]
-        [StringLength(11)]
-        [Column("mobile_number")]
-        public string? MobileNumber { get; set; }
-
-        [Required]
-        [StringLength(50)]
-        [Column("username")]
-        public string? Username { get; set; }
-
-        [Required]
-        [StringLength(255)]
-        [Column("password_hash")] // Map به ستون دیتابیس
-        public string? PasswordHash { get; set; }
-
-        [Required]
-        [StringLength(75)]
-        [Column("name")]
-        public string? Name { get; set; }
-
-        [Required]
-        [StringLength(85)]
-        [Column("lastname")]
-        public string? LastName { get; set; }
-
-        [Required]
-        [StringLength(50)]
-        [Column("role")]
-        public string? Role { get; set; }
-
-        [Column("created_at")] // Map به ستون دیتابیس
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Column("last_login")] // Map به ستون دیتابیس
-        public DateTime? LastLogin { get; set; }
-
-        [Column("is_active")] // Map به ستون دیتابیس
-        public bool IsActive { get; set; } = true;
+        public string NationalId { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public required string Role { get; set; }                // ارتباط به جدول Roles
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? LastLogin { get; set; }       // می‌تونه null باشه
+        public bool IsActive { get; set; }
+        public string? MobileNumber { get; set; }      // اختیاری، می‌تونه null باشه
     }
 
     public class Request
@@ -137,7 +102,7 @@ namespace ServicePomixPMO.API.Models
         public long LogId { get; set; }
 
         [Column("userid")]
-        public long? UserId { get; set; }
+        public int? UserId { get; set; }
 
         [Column("action")]
         public string? Action { get; set; }

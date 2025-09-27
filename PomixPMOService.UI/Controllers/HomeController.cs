@@ -1,6 +1,7 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
 using PomixPMOService.UI.ViewModels;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
@@ -73,15 +74,89 @@ namespace PomixPMOService.UI.Controllers
             }
         }
 
+
         public IActionResult Cartable()
         {
             return View("~/Views/Cartable/Cartable.cshtml", new List<object>());
         }
 
-        public IActionResult Users()
+        public async Task<IActionResult> Users()
         {
-            return View();
+            try
+            {
+                Console.WriteLine("متد Users فراخوانی شد!");
+                Console.WriteLine("در حال ارسال درخواست به http://localhost:5066/api/Auth/GetUsers...");
+                var response = await _client.GetAsync("Auth/GetUsers");
+                Console.WriteLine($"وضعیت پاسخ: {response.StatusCode}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var users = await response.Content.ReadFromJsonAsync<List<UserViewModel>>();
+                    Console.WriteLine($"تعداد کاربران دریافت‌شده: {users?.Count ?? 0}");
+                    return View(users);
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"خطای API: {error}");
+                    ViewBag.ErrorMessage = $"خطا در دریافت کاربران: {error}";
+                    return View(new List<UserViewModel>());
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"خطا: {ex.Message}");
+                Console.WriteLine($"جزئیات خطا: {ex.StackTrace}");
+                ViewBag.ErrorMessage = $"خطا در ارتباط با سرور: {ex.Message}";
+                return View(new List<UserViewModel>());
+            }
         }
+
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> CreateUser(UserViewModel model)
+        //{
+        //    try
+        //    {
+        //        Console.WriteLine("متد CreateUser فراخوانی شد!");
+        //        if (!ModelState.IsValid)
+        //        {
+        //            Console.WriteLine("ModelState نامعتبر است!");
+        //            ViewBag.ErrorMessage = "لطفاً همه فیلدها را به درستی پر کنید.";
+        //            return View("Users", new List<UserViewModel>());
+        //        }
+
+        //        // بررسی تطابق رمز عبور و تأیید رمز عبور
+        //        if (model.Password != model.ConfirmPassword)
+        //        {
+        //            Console.WriteLine("رمز عبور و تأیید رمز عبور یکسان نیستند!");
+        //            ViewBag.ErrorMessage = "رمز عبور و تأیید رمز عبور باید یکسان باشند.";
+        //            return View("Users", new List<UserViewModel>());
+        //        }
+
+        //        Console.WriteLine("در حال ارسال درخواست به http://localhost:5066/api/Auth/CreateUser...");
+        //        var response = await _client.PostAsJsonAsync("Auth/CreateUser", model);
+        //        Console.WriteLine($"وضعیت پاسخ: {response.StatusCode}");
+        //        if (response.IsSuccessStatusCode)
+        //        {
+        //            Console.WriteLine("کاربر با موفقیت اضافه شد!");
+        //            return RedirectToAction("Users");
+        //        }
+        //        else
+        //        {
+        //            var error = await response.Content.ReadAsStringAsync();
+        //            Console.WriteLine($"خطای API: {error}");
+        //            ViewBag.ErrorMessage = $"خطا در افزودن کاربر: {error}";
+        //            return View("Users", new List<UserViewModel>());
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"خطا: {ex.Message}");
+        //        Console.WriteLine($"جزئیات خطا: {ex.StackTrace}");
+        //        ViewBag.ErrorMessage = $"خطا در ارتباط با سرور: {ex.Message}";
+        //        return View("Users", new List<UserViewModel>());
+        //    }
+        //}
 
         public IActionResult EditProfile()
         {

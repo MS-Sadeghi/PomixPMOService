@@ -11,7 +11,7 @@ namespace ServicePomixPMO.API.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Request> Request { get; set; }
-        public DbSet<Cartable> Cartables { get; set; }
+        public DbSet<Cartable> Cartable { get; set; }
         public DbSet<CartableItem> CartableItems { get; set; }
         public DbSet<UserLog> UserLogs { get; set; }
         public DbSet<RequestLog> RequestLogs { get; set; }

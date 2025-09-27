@@ -4,6 +4,11 @@
     Layout = "_Layout";
 }
 
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+}
+
 <div class="input-group mb-5">
     <input type="text" class="form-control" placeholder="جستجو">
     <div class="input-group-text btn btn-primary">
@@ -22,21 +27,33 @@
                     <tr>
                         <th>نام</th>
                         <th>نام خانوادگی</th>
-                        <th>موقعیت </th>
-                        <th>تاریخ </th>
-                        <th>شماره تماس</th>
-                        <th>ایمیل</th>
+                        <th>موقعیت</th>
+                        <th>نام کاربری</th>
+                        <th>تاریخ ثبت</th>
+                        <th>آخرین ورود</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>بلا</td>
-                        <td>کلوئی</td>
-                        <td>توسعه‌دهنده سیستم</td>
-                        <td>1397/12/21</td>
-                        <td>654,765</td>
-                        <td>b.Chloe@datatables.net</td>
-                    </tr>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>@user.Name</td>
+                                <td>@user.LastName</td>
+                                <td>@user.Role</td>
+                                <td>@user.Username</td>
+                                <td>@(user.CreatedAt?.ToString("yyyy/MM/dd") ?? "-")</td>
+                                <td>@(user.LastLogin?.ToString("yyyy/MM/dd HH:mm") ?? "-")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center">هیچ کاربری یافت نشد.</td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
@@ -52,22 +69,21 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body">
-                <form asp-controller="Users" asp-action="CreateUser" class="needs-validation" novalidate>
+                <form asp-controller="Home" asp-action="CreateUser" class="needs-validation" novalidate>
                     <div class="form-row">
                         <div class="col-xl-6 mb-3">
                             <label for="Name">نام</label>
-                            <input class="form-control" id="Name" required>
+                            <input class="form-control" id="Name" name="Name" required>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً نام را وارد کنید.</div>
                         </div>
                         <div class="col-xl-6 mb-3">
                             <label for="LastName">نام خانوادگی</label>
-                            <input class="form-control" id="LastName" required>
+                            <input class="form-control" id="LastName" name="LastName" required>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً نام خانوادگی را وارد کنید.</div>
                         </div>
                     </div>
-
                     <div class="form-row">
                         <div class="col-xl-6 mb-3">
                             <label for="Password">رمز عبور</label>
@@ -75,26 +91,24 @@
                                 <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                                     <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
                                 </a>
-                                <input class="input100 form-control" type="password" id="Password" placeholder="رمز عبور" autocomplete="new-password" required>
+                                <input class="input100 form-control" type="password" id="Password" name="Password" placeholder="رمز عبور" autocomplete="new-password" required>
                             </div>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً رمز عبور را وارد کنید.</div>
                         </div>
-
                         <div class="col-xl-6 mb-3">
                             <label for="ConfirmPassword">تأیید رمز عبور</label>
                             <div class="wrap-input100 validate-input input-group" id="Password-toggle2">
                                 <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                                     <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
                                 </a>
-                                <input class="input100 form-control" type="password" id="ConfirmPassword" placeholder="تأیید رمز عبور" autocomplete="new-password" required>
+                                <input class="input100 form-control" type="password" id="ConfirmPassword" name="ConfirmPassword" placeholder="تأیید رمز عبور" autocomplete="new-password" required>
                             </div>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً تأیید رمز عبور را وارد کنید.</div>
                             <div id="passwordMismatch" class="invalid-feedback d-none">رمز عبور و تأیید رمز عبور باید یکسان باشند.</div>
                         </div>
                     </div>
-
                     <div class="modal-footer">
                         <button class="btn btn-primary" type="submit">ثبت کاربر</button>
                         <button class="btn btn-light" type="button" data-bs-dismiss="modal">بستن</button>
@@ -105,15 +119,12 @@
     </div>
 </div>
 
-
-<!-- JavaScript to trigger modal -->
 <script>
-    document.getElementById('AddUser').addEventListener('click', function() {
+    document.getElementById('AddUser').addEventListener('click', function () {
         var modal = new bootstrap.Modal(document.getElementById('addUserModal'));
         modal.show();
     });
 
-    // Form validation script
     (function () {
         'use strict';
         var forms = document.querySelectorAll('.needs-validation');
@@ -127,5 +138,4 @@
             }, false);
         });
     })();
-
 </script>

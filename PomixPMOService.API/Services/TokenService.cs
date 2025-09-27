@@ -84,7 +84,7 @@ namespace ServicePomixPMO.API.Services
             {
                 new Claim("UserId", user.UserId.ToString()),
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.Role, user.Role.RoleName)
             };
 
             // اضافه کردن دسترسی‌ها به عنوان ادعاها

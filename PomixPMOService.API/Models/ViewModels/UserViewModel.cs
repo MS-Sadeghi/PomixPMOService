@@ -40,7 +40,7 @@ namespace PomixPMOService.API.Models.ViewModels
 
         [Required]
         [StringLength(50)]
-        public string? Role { get; set; }
+        public int RoleId { get; set; }
     }
 
     public class LoginViewModel

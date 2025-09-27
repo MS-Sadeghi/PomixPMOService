@@ -30,31 +30,32 @@ namespace PomixPMOService.API.Controllers
                 return BadRequest(ModelState);
 
             var user = await _context.Users
+                .Include(u => u.Role) // join جدول Roles
                 .FirstOrDefaultAsync(u => u.Username == loginViewModel.Username);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginViewModel.Password, user.PasswordHash))
                 return Unauthorized("نام کاربری یا رمز عبور اشتباه است.");
 
+            // بروزرسانی آخرین ورود 
             user.LastLogin = DateTime.UtcNow;
-            _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
+            // تولید توکن‌ها
             var tokens = await _tokenService.GenerateTokensAsync(user);
 
-            await LogAction(user.UserId, "Login_Success", user.Username, "User logged in with JWT");
-
+            // خروجی شامل اطلاعات کاربر و توکن‌ها
             return Ok(new
             {
-                Message = "ورود موفقیت آمیز بود",
-                User = new
+                user.UserId,
+                user.Username,
+                user.Name,
+                user.LastName,
+                Role = new
                 {
-                    user.UserId,
-                    user.Username,
-                    user.Name,
-                    user.LastName,
-                    user.Role
+                    user.Role.RoleId,
+                    user.Role.RoleName
                 },
-                Tokens = tokens
+                Tokens = tokens // اضافه کردن توکن‌ها
             });
         }
 
@@ -102,8 +103,9 @@ namespace PomixPMOService.API.Controllers
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(viewModel.Password),
                 Name = viewModel.Name,
                 LastName = viewModel.LastName,
-                Role = viewModel.Role
+                RoleId = viewModel.RoleId  // ← از ViewModel جدید باید RoleId بگیرید
             };
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
@@ -116,10 +118,12 @@ namespace PomixPMOService.API.Controllers
                 Username = user.Username,
                 Name = user.Name,
                 LastName = user.LastName,
-                Role = user.Role,
+                Role = user.Role.RoleName,   // ← اینجا فقط رشته می‌خوایم
                 CreatedAt = user.CreatedAt,
-                LastLogin = user.LastLogin
+                LastLogin = user.LastLogin,
+                IsActive = user.IsActive
             };
+
 
             return CreatedAtAction(nameof(GetUsers), new { id = user.UserId }, result);
         }
@@ -136,7 +140,7 @@ namespace PomixPMOService.API.Controllers
                     Username = u.Username,
                     Name = u.Name,
                     LastName = u.LastName,
-                    Role = u.Role,
+                    Role = u.Role.RoleName,
                     CreatedAt = u.CreatedAt,
                     LastLogin = u.LastLogin
                 })

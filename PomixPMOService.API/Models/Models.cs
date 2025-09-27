@@ -1,23 +1,30 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 
 namespace ServicePomixPMO.API.Models
 {
     public class User
     {
-
+        [Key]
         public long UserId { get; set; }
         public string NationalId { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public required string Role { get; set; }                // ارتباط به جدول Roles
-        public DateTime? CreatedAt { get; set; }
-        public DateTime? LastLogin { get; set; }       // می‌تونه null باشه
-        public bool IsActive { get; set; }
-        public string? MobileNumber { get; set; }      // اختیاری، می‌تونه null باشه
+
+        // فقط foreign key
+        public int RoleId { get; set; }
+
+        // navigation property
+        public Role Role { get; set; } = null!;
+
+        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? LastLogin { get; set; }
+        public bool IsActive { get; set; } = true;
     }
+
 
     public class Request
     {
@@ -241,4 +248,11 @@ namespace ServicePomixPMO.API.Models
         [ForeignKey("UserId")]
         public User? User { get; set; }
     }
+    public class Role
+    {
+        public int RoleId { get; set; }
+        public string RoleName { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+    }
+
 }

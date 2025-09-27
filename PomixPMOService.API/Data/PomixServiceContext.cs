@@ -30,7 +30,9 @@ namespace ServicePomixPMO.API.Data
             modelBuilder.Entity<RequestLog>().ToTable("RequestLogs", "Log");
             modelBuilder.Entity<UserAccess>().ToTable("UserAccess", "Sec");
             modelBuilder.Entity<ShahkarLog>().ToTable("ShahkarLog", "Log"); // اضافه شده
-            modelBuilder.Entity<RefreshToken>().ToTable("RefreshTokens", "Sec"); // اضافه شده
+            modelBuilder.Entity<RefreshToken>().ToTable("RefreshTokens", "Sec");
+            modelBuilder.Entity<Role>().ToTable("Roles", "Sec");
+            // اضافه شده
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.NationalId)
@@ -38,6 +40,11 @@ namespace ServicePomixPMO.API.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
+            modelBuilder.Entity<User>()
+                 .HasOne(u => u.Role)
+                 .WithMany()
+                 .HasForeignKey(u => u.RoleId)
+                 .OnDelete(DeleteBehavior.Restrict); 
 
             modelBuilder.Entity<Request>()
                 .HasIndex(r => r.DocumentNumber)

@@ -444,6 +444,7 @@ namespace PomixPMOService.API.Controllers
                     cookies = response.Headers.TryGetValues("Set-Cookie", out var cookies) ? cookies.ToList() : null,
                     digitalSignature,
                     requestId = requestCode
+
                 };
 
                 try
@@ -507,6 +508,13 @@ namespace PomixPMOService.API.Controllers
     }
 
     public class InternalShahkarResponse
+    {
+        public InternalResult? Result { get; set; }
+        public InternalStatus? Status { get; set; }
+    }
+
+
+    public class InternalVerifyDocResponse
     {
         public InternalResult? Result { get; set; }
         public InternalStatus? Status { get; set; }

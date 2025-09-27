@@ -19,6 +19,10 @@ namespace PomixPMOService.API.Models.ViewModels
         public DateTime AssignedAt { get; set; }
         public DateTime? ViewedAt { get; set; }
         public string? Status { get; set; }
+        public bool? IsMatch { get; internal set; }
+        public bool? IsExist { get; internal set; }
+        public bool? IsNationalIdInResponse { get; internal set; }
+        public DateTime CreatedAt { get; internal set; }
     }
 
     public class AssignCartableItemViewModel

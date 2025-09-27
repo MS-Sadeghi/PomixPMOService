@@ -31,6 +31,10 @@ namespace PomixPMOService.API.Models.ViewModels
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string? DocumentText { get; set; }
+        public string RequestCode { get; set; } = string.Empty;
+        public bool? IsExist { get;  set; }
+        public bool? IsNationalIdInResponse { get; set; }
+        public string? CreatedBy { get; set; }
     }
 
     public class CreateRequestViewModel

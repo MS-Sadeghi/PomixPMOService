@@ -19,6 +19,7 @@ namespace ServicePomixPMO.API.Controllers
             _context = context;
         }
 
+        // GET: api/Cartables/user/{userId}
         [HttpGet("user/{userId}")]
         public async Task<ActionResult<IEnumerable<CartableItemViewModel>>> GetCartableItems(long userId)
         {
@@ -41,11 +42,10 @@ namespace ServicePomixPMO.API.Controllers
                     NationalId = ci.Request!.NationalId,
                     DocumentNumber = ci.Request!.DocumentNumber,
                     VerificationCode = ci.Request!.VerificationCode,
-                    IdentityVerified = ci.Request!.IdentityVerified,
-                    DocumentVerified = ci.Request!.DocumentVerified,
-                    DocumentMatch = ci.Request!.DocumentMatch,
-                    TextApproved = ci.Request!.TextApproved,
-                    RequestStatus = ci.Request!.RequestStatus,
+                    IsMatch = ci.Request!.IsMatch,
+                    IsExist = ci.Request!.IsExist,
+                    IsNationalIdInResponse = ci.Request!.IsNationalIdInResponse,
+                    CreatedAt = ci.Request!.CreatedAt,
                     AssignedTo = ci.AssignedTo,
                     AssignedToName = ci.AssignedToUser != null ? $"{ci.AssignedToUser.Name} {ci.AssignedToUser.LastName}" : null,
                     AssignedAt = ci.AssignedAt,
@@ -57,6 +57,7 @@ namespace ServicePomixPMO.API.Controllers
             return Ok(cartableItems);
         }
 
+        // POST: api/Cartables/assign
         [HttpPost("assign")]
         public async Task<IActionResult> AssignCartableItem(AssignCartableItemViewModel viewModel)
         {
@@ -72,6 +73,7 @@ namespace ServicePomixPMO.API.Controllers
             cartableItem.AssignedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
+            // اضافه کردن لاگ برای عملیات Assign
             _context.RequestLogs.Add(new RequestLog
             {
                 RequestId = cartableItem.RequestId,
@@ -83,6 +85,25 @@ namespace ServicePomixPMO.API.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        // متد کمکی برای ایجاد آیتم کارتابل برای Request جدید
+        [HttpPost("create-for-request")]
+        public async Task<CartableItem> CreateCartableItemForRequest(long requestId, long cartableId, long? assignedToUserId = null)
+        {
+            var cartableItem = new CartableItem
+            {
+                RequestId = requestId,
+                CartableId = cartableId,
+                AssignedTo = assignedToUserId,
+                AssignedAt = (DateTime)(assignedToUserId.HasValue ? DateTime.UtcNow : (DateTime?)null),
+                Status = "New"
+            };
+
+            _context.CartableItems.Add(cartableItem);
+            await _context.SaveChangesAsync();
+
+            return cartableItem;
         }
     }
 }

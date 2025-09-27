@@ -56,56 +56,37 @@ namespace ServicePomixPMO.API.Models
 
     public class Request
     {
-
         [Key]
-        [Column("request_id")]
         public long RequestId { get; set; }
 
-        [Column("national_code")]
-        public string NationalId { get; set; } = string.Empty;
+      
+        [StringLength(10)]
+        public string? NationalId { get; set; }     // کد ملی
 
-        [Column("request_code")]
-        public string RequestCode { get; set; } = string.Empty;
+        [StringLength(20)]
+        public string? MobileNumber { get; set; }   // شماره همراه
 
-        [Column("document_number")]
-        public string? DocumentNumber { get; set; } = string.Empty;
+        [StringLength(50)]
+        public string? DocumentNumber { get; set; } // شناسه سند
 
-        [Column("verification_code")]
-        public string VerificationCode { get; set; } = string.Empty;
+        [StringLength(50)]
+        public string? VerificationCode { get; set; } // رمز تصدیق
 
-        [Column("identity_verified")]
-        public bool IdentityVerified { get; set; }
+        public bool? IsMatch { get; set; }              // وضعیت احراز هویت
+        public bool? IsExist { get; set; }              // وجود سند
+        public bool? IsNationalIdInResponse { get; set; } // بررسی نهایی
 
-        [Column("document_verified")]
-        public bool DocumentVerified { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("document_match")]
-        public bool DocumentMatch { get; set; }
+        [StringLength(100)]
+        public string? CreatedBy { get; set; }
 
-        [Column("text_approved")]
-        public bool TextApproved { get; set; }
-
-        [Column("expert_id")]
-        public long ExpertId { get; set; }
-
-        [Column("request_status")]
-        public string RequestStatus { get; set; } = string.Empty;
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; }
 
-        [Column("document_text")]
-        public string DocumentText { get; set; } = string.Empty;
-
-        [Column("mobile_number")]
-        public string MobileNumber { get; set; } = string.Empty;
-
-        // Navigation property برای کارشناس/Expert
-        [ForeignKey("ExpertId")]
-        public virtual User Expert { get; set; } = null!;
+        [StringLength(100)]
+        public string? UpdatedBy { get; set; }
+        public string RequestCode { get; set; } = string.Empty;
+        public long ExpertId { get; internal set; }
     }
 
     public class Cartable
@@ -268,6 +249,7 @@ namespace ServicePomixPMO.API.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         [Required]
         public string CreatedBy { get; set; } = null!;
+        public bool? IsExist { get;  set; }
     }
 
     [Table("RefreshTokens", Schema = "Sec")]

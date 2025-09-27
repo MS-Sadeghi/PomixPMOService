@@ -54,7 +54,6 @@ namespace PomixPMOService.UI.Controllers
                         return View(model);
                     }
 
-                    // ارسال توکن و پیام به View
                     ViewBag.JwtToken = loginResponse.Tokens.AccessToken;
                     ViewBag.SuccessMessage = loginResponse.Message;
 
@@ -76,7 +75,7 @@ namespace PomixPMOService.UI.Controllers
 
         public IActionResult Cartable()
         {
-            return View("~/Views/Cartable/Cartable.cshtml", new List<object>());
+            return View("~/Views/Cartable/Index.cshtml", new List<object>());
         }
 
         [HttpGet]
@@ -84,17 +83,14 @@ namespace PomixPMOService.UI.Controllers
         {
             try
             {
-                // دریافت توکن از Session یا localStorage (بسته به پیاده‌سازی)
                 var jwtToken = HttpContext.Session.GetString("JwtToken");
                 if (string.IsNullOrEmpty(jwtToken))
                 {
-                    return RedirectToAction("LoginPage"); // هدایت به صفحه لاگین در صورت عدم وجود توکن
+                    return RedirectToAction("LoginPage");
                 }
 
-                // افزودن توکن به هدر درخواست
                 _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
 
-                // درخواست به API برای دریافت لیست کاربران
                 var response = await _client.GetAsync("api/Auth");
                 if (response.IsSuccessStatusCode)
                 {
@@ -138,7 +134,6 @@ namespace PomixPMOService.UI.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     ViewBag.SuccessMessage = "کاربر با موفقیت ثبت شد.";
-                    // دریافت لیست کاربران به‌روز شده
                     var usersResponse = await _client.GetAsync("api/Auth");
                     var users = usersResponse.IsSuccessStatusCode
                         ? await usersResponse.Content.ReadFromJsonAsync<List<UserViewModel>>()

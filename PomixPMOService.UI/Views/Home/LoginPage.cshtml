@@ -5,18 +5,6 @@
     Layout = "~/Views/Shared/_LayoutAuth.cshtml";
 }
 
-<style>
-    .captchaInput, .dnt-captcha-img {
-        display: block !important;
-        visibility: visible !important;
-        width: 200px;
-        height: 80px;
-    }
-    .form-group, .wrap-input100 {
-        margin-bottom: 1rem;
-    }
-</style>
-
 <div class="page">
     <div class="container-login100">
         <div class="wrap-login100 p-6">
@@ -40,7 +28,7 @@
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                         <i class="mdi mdi-account" aria-hidden="true"></i>
                     </a>
-                    <input asp-for="Username" class="input100 border-start-0 ms-0 form-control" placeholder="نام کاربری" required />
+                    <input asp-for="Username" id="Username" class="input100 border-start-0 ms-0 form-control" placeholder="نام کاربری" required />
                     <span asp-validation-for="Username" class="text-danger"></span>
                 </div>
 
@@ -54,58 +42,46 @@
                 </div>
 
                 <!-- Two-Factor Authentication Type -->
-                @* <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا روش تأیید دو عاملی را انتخاب کنید">
+                <div class="wrap-input100 validate-input input-group mb-3">
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                         <i class="zmdi zmdi-key" aria-hidden="true"></i>
                     </a>
-                    <select asp-for="TwoFactorType" class="input100 border-start-0 ms-0 form-control" id="twoFactorType" required>
-                        <option value="1" selected>پیامک</option>
-                        <option value="2">Google Authenticator</option>
+                    <select class="input100 border-start-0 form-control ms-0" id="methodSelect">
+                        <option value="security" selected>کد امنیتی</option>
+                        <option value="sms">پیامک</option>
                     </select>
-                    <span asp-validation-for="TwoFactorType" class="text-danger"></span> 
-                </div>*@
-
-                <!-- SMS Section -->
-                @* <div id="smsSection" class="wrap-input100 validate-input input-group" data-bs-validate="لطفا شماره موبایل را وارد کنید">
-                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                        <i class="zmdi zmdi-smartphone" aria-hidden="true"></i>
-                    </a>
-                     <input asp-for="MobileNumber" class="input100 border-start-0 ms-0 form-control" type="text" id="mobileNumber" placeholder="شماره موبایل" />
-                    <button type="button" onclick="sendSMS()" class="btn btn-primary">ارسال کد</button>
-                    <span asp-validation-for="MobileNumber" class="text-danger"></span> 
                 </div>
-
-                <div id="smsCodeSection" class="wrap-input100 validate-input input-group" style="display: none;" data-bs-validate="لطفا کد تأیید را وارد کنید">
-                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                        <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
-                    </a>
-                     <input asp-for="SmsCode" class="input100 border-start-0 ms-0 form-control" type="text" id="smsCode" placeholder="کد تأیید" />
-                    <span asp-validation-for="SmsCode" class="text-danger"></span> 
-                </div>*@
 
                 <!-- Google Authenticator Section -->
-                <div id="googleAuthSection" class="wrap-input100 validate-input input-group" style="display: none;" data-bs-validate="لطفا کد Google Authenticator را وارد کنید">
-                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                        <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
-                   </a>
+                <div id="securitySection" class="input-group mb-3">
+                    <dnt-captcha asp-captcha-generator-max="9999"
+                                 asp-captcha-generator-min="1000"
+                                 asp-captcha-generator-language="English"
+                                 asp-captcha-generator-display-mode="ShowDigits"
+                                 asp-use-relative-urls="true"
+                                 asp-placeholder="کد امنیتی را وارد کنید"
+                                 asp-validation-error-message=" "
+                                 asp-too-many-requests-error-message="تعداد درخواست ها زیاد است، لطفا چند لحظه صبر کنید!"
+                                 asp-font-name="Tahoma"
+                                 asp-font-size="30"
+                                 asp-fore-color="#3333333"
+                                 asp-back-color="#FCF6F5FF"
+                                 asp-text-box-class="form-control captchaInput"
+                                 asp-text-box-template="<div class='form-group'>{0}</div>"
+                                 asp-validation-message-class="text-danger"
+                                 asp-refresh-button-class="icon icon-refresh btn"
+                                 asp-show-refresh-button="true" />
                 </div>
-                <dnt-captcha asp-captcha-generator-max="9999"
-                             asp-captcha-generator-min="1000"
-                             asp-captcha-generator-language="English"
-                             asp-captcha-generator-display-mode="ShowDigits"
-                             asp-use-relative-urls="true"
-                             asp-placeholder="کد امنیتی را وارد کنید"
-                             asp-validation-error-message=" "
-                             asp-too-many-requests-error-message="Too many requests! Please wait a minute!"
-                             asp-font-name="Tahoma"
-                             asp-font-size="30"
-                             asp-fore-color="#3333333"
-                             asp-back-color="#FCF6F5FF"
-                             asp-text-box-class="form-control captchaInput"
-                             asp-text-box-template="<div class='form-group'>{0}</div>"
-                             asp-validation-message-class="text-danger"
-                             asp-refresh-button-class="bx bx-sync btn "
-                             asp-show-refresh-button="true" />
+
+                <!-- SMS Section -->
+                <div id="smsSection" class="input-group mb-3" style="display:none;">
+                    <span class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
+                    </span>
+                    <input type="text" class="form-control" placeholder="کد پیامک را وارد کنید">
+                    <button class="btn btn-primary" type="button">تأیید</button>
+                </div>
+                
                 <!-- Submit Button -->
                 <div class="container-login100-form-btn mt-4">
                     <button type="submit" class="login100-form-btn btn-primary">ورود به سامانه</button>
@@ -124,6 +100,25 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var select = document.getElementById('methodSelect');
+            var securitySection = document.getElementById('securitySection');
+            var smsSection = document.getElementById('smsSection');
+
+            function toggleSections() {
+              if (select.value === 'sms') {
+                smsSection.style.display = 'flex';
+                securitySection.style.display = 'none';
+              } else {
+                smsSection.style.display = 'none';
+                securitySection.style.display = 'flex';
+              }
+            }
+
+            select.addEventListener('change', toggleSections);
+            toggleSections(); // اجرای اولیه
+          });
+
         // ذخیره توکن و هدایت به کارتابل
         const jwtToken = '@ViewBag.JwtToken';
         if (jwtToken) {

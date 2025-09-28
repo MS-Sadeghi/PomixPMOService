@@ -55,7 +55,6 @@ namespace PomixPMOService.UI.Controllers
                         return View(model);
                     }
 
-                    // ارسال توکن و پیام به View
                     ViewBag.JwtToken = loginResponse.Tokens.AccessToken;
                     ViewBag.SuccessMessage = loginResponse.Message;
 
@@ -78,7 +77,7 @@ namespace PomixPMOService.UI.Controllers
 
         public IActionResult Cartable()
         {
-            return View("~/Views/Cartable/Cartable.cshtml", new List<object>());
+            return View("~/Views/Cartable/Index.cshtml", new List<object>());
         }
 
         public async Task<IActionResult> Users()

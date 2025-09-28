@@ -58,7 +58,6 @@ namespace ServicePomixPMO.API.Models
         [StringLength(100)]
         public string? UpdatedBy { get; set; }
         public string RequestCode { get; set; } = string.Empty;
-        public long ExpertId { get; internal set; }
     }
 
     public class Cartable
@@ -196,6 +195,9 @@ namespace ServicePomixPMO.API.Models
         [Required]
         public long ExpertId { get; set; }
 
+      
+        public long RequestId { get; set; }
+
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
@@ -214,6 +216,7 @@ namespace ServicePomixPMO.API.Models
         [Required]
         public string DocumentNumber { get; set; } = null!;  // NationalRegisterNo
 
+        public long RequestId { get; set; }
         [Required]
         public string VerificationCode { get; set; } = null!; // SecretNo
 

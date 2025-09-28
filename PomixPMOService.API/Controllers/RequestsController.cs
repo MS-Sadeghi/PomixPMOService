@@ -70,45 +70,83 @@ namespace ServicePomixPMO.API.Controllers
 
             return request;
         }
-
-        // POST: api/NewRequest
-        [HttpPost]
-        public async Task<ActionResult<RequestViewModel>> Create(CreateRequestViewModel viewModel)
+        [HttpPost("CreateNewRequest")]
+        [Authorize]
+        public async Task<IActionResult> CreateNewRequest(NewRequestViewModel model)
         {
-            var callerUserId = long.Parse(User.FindFirst("UserId")?.Value ?? "0");
-            if (callerUserId == 0)
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
+            {
                 return Unauthorized("کاربر شناسایی نشد.");
+            }
 
-            var request = new Request
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                NationalId = viewModel.NationalId,
-                MobileNumber = viewModel.MobileNumber,
-                DocumentNumber = viewModel.DocumentNumber,
-                VerificationCode = viewModel.VerificationCode,
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = $"User_{callerUserId}"
-            };
+                // 1️⃣ ایجاد رکورد Request
+                var newRequest = new Request
+                {
+                    NationalId = model.NationalId,
+                    MobileNumber = model.MobileNumber,
+                    DocumentNumber = model.DocumentNumber,
+                    VerificationCode = model.VerificationCode,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = User.Identity?.Name ?? "Unknown"
+                };
+                _context.Request.Add(newRequest);
+                await _context.SaveChangesAsync(); // اینجا RequestId تولید میشه
 
-            _context.Request.Add(request);
-            await _context.SaveChangesAsync();
+                // 2️⃣ ایجاد ShahkarLog مرتبط
+                var shahkarLog = new ShahkarLog
+                {
+                    NationalId = model.NationalId,
+                    MobileNumber = model.MobileNumber,
+                    RequestCode = newRequest.RequestCode,
+                    ExpertId = userId,
+                    RequestId = newRequest.RequestId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ShahkarLog.Add(shahkarLog);
+                await _context.SaveChangesAsync();
 
-            var result = new RequestViewModel
+                // 3️⃣ ایجاد VerifyDocLog مرتبط
+                var verifyLog = new VerifyDocLog
+                {
+                    DocumentNumber = model.DocumentNumber,
+                    VerificationCode = model.VerificationCode,
+                    ResponseText = "", // میتونی بعداً مقدار واقعی پاسخ سرویس رو بذاری
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = userId.ToString(),
+                    RequestId = newRequest.RequestId
+                };
+                _context.VerifyDocLog.Add(verifyLog);
+                await _context.SaveChangesAsync();
+
+                // تایید transaction
+                await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    RequestId = newRequest.RequestId,
+                    Message = "درخواست جدید با موفقیت ایجاد شد."
+                });
+            }
+            catch (Exception ex)
             {
-                RequestId = request.RequestId,
-                NationalId = request.NationalId,
-                MobileNumber = request.MobileNumber,
-                DocumentNumber = request.DocumentNumber,
-                VerificationCode = request.VerificationCode,
-                IsMatch = (bool)request.IsMatch,
-                IsExist = request.IsExist,
-                IsNationalIdInResponse = request.IsNationalIdInResponse,
-                CreatedAt = request.CreatedAt,
-                CreatedBy = request.CreatedBy
-            };
-
-            return CreatedAtAction(nameof(Get), new { id = request.RequestId }, result);
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"خطا در ایجاد درخواست: {ex.Message}");
+            }
         }
 
-        
+        public class NewRequestViewModel
+        {
+            public string NationalId { get; set; } = string.Empty;       // کد ملی کاربر
+            public string MobileNumber { get; set; } = string.Empty;     // شماره موبایل
+            public string DocumentNumber { get; set; } = string.Empty;   // شماره سند / DocumentNumber
+            public string VerificationCode { get; set; } = string.Empty; // VerificationCode / SecretNo
+        }
+
+
     }
 }

@@ -380,6 +380,33 @@ namespace PomixPMOService.API.Controllers
                     return StatusCode(500, "خطا: ساختار پاسخ سرویس نامعتبر است - ویژگی 'data' در result یافت نشد.");
                 }
 
+                var lawyersInfo = new List<object>();
+                if (data.TryGetProperty("lstFindPersonInQuery", out var lstFindPerson))
+                {
+                    foreach (var person in lstFindPerson.EnumerateArray())
+                    {
+                        if (person.TryGetProperty("RoleType", out var roleTypeProp) &&
+                            roleTypeProp.GetString() == "وكيل")
+                        {
+                            var nationalNo = person.TryGetProperty("NationalNo", out var n) ? n.GetString() : null;
+                            var name = person.TryGetProperty("Name", out var na) ? na.GetString() : null;
+                            var family = person.TryGetProperty("Family", out var f) ? f.GetString() : null;
+
+                            if (!string.IsNullOrEmpty(nationalNo))
+                            {
+                                lawyersInfo.Add(new
+                                {
+                                    NationalNo = nationalNo,
+                                    Name = name,
+                                    Family = family
+                                });
+                            }
+                        }
+                    }
+                }
+
+                _logger.LogInformation("Extracted lawyers info: {@Lawyers}", lawyersInfo);
+
                 // Parse UsedQuotaStats
                 var quotaStats = new { hourlyUsed = 0, dailyUsed = 0, monthlyUsed = 0 };
                 if (jsonDoc.RootElement.TryGetProperty("UsedQuotaStats", out var quotaElement))
@@ -443,7 +470,9 @@ namespace PomixPMOService.API.Controllers
                     },
                     cookies = response.Headers.TryGetValues("Set-Cookie", out var cookies) ? cookies.ToList() : null,
                     digitalSignature,
-                    requestId = requestCode
+                    requestId = requestCode,
+                    lawyersInfo = lawyersInfo
+
                 };
 
                 try
@@ -468,6 +497,89 @@ namespace PomixPMOService.API.Controllers
             {
                 _logger.LogError(ex, "Unexpected error during document verification for {DocumentNumber}", model.DocumentNumber);
                 return StatusCode(500, $"خطای سرور: {ex.Message}");
+            }
+        }
+
+        [HttpPost("CheckLawyerNationalCode")]
+        [Authorize(Policy = "CanAccessShahkar")]
+        public async Task<IActionResult> CheckLawyerNationalCode([FromBody] CheckLawyerNationalCodeRequest model)
+        {
+            if (string.IsNullOrEmpty(model.NationalCode) || !model.NationalCode.All(char.IsDigit) || model.NationalCode.Length != 10)
+                return BadRequest("کد ملی وارد شده معتبر نیست.");
+
+            if (string.IsNullOrEmpty(model.DocumentNumber) || model.DocumentNumber.Length != 18)
+                return BadRequest("شناسه یکتای سند باید 18 رقم باشد.");
+
+            if (string.IsNullOrEmpty(model.VerificationCode) || model.VerificationCode.Length != 6)
+                return BadRequest("رمز تصدیق باید 6 رقم باشد.");
+
+            var log = await _context.VerifyDocLog
+                .Where(l => l.DocumentNumber == model.DocumentNumber && l.VerificationCode == model.VerificationCode)
+                .OrderByDescending(l => l.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (log == null)
+                return NotFound("هیچ لاگی برای این سند و رمز تصدیق پیدا نشد.");
+
+            try
+            {
+                using var jsonDoc = JsonDocument.Parse(log.ResponseText);
+
+                if (!jsonDoc.RootElement.TryGetProperty("responseText", out var responseTextElem))
+                    return StatusCode(500, "ساختار پاسخ لاگ نامعتبر است (responseText یافت نشد).");
+
+                using var innerDoc = JsonDocument.Parse(responseTextElem.GetString() ?? "{}");
+
+                if (!innerDoc.RootElement.TryGetProperty("result", out var resultElem) ||
+                    !resultElem.TryGetProperty("data", out var dataElem))
+                {
+                    return StatusCode(500, "ساختار پاسخ VerifyDocument نامعتبر است.");
+                }
+
+                if (!dataElem.TryGetProperty("lstFindPersonInQuery", out var lstFindPerson) ||
+                    lstFindPerson.ValueKind != JsonValueKind.Array)
+                {
+                    return NotFound("هیچ فردی در پاسخ VerifyDocument یافت نشد.");
+                }
+
+                string? foundName = null;
+                string? foundFamily = null;
+                foreach (var person in lstFindPerson.EnumerateArray())
+                {
+                    var roleType = person.TryGetProperty("RoleType", out var rt) ? rt.GetString() : null;
+                    var nationalNo = person.TryGetProperty("NationalNo", out var nn) ? nn.GetString() : null;
+
+                    if (roleType == "وكيل" && nationalNo == model.NationalCode)
+                    {
+                        foundName = person.TryGetProperty("Name", out var na) ? na.GetString() : null;
+                        foundFamily = person.TryGetProperty("Family", out var fa) ? fa.GetString() : null;
+                        break;
+                    }
+                }
+
+                if (foundName != null && foundFamily != null)
+                {
+                    return Ok(new
+                    {
+                        Match = true,
+                        Message = "کد ملی وارد شده متعلق به وکیل است.",
+                        Name = foundName,
+                        Family = foundFamily
+                    });
+                }
+                else
+                {
+                    return Ok(new
+                    {
+                        Match = false,
+                        Message = "کد ملی وارد شده بین وکلا یافت نشد."
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "خطا در پردازش CheckLawyerNationalCode");
+                return StatusCode(500, $"خطای پردازش: {ex.Message}");
             }
         }
 
@@ -507,6 +619,19 @@ namespace PomixPMOService.API.Controllers
     }
 
     public class InternalShahkarResponse
+    {
+        public InternalResult? Result { get; set; }
+        public InternalStatus? Status { get; set; }
+    }
+
+    public class CheckLawyerNationalCodeRequest
+    {
+        public string DocumentNumber { get; set; } = "";
+        public string VerificationCode { get; set; } = "";
+        public string NationalCode { get; set; } = "";
+    }
+
+    public class InternalVerifyDocResponse
     {
         public InternalResult? Result { get; set; }
         public InternalStatus? Status { get; set; }

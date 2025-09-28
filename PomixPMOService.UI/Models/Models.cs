@@ -32,7 +32,7 @@ namespace PomixPMOService.UI.Models
         [StringLength(50)]
         public string? Role { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? LastLogin { get; set; }
 
@@ -45,38 +45,34 @@ namespace PomixPMOService.UI.Models
         public long RequestId { get; set; }
 
         [Required]
+        [StringLength(50)]
+        public string RequestCode { get; set; } = string.Empty;
+
         [StringLength(10)]
-        public string? NationalId { get; set; }
-
-        [Required]
-        [StringLength(50)]
-        public string? DocumentNumber { get; set; }
-
-        [Required]
-        [StringLength(50)]
-        public string? VerificationCode { get; set; }
-
-        public bool IdentityVerified { get; set; } = false;
-
-        public bool DocumentVerified { get; set; } = false;
-
-        public bool DocumentMatch { get; set; } = false;
-
-        public bool TextApproved { get; set; } = false;
-
-        [ForeignKey("User")]
-        public long? ExpertId { get; set; }
-
-        public User? Expert { get; set; }
+        public string? NationalId { get; set; }     // کد ملی
 
         [StringLength(20)]
-        public string RequestStatus { get; set; } = "Pending";
+        public string? MobileNumber { get; set; }   // شماره همراه
+
+        [StringLength(50)]
+        public string? DocumentNumber { get; set; } // شناسه سند
+
+        [StringLength(50)]
+        public string? VerificationCode { get; set; } // رمز تصدیق
+
+        public bool? IsMatch { get; set; }              // وضعیت احراز هویت
+        public bool? IsExist { get; set; }              // وجود سند
+        public bool? IsNationalIdInResponse { get; set; } // بررسی نهایی
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        [StringLength(100)]
+        public string? CreatedBy { get; set; }
+
         public DateTime? UpdatedAt { get; set; }
 
-        public string? DocumentText { get; set; }
+        [StringLength(100)]
+        public string? UpdatedBy { get; set; }
     }
 
     public class Cartable
@@ -224,7 +220,7 @@ namespace PomixPMOService.UI.Models
         public string VerificationCode { get; set; } = string.Empty;
 
         [Required]
-        public bool DocumentValid { get; set; }
+        public bool IsExist { get; set; }
 
         public string? ResponseText { get; set; }
 

@@ -1,111 +1,64 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 
 namespace ServicePomixPMO.API.Models
 {
     public class User
     {
         [Key]
-        [Column("userid")]
         public long UserId { get; set; }
+        public string NationalId { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(10)]
-        [Column("national_code")] // Map به ستون دیتابیس
-        public string? NationalId { get; set; }
+        // فقط foreign key
+        public int RoleId { get; set; }
 
-        [Required]
-        [StringLength(11)]
-        [Column("mobile_number")]
-        public string? MobileNumber { get; set; }
+        // navigation property
+        public Role Role { get; set; } = null!;
 
-        [Required]
-        [StringLength(50)]
-        [Column("username")]
-        public string? Username { get; set; }
-
-        [Required]
-        [StringLength(255)]
-        [Column("password_hash")] // Map به ستون دیتابیس
-        public string? PasswordHash { get; set; }
-
-        [Required]
-        [StringLength(75)]
-        [Column("name")]
-        public string? Name { get; set; }
-
-        [Required]
-        [StringLength(85)]
-        [Column("lastname")]
-        public string? LastName { get; set; }
-
-        [Required]
-        [StringLength(50)]
-        [Column("role")]
-        public string? Role { get; set; }
-
-        [Column("created_at")] // Map به ستون دیتابیس
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Column("last_login")] // Map به ستون دیتابیس
+        public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLogin { get; set; }
-
-        [Column("is_active")] // Map به ستون دیتابیس
         public bool IsActive { get; set; } = true;
     }
 
+
     public class Request
     {
-
         [Key]
-        [Column("request_id")]
         public long RequestId { get; set; }
 
-        [Column("national_code")]
-        public string NationalId { get; set; } = string.Empty;
+      
+        [StringLength(10)]
+        public string? NationalId { get; set; }     // کد ملی
 
-        [Column("request_code")]
-        public string RequestCode { get; set; } = string.Empty;
+        [StringLength(20)]
+        public string? MobileNumber { get; set; }   // شماره همراه
 
-        [Column("document_number")]
-        public string? DocumentNumber { get; set; } = string.Empty;
+        [StringLength(50)]
+        public string? DocumentNumber { get; set; } // شناسه سند
 
-        [Column("verification_code")]
-        public string VerificationCode { get; set; } = string.Empty;
+        [StringLength(50)]
+        public string? VerificationCode { get; set; } // رمز تصدیق
 
-        [Column("identity_verified")]
-        public bool IdentityVerified { get; set; }
+        public bool? IsMatch { get; set; }              // وضعیت احراز هویت
+        public bool? IsExist { get; set; }              // وجود سند
+        public bool? IsNationalIdInResponse { get; set; } // بررسی نهایی
 
-        [Column("document_verified")]
-        public bool DocumentVerified { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column("document_match")]
-        public bool DocumentMatch { get; set; }
+        [StringLength(100)]
+        public string? CreatedBy { get; set; }
 
-        [Column("text_approved")]
-        public bool TextApproved { get; set; }
-
-        [Column("expert_id")]
-        public long ExpertId { get; set; }
-
-        [Column("request_status")]
-        public string RequestStatus { get; set; } = string.Empty;
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [Column("updated_at")]
         public DateTime? UpdatedAt { get; set; }
 
-        [Column("document_text")]
-        public string DocumentText { get; set; } = string.Empty;
-
-        [Column("mobile_number")]
-        public string MobileNumber { get; set; } = string.Empty;
-
-        // Navigation property برای کارشناس/Expert
-        [ForeignKey("ExpertId")]
-        public virtual User Expert { get; set; } = null!;
+        [StringLength(100)]
+        public string? UpdatedBy { get; set; }
+        public string RequestCode { get; set; } = string.Empty;
+        public long ExpertId { get; internal set; }
     }
 
     public class Cartable
@@ -156,7 +109,7 @@ namespace ServicePomixPMO.API.Models
         public long LogId { get; set; }
 
         [Column("userid")]
-        public long? UserId { get; set; }
+        public int? UserId { get; set; }
 
         [Column("action")]
         public string? Action { get; set; }
@@ -268,6 +221,7 @@ namespace ServicePomixPMO.API.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         [Required]
         public string CreatedBy { get; set; } = null!;
+        public bool? IsExist { get;  set; }
     }
 
     [Table("RefreshTokens", Schema = "Sec")]
@@ -294,4 +248,11 @@ namespace ServicePomixPMO.API.Models
         [ForeignKey("UserId")]
         public User? User { get; set; }
     }
+    public class Role
+    {
+        public int RoleId { get; set; }
+        public string RoleName { get; set; } = string.Empty;
+        public bool IsActive { get; set; }
+    }
+
 }

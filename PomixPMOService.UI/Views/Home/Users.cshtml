@@ -4,6 +4,11 @@
     Layout = "_Layout";
 }
 
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+}
+
 <div class="input-group mb-5">
     <input type="text" class="form-control" placeholder="جستجو" id="searchInput">
     <div class="input-group-text btn btn-primary">
@@ -31,21 +36,30 @@
                         <th>نام</th>
                         <th>نام خانوادگی</th>
                         <th>موقعیت</th>
-                        <th>تاریخ ثبت</th>
-                        <th>شماره تماس</th>
                         <th>نام کاربری</th>
+                        <th>تاریخ ثبت</th>
+                        <th>آخرین ورود</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var user in Model)
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>@user.Name</td>
+                                <td>@user.LastName</td>
+                                <td>@user.Role</td>
+                                <td>@user.Username</td>
+                                <td>@(user.CreatedAt?.ToString("yyyy/MM/dd") ?? "-")</td>
+                                <td>@(user.LastLogin?.ToString("yyyy/MM/dd HH:mm") ?? "-")</td>
+                            </tr>
+                        }
+                    }
+                    else
                     {
                         <tr>
-                            <td>@user.Name</td>
-                            <td>@user.LastName</td>
-                            <td>@user.Role</td>
-                            <td>@user.CreatedAt.ToString("yyyy/MM/dd")</td>
-                            <td>@user.MobileNumber</td>
-                            <td>@user.Username</td>
+                            <td colspan="6" class="text-center">هیچ کاربری یافت نشد.</td>
                         </tr>
                     }
                 </tbody>
@@ -80,20 +94,6 @@
                     </div>
                     <div class="form-row">
                         <div class="col-xl-6 mb-3">
-                            <label for="Username">نام کاربری</label>
-                            <input class="form-control" id="Username" name="Username" required>
-                            <div class="valid-feedback">معتبر است!</div>
-                            <div class="invalid-feedback">لطفاً نام کاربری را وارد کنید.</div>
-                        </div>
-                        <div class="col-xl-6 mb-3">
-                            <label for="NationalId">کد ملی</label>
-                            <input class="form-control" id="NationalId" name="NationalId" required>
-                            <div class="valid-feedback">معتبر است!</div>
-                            <div class="invalid-feedback">لطفاً کد ملی را وارد کنید.</div>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-xl-6 mb-3">
                             <label for="Password">رمز عبور</label>
                             <div class="wrap-input100 validate-input input-group" id="Password-toggle1">
                                 <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
@@ -110,19 +110,11 @@
                                 <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                                     <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
                                 </a>
-                                <input class="input100 form-control" type="password" id="ConfirmPassword" placeholder="تأیید رمز عبور" autocomplete="new-password" required>
+                                <input class="input100 form-control" type="password" id="ConfirmPassword" name="ConfirmPassword" placeholder="تأیید رمز عبور" autocomplete="new-password" required>
                             </div>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً تأیید رمز عبور را وارد کنید.</div>
                             <div id="passwordMismatch" class="invalid-feedback d-none">رمز عبور و تأیید رمز عبور باید یکسان باشند.</div>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="col-xl-6 mb-3">
-                            <label for="Role">نقش</label>
-                            <input class="form-control" id="Role" name="Role" required>
-                            <div class="valid-feedback">معتبر است!</div>
-                            <div class="invalid-feedback">لطفاً نقش را وارد کنید.</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -135,39 +127,23 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // باز کردن مودال
-        document.getElementById('AddUser').addEventListener('click', function () {
-            var modal = new bootstrap.Modal(document.getElementById('addUserModal'));
-            modal.show();
+<script>
+    document.getElementById('AddUser').addEventListener('click', function () {
+        var modal = new bootstrap.Modal(document.getElementById('addUserModal'));
+        modal.show();
+    });
+
+    (function () {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
         });
-
-        // اعتبارسنجی فرم
-        (function () {
-            'use strict';
-            var forms = document.querySelectorAll('.needs-validation');
-            Array.prototype.slice.call(forms).forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    var password = document.getElementById('Password').value;
-                    var confirmPassword = document.getElementById('ConfirmPassword').value;
-                    var passwordMismatch = document.getElementById('passwordMismatch');
-
-                    if (password !== confirmPassword) {
-                        passwordMismatch.classList.remove('d-none');
-                        event.preventDefault();
-                        event.stopPropagation();
-                    } else {
-                        passwordMismatch.classList.add('d-none');
-                    }
-
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-        })();
-    </script>
-}
+    })();
+</script>

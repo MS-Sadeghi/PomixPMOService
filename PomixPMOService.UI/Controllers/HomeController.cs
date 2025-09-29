@@ -58,6 +58,8 @@ namespace PomixPMOService.UI.Controllers
                     ViewBag.JwtToken = loginResponse.Tokens.AccessToken;
                     ViewBag.SuccessMessage = loginResponse.Message;
 
+                    HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
+
                     return View(model);
                 }
                 else

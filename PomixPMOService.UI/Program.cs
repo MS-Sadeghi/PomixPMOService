@@ -26,6 +26,14 @@ builder.Services.AddDNTCaptcha(options =>
            .AbsoluteExpiration(minutes: 7);
 });
 
+builder.Services.AddDistributedMemoryCache(); // برای ذخیره Session در حافظه
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // مدت زمان انقضای Session
+    options.Cookie.HttpOnly = true; // امنیت بیشتر برای کوکی Session
+    options.Cookie.IsEssential = true; // برای GDPR و قوانین کوکی
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -39,6 +47,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
+
+// افزودن middleware برای Session
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",

@@ -20,61 +20,27 @@ namespace ServicePomixPMO.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<PaginatedResponse<RequestViewModel>>> GetAll(
-            [FromQuery] PaginationParameters pagination = default!)
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<RequestViewModel>>> GetAll()
         {
-            try
-            {
-                var query = _context.Request.AsQueryable();
-
-                if (!string.IsNullOrEmpty(pagination.Search))
+            return await _context.Request
+                .Select(r => new RequestViewModel
                 {
-                    var search = pagination.Search.ToLower();
-                    query = query.Where(r =>
-                        r.NationalId.ToLower().Contains(search) ||
-                        r.MobileNumber.ToLower().Contains(search) ||
-                        r.RequestCode.ToString().ToLower().Contains(search) ||
-                        r.DocumentNumber.ToLower().Contains(search) ||
-                        r.VerificationCode.ToLower().Contains(search)
-                    );
-                }
-
-                var totalCount = await query.CountAsync();
-
-                var items = await query
-                    .OrderByDescending(r => r.CreatedAt) 
-                    .Skip((pagination.Page - 1) * pagination.PageSize)
-                    .Take(pagination.PageSize)
-                    .Select(r => new RequestViewModel
-                    {
-                        RequestId = r.RequestId,
-                        RequestCode = (string)r.RequestCode,
-                        NationalId = r.NationalId,
-                        MobileNumber = r.MobileNumber,
-                        DocumentNumber = r.DocumentNumber,
-                        VerificationCode = r.VerificationCode,
-                        IsMatch = r.IsMatch ?? false,
-                        IsExist = r.IsExist,
-                        IsNationalIdInResponse = r.IsNationalIdInResponse,
-                        CreatedAt = r.CreatedAt,
-                        CreatedBy = r.CreatedBy,
-                    })
-                    .ToListAsync();
-
-                var response = new PaginatedResponse<RequestViewModel>
-                {
-                    Items = items,
-                    TotalCount = totalCount,
-                    CurrentPage = pagination.Page,
-                    PageSize = pagination.PageSize
-                };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"خطا در دریافت درخواست‌ها: {ex.Message}");
-            }
+                    RequestId = r.RequestId,
+                    RequestCode = r.RequestCode,
+                    NationalId = r.NationalId,
+                    MobileNumber = r.MobileNumber,
+                    DocumentNumber = r.DocumentNumber,
+                    VerificationCode = r.VerificationCode,
+                    IsMatch = r.IsMatch ?? false,
+                    IsExist = r.IsExist ?? false,
+                    IsNationalIdInResponse = r.IsNationalIdInResponse ?? false,
+                    ValidateByExpert = r.ValidateByExpert, // اضافه شده
+                    Description = r.Description,           // اضافه شده
+                    CreatedAt = r.CreatedAt,
+                    CreatedBy = r.CreatedBy
+                })
+                .ToListAsync();
         }
 
         [HttpGet("{id}")]
@@ -85,17 +51,18 @@ namespace ServicePomixPMO.API.Controllers
                 .Select(r => new RequestViewModel
                 {
                     RequestId = r.RequestId,
-                    RequestCode = (string)r.RequestCode,
+                    RequestCode = r.RequestCode,
                     NationalId = r.NationalId,
                     MobileNumber = r.MobileNumber,
                     DocumentNumber = r.DocumentNumber,
                     VerificationCode = r.VerificationCode,
-                    IsMatch = (bool)r.IsMatch,
-                    IsExist = r.IsExist,
-                    IsNationalIdInResponse = r.IsNationalIdInResponse,
+                    IsMatch = r.IsMatch ?? false,
+                    IsExist = r.IsExist ?? false,
+                    IsNationalIdInResponse = r.IsNationalIdInResponse ?? false,
+                    ValidateByExpert = r.ValidateByExpert, // اضافه شده
+                    Description = r.Description,           // اضافه شده
                     CreatedAt = r.CreatedAt,
-                    CreatedBy = r.CreatedBy,
-                   
+                    CreatedBy = r.CreatedBy
                 })
                 .FirstOrDefaultAsync();
 
@@ -104,6 +71,9 @@ namespace ServicePomixPMO.API.Controllers
 
             return request;
         }
+
+
+
         [HttpPost("CreateNewRequest")]
         [Authorize]
         public async Task<IActionResult> CreateNewRequest(NewRequestViewModel model)
@@ -167,6 +137,46 @@ namespace ServicePomixPMO.API.Controllers
                 await transaction.RollbackAsync();
                 return StatusCode(500, $"خطا در ایجاد درخواست: {ex.Message}");
             }
+        }
+
+        [HttpPost("ValidateRequest")]
+        [Authorize(Policy = "CanValidateRequest")]
+        public async Task<IActionResult> ValidateRequest([FromBody] ValidateRequestViewModel model)
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
+            {
+                return Unauthorized("کاربر شناسایی نشد.");
+            }
+
+            var request = await _context.Request.FindAsync(model.RequestId);
+            if (request == null)
+                return NotFound("درخواست یافت نشد.");
+
+            request.ValidateByExpert = model.ValidateByExpert;
+            request.Description = model.Description;
+            request.UpdatedAt = DateTime.UtcNow;
+            request.UpdatedBy = User.Identity?.Name ?? userId.ToString();
+
+            _context.Request.Update(request);
+            await _context.SaveChangesAsync();
+
+            // لاگ کردن عملیات
+            _context.RequestLogs.Add(new RequestLog
+            {
+                RequestId = request.RequestId,
+                UserId = userId,
+                Action = model.ValidateByExpert ? "ValidateRequest_Approved" : "ValidateRequest_Rejected",
+                Details = $"تأیید درخواست توسط کارشناس حراست: {model.Description}",
+                ActionTime = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                RequestId = request.RequestId,
+                Message = model.ValidateByExpert ? "درخواست با موفقیت تأیید شد." : "درخواست رد شد."
+            });
         }
 
         public class NewRequestViewModel

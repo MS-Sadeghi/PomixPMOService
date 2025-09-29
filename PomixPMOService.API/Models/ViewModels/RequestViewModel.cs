@@ -25,6 +25,8 @@ namespace PomixPMOService.API.Models.ViewModels
         public bool DocumentMatch { get; set; }
         public bool TextApproved { get; set; }
         public bool IsMatch { get; set; }
+        public bool? ValidateByExpert { get; set; } 
+        public string? Description { get; set; }
         public long? ExpertId { get; set; }
         public string? ExpertName { get; set; }
         public string? RequestStatus { get; set; }

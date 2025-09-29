@@ -75,10 +75,10 @@ namespace PomixPMOService.UI.Controllers
         }
 
 
-        public IActionResult Cartable()
-        {
-            return View("~/Views/Cartable/Index.cshtml", new List<object>());
-        }
+        //public IActionResult Cartable()
+        //{
+        //    return View("~/Views/Cartable/Index.cshtml", new List<object>());
+        //}
 
         public async Task<IActionResult> Users()
         {

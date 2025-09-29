@@ -8,7 +8,7 @@ namespace PomixPMOService.UI.Controllers
         public IActionResult Index()
         {
             // اینجا می‌تونی بعداً از API داده بگیری و پاس بدی به View
-            return View("~/Views/Cartable/Index.cshtml");
+            return View();
         }
     }
 }

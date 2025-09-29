@@ -19,7 +19,6 @@ namespace ServicePomixPMO.API.Controllers
             _context = context;
         }
 
-        // GET: api/NewRequest
         [HttpGet]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RequestViewModel>>> GetAll()
@@ -89,7 +88,6 @@ namespace ServicePomixPMO.API.Controllers
 
             try
             {
-                // 1️⃣ ایجاد رکورد Request
                 var newRequest = new Request
                 {
                     NationalId = model.NationalId,
@@ -100,9 +98,8 @@ namespace ServicePomixPMO.API.Controllers
                     CreatedBy = User.Identity?.Name ?? "Unknown"
                 };
                 _context.Request.Add(newRequest);
-                await _context.SaveChangesAsync(); // اینجا RequestId تولید میشه
+                await _context.SaveChangesAsync();
 
-                // 2️⃣ ایجاد ShahkarLog مرتبط
                 var shahkarLog = new ShahkarLog
                 {
                     NationalId = model.NationalId,
@@ -115,12 +112,11 @@ namespace ServicePomixPMO.API.Controllers
                 _context.ShahkarLog.Add(shahkarLog);
                 await _context.SaveChangesAsync();
 
-                // 3️⃣ ایجاد VerifyDocLog مرتبط
                 var verifyLog = new VerifyDocLog
                 {
                     DocumentNumber = model.DocumentNumber,
                     VerificationCode = model.VerificationCode,
-                    ResponseText = "", // میتونی بعداً مقدار واقعی پاسخ سرویس رو بذاری
+                    ResponseText = "", 
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = userId.ToString(),
                     RequestId = newRequest.RequestId
@@ -128,7 +124,6 @@ namespace ServicePomixPMO.API.Controllers
                 _context.VerifyDocLog.Add(verifyLog);
                 await _context.SaveChangesAsync();
 
-                // تایید transaction
                 await transaction.CommitAsync();
 
                 return Ok(new
@@ -186,10 +181,10 @@ namespace ServicePomixPMO.API.Controllers
 
         public class NewRequestViewModel
         {
-            public string NationalId { get; set; } = string.Empty;       // کد ملی کاربر
-            public string MobileNumber { get; set; } = string.Empty;     // شماره موبایل
-            public string DocumentNumber { get; set; } = string.Empty;   // شماره سند / DocumentNumber
-            public string VerificationCode { get; set; } = string.Empty; // VerificationCode / SecretNo
+            public string NationalId { get; set; } = string.Empty;  
+            public string MobileNumber { get; set; } = string.Empty;   
+            public string DocumentNumber { get; set; } = string.Empty;   
+            public string VerificationCode { get; set; } = string.Empty; 
         }
 
 

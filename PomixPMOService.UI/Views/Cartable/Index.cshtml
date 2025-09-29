@@ -5,7 +5,7 @@
 }
 
 <div class="input-group mb-5">
-    <input type="text" class="form-control" placeholder="جستجو">
+    <input type="text" class="form-control" placeholder="جستجو" id="searchInput">
     <div class="input-group-text btn btn-primary">
         <i class="fa fa-search" aria-hidden="true"></i>
     </div>
@@ -39,6 +39,24 @@
                         </table>
                     </div>
                 </div>
+                <!-- صفحه‌بندی -->
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-end" id="pagination">
+                        <li class="page-item" id="prevPage">
+                            <a class="page-link" href="javascript:void(0)">
+                                <i class="fa fa-angle-left"></i>
+                                <span class="sr-only"><</span>
+                            </a>
+                        </li>
+                        <!-- لینک‌های صفحه به‌صورت داینامیک پر می‌شوند -->
+                        <li class="page-item" id="nextPage">
+                            <a class="page-link" href="javascript:void(0)">
+                                <i class="fa fa-angle-right"></i>
+                                <span class="sr-only">></span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
@@ -115,7 +133,7 @@
                                             <!-- Buttons -->
                                             <div class="modal-footer">
                                                 <div class="col-md-9">
-                                                    <button type="button" class="btn btn-primary" id="checkAllBtn">بررسی</button>
+                                                    <button type="button" class="btn btn-primary me-5" id="checkAllBtn">بررسی</button>
                                                 </div>
                                                 <a href="javascript:void(0)" class="btn btn-azure" id="submitBtn">ثبت</a>
                                                 <a href="javascript:void(0)" class="btn btn-default" data-bs-dismiss="modal">انصراف</a>
@@ -137,234 +155,257 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
-            const checkAllBtn = $('#checkAllBtn');
-            const submitBtn = $('#submitBtn');
-            let checkResults = {
-                step1: false,
-                step2: false,
-                step3: false
+        const apiBaseUrl = 'http://localhost:5066/api/';
+        const token = localStorage.getItem('jwtToken');
+        let currentPage = 1;
+        const pageSize = 10;
+        let totalPages = 1;
+        let currentSearch = ''; 
+
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             };
+        }
 
-            // Function to show result message
-            function showResultMessage(step, isSuccess, message) {
-            const colorClass = isSuccess ? 'text-success' : 'text-danger';
-            const icon = isSuccess ? '<i class="fe fe-thumbs-up me-1"></i>' : '<i class="fe fe-slash me-1"></i>';
-               $(`#message-step${step}`).html(`<span class="${colorClass} d-block text-start">${icon}${message}</span>`);
+        function resetModalForm() {
+            $('#needs-validation-form')[0].reset();
+            $('#message-step1, #message-step2, #message-step3').text('').css('color', '');
+            $('#invalidCheck2').prop('checked', false);
+        }
 
-                // Update check results
-                checkResults[step] = isSuccess;
+        $(document).ready(function() {
+            loadCartableData();
 
-                // Check if all steps are successful
-                const allSuccess = checkResults.step1 && checkResults.step2 && checkResults.step3;
-                submitBtn.toggle(allSuccess);
-            }
-
-            // Check All Button Click
-            checkAllBtn.on('click', function () {
-                // Reset results
-                checkResults = { step1: false, step2: false, step3: false };
-                $('#message-step1').html('');
-                $('#message-step2').html('');
-                $('#message-step3').html('');
-                submitBtn.hide();
-
-                // Step 1: احراز هویت
-                checkStep1();
+            $('.input-group-text.btn').on('click', function() {
+                currentSearch = $('#searchInput').val().trim();
+                currentPage = 1;
+                loadCartableData();
             });
 
-            // Step 1: احراز هویت
-            function checkStep1() {
-                const nationalCode = $('#national_code').val().trim();
-                const mobileNumber = $('#mobile_number').val().trim();
+            $('#checkAllBtn').on('click', function() {
+                validateSteps();
+            });
 
-                // Client-side validation
-                if (!nationalCode || nationalCode.length !== 10 || !/^\d{10}$/.test(nationalCode)) {
-                    showResultMessage('1', false, 'کد ملی باید ۱۰ رقم باشد.');
-                    return;
-                }
-                if (!mobileNumber || mobileNumber.length !== 11 || !/^09\d{9}$/.test(mobileNumber)) {
-                    showResultMessage('1', false, 'شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود.');
-                    return;
-                }
+            $('#submitBtn').on('click', function() {
+                submitRequest();
+            });
 
-                // Show loading
-                checkAllBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status"></span> در حال بررسی...');
+            $('#scrollingmodal').on('hidden.bs.modal', function() {
+                resetModalForm();
+            });
 
-                // Get JWT token
-                const token = localStorage.getItem('jwtToken');
-                if (!token) {
-                    showResultMessage('1', false, 'لطفاً ابتدا وارد شوید.');
-                    checkAllBtn.prop('disabled', false).html('بررسی');
-                    window.location.href = '/Home/LoginPage';
-                    return;
-                }
-
-                // Send request
-                $.ajax({
-                    url: 'http://localhost:5066/api/Service/CheckMobileNationalCode',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    data: JSON.stringify({
-                        nationalId: nationalCode,
-                        mobileNumber: mobileNumber
-                    }),
-                    success: function (response) {
-                        if (response.isSuccessful) {
-                            try {
-                                const internalResponse = JSON.parse(response.responseText);
-                                if (internalResponse?.result?.data?.response === 200) {
-                                    showResultMessage('1', true, 'احراز هویت با موفقیت انجام شد');
-                                    // Proceed to step 2
-                                    setTimeout(() => checkStep2(), 500);
-                                } else if (internalResponse?.result?.data?.response === 600) {
-                                    showResultMessage('1', false, 'کد ملی و شماره موبایل تطابق ندارند');
-                                    checkAllBtn.prop('disabled', false).html('بررسی');
-                                } else {
-                                    showResultMessage('1', false, 'خطا در احراز هویت: ' + (internalResponse?.result?.data?.comment || 'پاسخ نامعتبر'));
-                                    checkAllBtn.prop('disabled', false).html('بررسی');
-                                }
-                            } catch (e) {
-                                showResultMessage('1', false, 'خطا در پردازش پاسخ سرویس');
-                                checkAllBtn.prop('disabled', false).html('بررسی');
-                            }
-                        } else {
-                            showResultMessage('1', false, response.errorDescription || 'خطا در احراز هویت');
-                            checkAllBtn.prop('disabled', false).html('بررسی');
-                        }
-                    },
-                    error: function (xhr) {
-                        let errorMsg = 'خطا در ارتباط با سرویس.';
-                        if (xhr.status === 401) {
-                            errorMsg = 'عدم دسترسی: لطفاً دوباره وارد شوید.';
-                            window.location.href = '/Home/LoginPage';
-                        } else if (xhr.status === 429) {
-                            errorMsg = 'تعداد درخواست‌ها بیش از حد مجاز است.';
-                        } else if (xhr.responseJSON && xhr.responseJSON.errorDescription) {
-                            errorMsg = xhr.responseJSON.errorDescription;
-                        }
-                        showResultMessage('1', false, errorMsg);
-                        checkAllBtn.prop('disabled', false).html('بررسی');
+            $('#pagination').on('click', '.page-link', function(e) {
+                e.preventDefault();
+                const pageText = $(this).text().trim();
+                if ($(this).parent().attr('id') === 'prevPage') {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        loadCartableData();
                     }
-                });
-            }
-
-            // Step 2: احراز سند
-            function checkStep2() {
-                const verifyCode = $('#verify_code').val().trim();
-                const documentNumber = $('#document_number').val().trim();
-
-                // Client-side validation
-                if (!verifyCode || verifyCode.length !== 6 || !/^\d{6}$/.test(verifyCode)) {
-                    showResultMessage('2', false, 'رمز تصدیق باید ۶ رقم باشد.');
-                    checkAllBtn.prop('disabled', false).html('بررسی');
-                    return;
-                }
-                if (!documentNumber || documentNumber.length !== 18 || !/^\d{18}$/.test(documentNumber)) {
-                    showResultMessage('2', false, 'شناسه سند باید ۱۸ رقم باشد.');
-                    checkAllBtn.prop('disabled', false).html('بررسی');
-                    return;
-                }
-
-                // Get JWT token
-                const token = localStorage.getItem('jwtToken');
-                if (!token) {
-                    showResultMessage('2', false, 'لطفاً ابتدا وارد شوید.');
-                    checkAllBtn.prop('disabled', false).html('بررسی');
-                    window.location.href = '/Home/LoginPage';
-                    return;
-                }
-
-                // Send request
-                $.ajax({
-                    url: 'http://localhost:5066/api/Service/VerifyDocument',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    data: JSON.stringify({
-                        verificationCode: verifyCode,
-                        documentNumber: documentNumber
-                    }),
-                    success: function (response) {
-                        if (response.isSuccessful) {
-                            try {
-                                const internalResponse = JSON.parse(response.responseText);
-                                if (internalResponse?.result?.data?.response === 200) {
-                                    showResultMessage('2', true, 'سند با موفقیت تایید شد');
-                                    // Proceed to step 3
-                                    setTimeout(() => checkStep3(), 500);
-                                } else if (internalResponse?.result?.data?.response === 600) {
-                                    showResultMessage('2', false, 'سند تایید نشد');
-                                    checkAllBtn.prop('disabled', false).html('بررسی');
-                                } else {
-                                    showResultMessage('2', false, 'خطا در تایید سند: ' + (internalResponse?.result?.data?.comment || 'پاسخ نامعتبر'));
-                                    checkAllBtn.prop('disabled', false).html('بررسی');
-                                }
-                            } catch (e) {
-                                showResultMessage('2', false, 'خطا در پردازش پاسخ سرویس');
-                                checkAllBtn.prop('disabled', false).html('بررسی');
-                            }
-                        } else {
-                            showResultMessage('2', false, response.errorDescription || 'خطا در تایید سند');
-                            checkAllBtn.prop('disabled', false).html('بررسی');
-                        }
-                    },
-                    error: function (xhr) {
-                        let errorMsg = 'خطا در ارتباط با سرویس.';
-                        if (xhr.status === 401) {
-                            errorMsg = 'عدم دسترسی: لطفاً دوباره وارد شوید.';
-                            window.location.href = '/Home/LoginPage';
-                        } else if (xhr.status === 429) {
-                            errorMsg = 'تعداد درخواست‌ها بیش از حد مجاز است.';
-                        } else if (xhr.responseJSON && xhr.responseJSON.errorDescription) {
-                            errorMsg = xhr.responseJSON.errorDescription;
-                        }
-                        showResultMessage('2', false, errorMsg);
-                        checkAllBtn.prop('disabled', false).html('بررسی');
+                } else if ($(this).parent().attr('id') === 'nextPage') {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        loadCartableData();
                     }
-                });
-            }
-
-            // Step 3: تطابق کد ملی
-            function checkStep3() {
-                const clientNationalCode = $('#client_national_code').val().trim();
-
-                // Client-side validation
-                if (!clientNationalCode || clientNationalCode.length !== 10 || !/^\d{10}$/.test(clientNationalCode)) {
-                    showResultMessage('3', false, 'کد ملی موکل باید ۱۰ رقم باشد.');
-                    checkAllBtn.prop('disabled', false).html('بررسی');
-                    return;
-                }
-
-                // Simulate API call (replace with actual API call)
-                setTimeout(() => {
-                    // This is a simulation - replace with actual API call
-                    const isSuccess = true; // Simulate success
-
-                    if (isSuccess) {
-                        showResultMessage('3', true, 'تطابق کد ملی با موفقیت انجام شد');
-                    } else {
-                        showResultMessage('3', false, 'کد ملی موکل تطابق ندارد');
-                    }
-
-                    checkAllBtn.prop('disabled', false).html('بررسی');
-                }, 1000);
-            }
-
-            // Submit Button Click
-            submitBtn.on('click', function () {
-                if (checkResults.step1 && checkResults.step2 && checkResults.step3) {
-                    alert('ثبت نهایی انجام شد!');
-                    $('#scrollingmodal').modal('hide');
-                    // Reset form
-                    $('#needs-validation-form')[0].reset();
-                    $('#message-step1').html('');
-                    $('#message-step2').html('');
-                    $('#message-step3').html('');
-                    submitBtn.hide();
+                } else if (!isNaN(pageText)) {
+                    currentPage = parseInt(pageText);
+                    loadCartableData();
                 }
             });
         });
+
+        function loadCartableData() {
+            let url = `${apiBaseUrl}Request?page=${currentPage}&pageSize=${pageSize}`;
+            if (currentSearch) {
+                url += `&search=${encodeURIComponent(currentSearch)}`;
+            }
+
+            fetch(url, {
+                method: 'GET',
+                headers: getHeaders()
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        alert('لطفاً ابتدا وارد سیستم شوید.');
+                        window.location.href = '/Home/LoginPage';
+                    }
+                    throw new Error('خطا در دریافت داده‌ها');
+                }
+                return response.json();
+            })
+            .then(data => {
+                populateTable(data.items);
+                totalPages = data.totalPages;
+                updatePagination(data.totalCount);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('خطا در بارگذاری داده‌ها: ' + error.message);
+            });
+        }
+
+        function populateTable(items) {
+            const tbody = $('#cartableBody');
+            tbody.empty();
+            items.forEach(item => {
+                const row = `
+                    <tr>
+                        <td>${item.requestId || ''}</td>
+                        <td>${item.nationalId || ''}</td>
+                        <td>${item.mobileNumber || ''}</td>
+                        <td>${item.documentNumber || ''}</td>
+                        <td>${item.verificationCode || ''}</td>
+                        <td>${item.isMatch ? 'تایید شده' : 'تایید نشده'}</td>
+                        <td>${item.isExist ? 'وجود دارد' : 'وجود ندارد'}</td>
+                        <td>${item.isNationalIdInResponse ? 'تایید شده' : 'تایید نشده'}</td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        function updatePagination(totalCount) {
+            totalPages = Math.ceil(totalCount / pageSize);
+            const pagination = $('#pagination');
+            pagination.empty();
+
+            pagination.append(`
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}" id="prevPage">
+                    <a class="page-link" href="javascript:void(0)">
+                        <i class="fa fa-angle-right"></i>
+                        <span class="sr-only"><</span>
+                    </a>
+                </li>
+            `);
+
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+
+            for (let i = startPage; i <= endPage; i++) {
+                pagination.append(`
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="javascript:void(0)">${i}</a>
+                    </li>
+                `);
+            }
+
+            pagination.append(`
+                <li class="page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}" id="nextPage">
+                    <a class="page-link" href="javascript:void(0)">
+                        <i class="fa fa-angle-left"></i>
+                        <span class="sr-only">></span>
+                    </a>
+                </li>
+            `);
+        }
+
+        function validateSteps() {
+            const nationalCode = $('#national_code').val().trim();
+            const mobileNumber = $('#mobile_number').val().trim();
+            const verifyCode = $('#verify_code').val().trim();
+            const documentNumber = $('#document_number').val().trim();
+            const clientNationalCode = $('#client_national_code').val().trim();
+            const checkbox = $('#invalidCheck2').is(':checked');
+
+            $('#message-step1, #message-step2, #message-step3').text('');
+
+            let isValid = true;
+
+            // گام 1: احراز هویت
+            if (!nationalCode || nationalCode.length !== 10 || !/^\d{10}$/.test(nationalCode)) {
+                $('#message-step1').text('کد ملی نامعتبر است.').css('color', 'red');
+                isValid = false;
+            }
+            if (!mobileNumber || mobileNumber.length !== 11 || !/^09\d{9}$/.test(mobileNumber)) {
+                $('#message-step1').text($('#message-step1').text() + ' شماره موبایل نامعتبر است.').css('color', 'red');
+                isValid = false;
+            }
+            if (isValid) {
+                $('#message-step1').text('احراز هویت معتبر است.').css('color', 'green');
+            }
+
+            // گام 2: احراز سند
+            if (!verifyCode || verifyCode.length !== 6 || !/^\d{6}$/.test(verifyCode)) {
+                $('#message-step2').text('رمز تصدیق نامعتبر است.').css('color', 'red');
+                isValid = false;
+            }
+            if (!documentNumber || documentNumber.length !== 18 || !/^\d{18}$/.test(documentNumber)) {
+                $('#message-step2').text($('#message-step2').text() + ' شناسه سند نامعتبر است.').css('color', 'red');
+                isValid = false;
+            }
+            if (isValid) {
+                $('#message-step2').text('احراز سند معتبر است.').css('color', 'green');
+            }
+
+            // گام 3: تطابق کد ملی
+            if (!clientNationalCode || clientNationalCode.length !== 10 || !/^\d{10}$/.test(clientNationalCode)) {
+                $('#message-step3').text('کد ملی موکل نامعتبر است.').css('color', 'red');
+                isValid = false;
+            } else {
+                $('#message-step3').text('تطابق کد ملی معتبر است.').css('color', 'green');
+            }
+
+            if (!checkbox) {
+                alert('لطفاً با شرایط موافقت کنید.');
+                isValid = false;
+            }
+
+            if (isValid) {
+                alert('همه گام‌ها معتبر هستند.');
+            }
+        }
+
+        // تابع ارسال درخواست به API
+        function submitRequest() {
+            const nationalCode = $('#national_code').val().trim();
+            const mobileNumber = $('#mobile_number').val().trim();
+            const verifyCode = $('#verify_code').val().trim();
+            const documentNumber = $('#document_number').val().trim();
+            const clientNationalCode = $('#client_national_code').val().trim();
+            const checkbox = $('#invalidCheck2').is(':checked');
+
+            if (!checkbox) {
+                alert('لطفاً با شرایط موافقت کنید.');
+                return;
+            }
+
+            const requestData = {
+                NationalId: clientNationalCode,
+                MobileNumber: mobileNumber,
+                DocumentNumber: documentNumber,
+                VerificationCode: verifyCode
+            };
+
+            fetch(`${apiBaseUrl}Service/ProcessCombinedRequest`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        alert('لطفاً ابتدا وارد سیستم شوید.');
+                        window.location.href = '/Home/LoginPage';
+                    }
+                    throw new Error('خطا در ارسال درخواست');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('درخواست با موفقیت ثبت شد.');
+                $('#scrollingmodal').modal('hide');
+                currentPage = 1; 
+                loadCartableData(); 
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('خطا در ثبت درخواست: ' + error.message);
+            });
+        }
     </script>
 }

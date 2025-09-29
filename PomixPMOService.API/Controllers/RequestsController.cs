@@ -19,30 +19,64 @@ namespace ServicePomixPMO.API.Controllers
             _context = context;
         }
 
-        // GET: api/NewRequest
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RequestViewModel>>> GetAll()
+        public async Task<ActionResult<PaginatedResponse<RequestViewModel>>> GetAll(
+            [FromQuery] PaginationParameters pagination = default!)
         {
-            return await _context.Request
-                .Select(r => new RequestViewModel
+            try
+            {
+                var query = _context.Request.AsQueryable();
+
+                if (!string.IsNullOrEmpty(pagination.Search))
                 {
-                    RequestId = r.RequestId,
-                    RequestCode = (string)r.RequestCode,
-                    NationalId = r.NationalId,
-                    MobileNumber = r.MobileNumber,
-                    DocumentNumber = r.DocumentNumber,
-                    VerificationCode = r.VerificationCode,
-                    IsMatch = r.IsMatch ?? false,
-                    IsExist = r.IsExist,
-                    IsNationalIdInResponse = r.IsNationalIdInResponse,
-                    CreatedAt = r.CreatedAt,
-                    CreatedBy = r.CreatedBy,
-               
-                })
-                .ToListAsync();
+                    var search = pagination.Search.ToLower();
+                    query = query.Where(r =>
+                        r.NationalId.ToLower().Contains(search) ||
+                        r.MobileNumber.ToLower().Contains(search) ||
+                        r.RequestCode.ToString().ToLower().Contains(search) ||
+                        r.DocumentNumber.ToLower().Contains(search) ||
+                        r.VerificationCode.ToLower().Contains(search)
+                    );
+                }
+
+                var totalCount = await query.CountAsync();
+
+                var items = await query
+                    .OrderByDescending(r => r.CreatedAt) 
+                    .Skip((pagination.Page - 1) * pagination.PageSize)
+                    .Take(pagination.PageSize)
+                    .Select(r => new RequestViewModel
+                    {
+                        RequestId = r.RequestId,
+                        RequestCode = (string)r.RequestCode,
+                        NationalId = r.NationalId,
+                        MobileNumber = r.MobileNumber,
+                        DocumentNumber = r.DocumentNumber,
+                        VerificationCode = r.VerificationCode,
+                        IsMatch = r.IsMatch ?? false,
+                        IsExist = r.IsExist,
+                        IsNationalIdInResponse = r.IsNationalIdInResponse,
+                        CreatedAt = r.CreatedAt,
+                        CreatedBy = r.CreatedBy,
+                    })
+                    .ToListAsync();
+
+                var response = new PaginatedResponse<RequestViewModel>
+                {
+                    Items = items,
+                    TotalCount = totalCount,
+                    CurrentPage = pagination.Page,
+                    PageSize = pagination.PageSize
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"خطا در دریافت درخواست‌ها: {ex.Message}");
+            }
         }
 
-        // GET: api/NewRequest/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<RequestViewModel>> Get(long id)
         {
@@ -84,7 +118,6 @@ namespace ServicePomixPMO.API.Controllers
 
             try
             {
-                // 1️⃣ ایجاد رکورد Request
                 var newRequest = new Request
                 {
                     NationalId = model.NationalId,
@@ -95,9 +128,8 @@ namespace ServicePomixPMO.API.Controllers
                     CreatedBy = User.Identity?.Name ?? "Unknown"
                 };
                 _context.Request.Add(newRequest);
-                await _context.SaveChangesAsync(); // اینجا RequestId تولید میشه
+                await _context.SaveChangesAsync();
 
-                // 2️⃣ ایجاد ShahkarLog مرتبط
                 var shahkarLog = new ShahkarLog
                 {
                     NationalId = model.NationalId,
@@ -110,12 +142,11 @@ namespace ServicePomixPMO.API.Controllers
                 _context.ShahkarLog.Add(shahkarLog);
                 await _context.SaveChangesAsync();
 
-                // 3️⃣ ایجاد VerifyDocLog مرتبط
                 var verifyLog = new VerifyDocLog
                 {
                     DocumentNumber = model.DocumentNumber,
                     VerificationCode = model.VerificationCode,
-                    ResponseText = "", // میتونی بعداً مقدار واقعی پاسخ سرویس رو بذاری
+                    ResponseText = "", 
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = userId.ToString(),
                     RequestId = newRequest.RequestId
@@ -123,7 +154,6 @@ namespace ServicePomixPMO.API.Controllers
                 _context.VerifyDocLog.Add(verifyLog);
                 await _context.SaveChangesAsync();
 
-                // تایید transaction
                 await transaction.CommitAsync();
 
                 return Ok(new
@@ -141,10 +171,10 @@ namespace ServicePomixPMO.API.Controllers
 
         public class NewRequestViewModel
         {
-            public string NationalId { get; set; } = string.Empty;       // کد ملی کاربر
-            public string MobileNumber { get; set; } = string.Empty;     // شماره موبایل
-            public string DocumentNumber { get; set; } = string.Empty;   // شماره سند / DocumentNumber
-            public string VerificationCode { get; set; } = string.Empty; // VerificationCode / SecretNo
+            public string NationalId { get; set; } = string.Empty;  
+            public string MobileNumber { get; set; } = string.Empty;   
+            public string DocumentNumber { get; set; } = string.Empty;   
+            public string VerificationCode { get; set; } = string.Empty; 
         }
 
 

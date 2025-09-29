@@ -51,4 +51,28 @@ namespace PomixPMOService.API.Models.ViewModels
         public string? DocumentText { get; set; }
         public string MobileNumber { get; internal set; }
     }
+
+    public class PaginatedResponse<T>
+    {
+        public List<T> Items { get; set; } = new List<T>();
+        public int TotalCount { get; set; }
+        public int CurrentPage { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+        public bool HasPreviousPage => CurrentPage > 1;
+        public bool HasNextPage => CurrentPage < TotalPages;
+    }
+
+    public class PaginationParameters
+    {
+        private const int MaxPageSize = 100;
+        public int Page { get; set; } = 1;
+        private int _pageSize = 10;
+        public int PageSize
+        {
+            get => _pageSize;
+            set => _pageSize = Math.Min(MaxPageSize, value); // محدود کردن به 100
+        }
+        public string? Search { get; set; }
+    }
 }

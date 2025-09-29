@@ -66,17 +66,22 @@ namespace PomixPMOService.API.Controllers
         public async Task<IActionResult> ProcessCombinedRequest([FromBody] CombinedRequestViewModel model)
         {
             if (!ModelState.IsValid)
+            {
+                _logger.LogWarning("Invalid model state: {Errors}", string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
                 return BadRequest(ModelState);
+            }
 
             var userIdClaim = User.FindFirst("UserId")?.Value;
             if (!long.TryParse(userIdClaim, out long userId))
+            {
+                _logger.LogWarning("Could not extract UserId from JWT token.");
                 return Unauthorized("کاربر شناسایی نشد.");
+            }
 
-            // ایجاد رکورد Request اصلی
             var requestId = GenerateRequestId();
             var request = new Request
             {
-                RequestCode = requestId,      // رشته
+                RequestCode = requestId,
                 NationalId = model.NationalId,
                 MobileNumber = model.MobileNumber,
                 DocumentNumber = model.DocumentNumber,
@@ -88,42 +93,98 @@ namespace PomixPMOService.API.Controllers
             _context.Request.Add(request);
             await _context.SaveChangesAsync();
 
-            // expertId همان userId است یا اگر متفاوت است، مقدار واقعی را بفرست
             long expertId = userId;
 
-            // کال همزمان دو سرویس با پارامترهای کامل
-            var shahkarTask = CheckMobileNationalCode_Internal(
-                model.NationalId,
-                model.MobileNumber,
-                request.RequestCode,   // رشته
-                request.RequestId,     // long
-                expertId              // long
-            );
-
-            var verifyDocTask = VerifyDocument_Internal(
-                model.DocumentNumber,
-                model.VerificationCode,
-                request.RequestCode,  // رشته
-                request.RequestId,    // long
-                userId                // long
-            );
-
-            await Task.WhenAll(shahkarTask, verifyDocTask);
-
-            var combinedResult = new
+            try
             {
-                Shahkar = shahkarTask.Result,
-                VerifyDoc = verifyDocTask.Result
-            };
+                var shahkarTask = CheckMobileNationalCode_Internal(
+                    model.NationalId,
+                    model.MobileNumber,
+                    request.RequestCode,
+                    request.RequestId,
+                    expertId
+                );
 
-            return Ok(combinedResult);
+                var verifyDocTask = VerifyDocument_Internal(
+                    model.DocumentNumber,
+                    model.VerificationCode,
+                    request.RequestCode,
+                    request.RequestId,
+                    userId
+                );
+
+                await Task.WhenAll(shahkarTask, verifyDocTask);
+
+                var shahkarResult = await shahkarTask;
+                var verifyDocResult = await verifyDocTask;
+
+                bool isMatch = false;
+                try
+                {
+                    var internalShahkarResponse = JsonSerializer.Deserialize<InternalShahkarResponse>(
+                        shahkarResult.ResponseText,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+                    isMatch = internalShahkarResponse?.Result?.Data?.Response == 200;
+                }
+                catch (System.Text.Json.JsonException ex)
+                {
+                    _logger.LogError(ex, "Failed to parse internal Shahkar response: {ResponseText}", shahkarResult.ResponseText);
+                }
+
+                bool isExist = false;
+                try
+                {
+                    var internalVerifyDocResponse = JsonSerializer.Deserialize<VerifyDocInternalResponse>(
+                        verifyDocResult.ResponseText,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+                    if (internalVerifyDocResponse?.Result != null && internalVerifyDocResponse.Result.Data.ValueKind != JsonValueKind.Undefined)
+                    {
+                        var dataElement = internalVerifyDocResponse.Result.Data;
+                        if (dataElement.TryGetProperty("ExistDoc", out var existDocElement) && existDocElement.ValueKind == JsonValueKind.True)
+                        {
+                            isExist = true;
+                        }
+                    }
+                }
+                catch (System.Text.Json.JsonException ex)
+                {
+                    _logger.LogError(ex, "Failed to parse internal VerifyDoc response: {ResponseText}", verifyDocResult.ResponseText);
+                }
+
+                bool isNationalIdInResponse = false;
+                if (verifyDocResult.PersonsInQuery != null)
+                {
+                    isNationalIdInResponse = verifyDocResult.PersonsInQuery.Any(p => p.NationalNo == model.NationalId);
+                }
+
+                request.IsMatch = isMatch;
+                request.IsExist = isExist;
+                request.IsNationalIdInResponse = isNationalIdInResponse;
+                request.UpdatedAt = DateTime.UtcNow;
+                request.UpdatedBy = User.Identity?.Name ?? "Unknown";
+                _context.Request.Update(request);
+                await _context.SaveChangesAsync();
+
+                var combinedResult = new
+                {
+                    Shahkar = shahkarResult,
+                    VerifyDoc = verifyDocResult
+                };
+
+                return Ok(combinedResult);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing combined request for NationalId={NationalId}", model.NationalId);
+                return StatusCode(500, $"خطای سرور: {ex.Message}");
+            }
         }
 
-
         private async Task<ShahkarResponse> CheckMobileNationalCode_Internal(
-     string nationalId, string mobile, string requestCode, long requestId, long expertId)
+            string nationalId, string mobile, string requestCode, long requestId, long expertId)
         {
-            // اعتبارسنجی ورودی
             if (nationalId.Length != 10 || !nationalId.All(char.IsDigit))
             {
                 _logger.LogWarning("Invalid NationalId format: NationalId={NationalId}", nationalId);
@@ -163,20 +224,19 @@ namespace PomixPMOService.API.Controllers
                     },
                     parameters = new[]
                     {
-                new { parameterName = "serviceType", parameterValue = "2" },
-                new { parameterName = "identificationType", parameterValue = "0" },
-                new { parameterName = "identificationNo", parameterValue = nationalId },
-                new { parameterName = "requestId", parameterValue = requestCode },
-                new { parameterName = "serviceNumber", parameterValue = mobile }
-            },
+                        new { parameterName = "serviceType", parameterValue = "2" },
+                        new { parameterName = "identificationType", parameterValue = "0" },
+                        new { parameterName = "identificationNo", parameterValue = nationalId },
+                        new { parameterName = "requestId", parameterValue = requestCode },
+                        new { parameterName = "serviceNumber", parameterValue = mobile }
+                    },
                     service = "gsb-itoshahkar"
                 };
 
-                var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(requestContent), Encoding.UTF8, "application/json");
+                var content = new StringContent(JsonSerializer.Serialize(requestContent), Encoding.UTF8, "application/json");
                 _logger.LogInformation("Sending request to Shahkar: URL={Url}, RequestContent={RequestContent}, Headers={Headers}",
                     _options.BaseUrl, await content.ReadAsStringAsync(), _httpClient.DefaultRequestHeaders);
 
-                // حفظ رفتار ناهمزمان
                 var response = await _retryPolicy.ExecuteAsync(() => _httpClient.PostAsync(_options.BaseUrl, content));
                 var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -193,7 +253,7 @@ namespace PomixPMOService.API.Controllers
                 ShahkarResponse? result;
                 try
                 {
-                    result = System.Text.Json.JsonSerializer.Deserialize<ShahkarResponse>(responseContent, new JsonSerializerOptions
+                    result = JsonSerializer.Deserialize<ShahkarResponse>(responseContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
@@ -211,22 +271,21 @@ namespace PomixPMOService.API.Controllers
                     throw new Exception("پاسخ سرویس شاهکار خالی است.");
                 }
 
-                // پارس پاسخ داخلی
                 bool isMatch = false;
                 try
                 {
-                    var internalResponse = System.Text.Json.JsonSerializer.Deserialize<InternalShahkarResponse>(result.ResponseText, new JsonSerializerOptions
+                    var internalResponse = JsonSerializer.Deserialize<InternalShahkarResponse>(result.ResponseText, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
                     if (internalResponse?.Result?.Data?.Response == 200)
                     {
-                        isMatch = true; // تطابق موفق
+                        isMatch = true;
                     }
                     else if (internalResponse?.Result?.Data?.Response == 600)
                     {
-                        isMatch = false; // عدم تطابق
+                        isMatch = false;
                     }
                     else
                     {
@@ -241,7 +300,6 @@ namespace PomixPMOService.API.Controllers
                     throw new Exception($"خطا در پردازش پاسخ داخلی سرویس شاهکار: {ex.Message}");
                 }
 
-                // ثبت لاگ
                 var log = new ShahkarLog
                 {
                     NationalId = nationalId,
@@ -256,11 +314,9 @@ namespace PomixPMOService.API.Controllers
                 _context.ShahkarLog.Add(log);
                 await _context.SaveChangesAsync();
 
-                // تنظیم فیلدهای ShahkarResponse
                 result.ResponseStatusCode = (int)response.StatusCode;
                 result.RequestId = requestId.ToString();
 
-                // ذخیره در کش
                 try
                 {
                     _cache.Set(cacheKey, result, TimeSpan.FromHours(24));
@@ -298,21 +354,105 @@ namespace PomixPMOService.API.Controllers
                 credential = new { code = _options.Credential.Code, password = _options.Credential.Password },
                 parameters = new object[]
                 {
-                    new { parameterName = "NationalRegisterNo", parameterValue = documentNumber },
-                    new { parameterName = "SecretNo", parameterValue = verificationCode },
-                    new { parameterName = "requestId", parameterValue = requestCode }
+            new { parameterName = "NationalRegisterNo", parameterValue = documentNumber },
+            new { parameterName = "SecretNo", parameterValue = verificationCode },
+            new { parameterName = "requestId", parameterValue = requestCode }
                 },
                 service = "gsb-Approval2-GetData"
             };
 
             var json = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
+            _logger.LogInformation("Sending request to VerifyDoc: URL={Url}, RequestContent={RequestContent}, Headers={Headers}",
+                _options.BaseUrl, json, _httpClient.DefaultRequestHeaders);
 
-            var response = await _httpClient.PostAsync(_options.BaseUrl, content);
+            var response = await _retryPolicy.ExecuteAsync(() => _httpClient.PostAsync(_options.BaseUrl, content));
             var responseString = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Received response from VerifyDoc: StatusCode={StatusCode}, Content={ResponseContent}",
+                response.StatusCode, responseString);
 
-            var jsonDoc = JsonDocument.Parse(responseString);
-            bool isSuccessful = jsonDoc.RootElement.GetProperty("isSuccessful").GetBoolean();
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("VerifyDoc request failed: StatusCode={StatusCode}, Response={ResponseContent}",
+                    response.StatusCode, responseString);
+                throw new HttpRequestException($"خطای سرویس اصالت سند: کد {(int)response.StatusCode}");
+            }
+
+            VerifyDocResponse result = new VerifyDocResponse
+            {
+                IsSuccessful = false,
+                ResponseText = responseString,
+                PersonsInQuery = new List<PersonInQuery>(),
+                ExistDoc = false
+            };
+
+            bool isExist = false;
+            bool succseed = false;
+            List<PersonInQuery> personsInQuery = new List<PersonInQuery>();
+
+            try
+            {
+                using var jsonDoc = JsonDocument.Parse(responseString);
+                var root = jsonDoc.RootElement;
+
+                // Parse nested responseText
+                if (root.TryGetProperty("responseText", out var responseTextElement) && responseTextElement.ValueKind == JsonValueKind.String)
+                {
+                    try
+                    {
+                        using var responseTextDoc = JsonDocument.Parse(responseTextElement.GetString());
+                        if (responseTextDoc.RootElement.TryGetProperty("result", out var resultElement) &&
+                            resultElement.TryGetProperty("data", out var dataElement))
+                        {
+                            isExist = dataElement.TryGetProperty("ExistDoc", out var existDocElement) && existDocElement.GetBoolean();
+                            succseed = dataElement.TryGetProperty("Succseed", out var succseedElement) && succseedElement.GetBoolean();
+
+                            if (dataElement.TryGetProperty("lstFindPersonInQuery", out var personsElement) && personsElement.ValueKind == JsonValueKind.Array)
+                            {
+                                personsInQuery = JsonSerializer.Deserialize<List<PersonInQuery>>(personsElement.GetRawText(), new JsonSerializerOptions
+                                {
+                                    PropertyNameCaseInsensitive = true
+                                }) ?? new List<PersonInQuery>();
+                            }
+
+                            _logger.LogInformation("Parsed VerifyDoc data - isExist: {IsExist}, succseed: {Succseed}, personsInQuery count: {PersonsInQueryCount}",
+                                isExist, succseed, personsInQuery.Count);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Missing 'result' or 'data' in responseText for {RequestId}", requestCode);
+                        }
+                    }
+                    catch (JsonException nestedEx)
+                    {
+                        _logger.LogError(nestedEx, "Failed to parse nested responseText for {RequestId}: {ResponseText}", requestCode, responseTextElement.GetString());
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Missing or invalid 'responseText' property for {RequestId}", requestCode);
+                }
+
+                result = new VerifyDocResponse
+                {
+                    IsSuccessful = isExist || succseed, // Ensure IsSuccessful is true if ExistDoc is true
+                    ResponseText = responseString,
+                    PersonsInQuery = personsInQuery,
+                    ExistDoc = isExist // Explicitly set ExistDoc
+                };
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Failed to deserialize VerifyDoc response for {RequestId}: ResponseContent={ResponseContent}",
+                    requestCode, responseString);
+                result = new VerifyDocResponse
+                {
+                    IsSuccessful = false,
+                    ResponseText = responseString,
+                    PersonsInQuery = new List<PersonInQuery>(),
+                    ExistDoc = false
+                };
+            }
 
             var log = new VerifyDocLog
             {
@@ -321,16 +461,16 @@ namespace PomixPMOService.API.Controllers
                 ResponseText = responseString,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = User.Identity?.Name ?? userId.ToString(),
+                IsExist = isExist, // This will be 1 in DB if ExistDoc is true
                 RequestId = requestId
             };
+
+            _logger.LogInformation("Saving VerifyDocLog - DocumentNumber: {DocumentNumber}, IsExist: {IsExist}, RequestId: {RequestId}",
+                log.DocumentNumber, log.IsExist, log.RequestId);
             _context.VerifyDocLog.Add(log);
             await _context.SaveChangesAsync();
 
-            return new VerifyDocResponse
-            {
-                IsSuccessful = isSuccessful,
-                ResponseText = responseString
-            };
+            return result;
         }
 
         private string GenerateRequestId()
@@ -360,7 +500,7 @@ namespace PomixPMOService.API.Controllers
             return remainder < 2 ? checkDigit == remainder : checkDigit == 11 - remainder;
         }
 
-        private string GetJwtToken() => "your-valid-token"; // جایگزین واقعی توکن JWT
+        private string GetJwtToken() => "your-valid-token";
     }
 
     #region ViewModels & DTOs
@@ -381,7 +521,13 @@ namespace PomixPMOService.API.Controllers
         public DataWrapper? Data { get; set; }
         public StatusWrapper? Status { get; set; }
     }
-
+    public class VerifyDocResponse
+    {
+        public bool IsSuccessful { get; set; }
+        public string? ResponseText { get; set; }
+        public List<PersonInQuery>? PersonsInQuery { get; set; }
+        public bool ExistDoc { get; set; }
+    }
     public class DataWrapper
     {
         public string? Result { get; set; }
@@ -395,11 +541,6 @@ namespace PomixPMOService.API.Controllers
     {
         public int StatusCode { get; set; }
         public string? Message { get; set; }
-    }
-    public class VerifyDocResponse
-    {
-        public bool IsSuccessful { get; set; }
-        public string? ResponseText { get; set; }
     }
 
     public class ShahkarServiceOptions
@@ -448,6 +589,59 @@ namespace PomixPMOService.API.Controllers
 
         [JsonPropertyName("monthlyUsed")]
         public int MonthlyUsed { get; set; }
+    }
+
+    public class VerifyDocInternalResponse
+    {
+        public VerifyDocResultWrapper? Result { get; set; }
+        public StatusWrapper? Status { get; set; }
+    }
+
+    public class VerifyDocResultWrapper
+    {
+        public JsonElement Data { get; set; }
+        public StatusWrapper? Status { get; set; }
+    }
+
+    public class VerifyDocDataWrapper
+    {
+        public List<object>? RegCases { get; set; }
+        public List<object>? BaseDocuments { get; set; }
+        public List<object>? FollowerDocuments { get; set; }
+        public bool Succseed { get; set; }
+        public string? NationalRegisterNo { get; set; }
+        public string? DocType { get; set; }
+        public string? DocType_code { get; set; }
+        public bool HasPermission { get; set; }
+        public bool ExistDoc { get; set; }
+        public string? Desc { get; set; }
+        public string? ScriptoriumName { get; set; }
+        public string? SignGetterTitle { get; set; }
+        public string? SignSubject { get; set; }
+        public string? DocDate { get; set; }
+        public string? CaseClasifyNo { get; set; }
+        public string? ImpotrtantAnnexText { get; set; }
+        public string? DocImage { get; set; }
+        public string? DocImage_Base64 { get; set; }
+        public string? ADVOCACYENDDATE { get; set; }
+        public List<PersonInQuery>? LstFindPersonInQuery { get; set; }
+    }
+
+    public class PersonInQuery
+    {
+        public string? NationalNo { get; set; }
+        public string? Birthdate { get; set; }
+        public string? Name { get; set; }
+        public string? Family { get; set; }
+        public string? AgentType { get; set; }
+        public string? PersonType { get; set; }
+        public string? PersonType_code { get; set; }
+        public string? NationalNoMovakel { get; set; }
+        public string? NameMovakel { get; set; }
+        public string? FamilyMovakel { get; set; }
+        public string? TxtRelation { get; set; }
+        public string? RoleType { get; set; }
+        public string? Person_RoleType_code { get; set; }
     }
     #endregion
 }

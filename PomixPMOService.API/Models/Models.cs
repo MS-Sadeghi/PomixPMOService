@@ -43,7 +43,8 @@ namespace ServicePomixPMO.API.Models
 
         [StringLength(50)]
         public string? VerificationCode { get; set; } // رمز تصدیق
-
+        public bool? ValidateByExpert { get; set; } // اضافه شده
+        public string? Description { get; set; }
         public bool? IsMatch { get; set; }              // وضعیت احراز هویت
         public bool? IsExist { get; set; }              // وجود سند
         public bool? IsNationalIdInResponse { get; set; } // بررسی نهایی
@@ -69,7 +70,7 @@ namespace ServicePomixPMO.API.Models
         public long UserId { get; set; }
 
         public User? User { get; set; }
-
+        public string? CartableName { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 

@@ -126,38 +126,18 @@ namespace PomixPMOService.API.Controllers
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
                     isMatch = internalShahkarResponse?.Result?.Data?.Response == 200;
+                    _logger.LogInformation("Shahkar IsMatch for {RequestId}: {IsMatch}", requestId, isMatch);
                 }
                 catch (System.Text.Json.JsonException ex)
                 {
                     _logger.LogError(ex, "Failed to parse internal Shahkar response: {ResponseText}", shahkarResult.ResponseText);
                 }
 
-                bool isExist = false;
-                try
-                {
-                    var internalVerifyDocResponse = JsonSerializer.Deserialize<VerifyDocInternalResponse>(
-                        verifyDocResult.ResponseText,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                    );
-                    if (internalVerifyDocResponse?.Result != null && internalVerifyDocResponse.Result.Data.ValueKind != JsonValueKind.Undefined)
-                    {
-                        var dataElement = internalVerifyDocResponse.Result.Data;
-                        if (dataElement.TryGetProperty("ExistDoc", out var existDocElement) && existDocElement.ValueKind == JsonValueKind.True)
-                        {
-                            isExist = true;
-                        }
-                    }
-                }
-                catch (System.Text.Json.JsonException ex)
-                {
-                    _logger.LogError(ex, "Failed to parse internal VerifyDoc response: {ResponseText}", verifyDocResult.ResponseText);
-                }
+                bool isExist = verifyDocResult.ExistDoc;
+                bool isNationalIdInResponse = verifyDocResult.PersonsInQuery?.Any(p => p.NationalNo == model.NationalId) ?? false;
 
-                bool isNationalIdInResponse = false;
-                if (verifyDocResult.PersonsInQuery != null)
-                {
-                    isNationalIdInResponse = verifyDocResult.PersonsInQuery.Any(p => p.NationalNo == model.NationalId);
-                }
+                _logger.LogInformation("VerifyDoc results for {RequestId}: IsExist={IsExist}, IsNationalIdInResponse={IsNationalIdInResponse}",
+                    requestId, isExist, isNationalIdInResponse);
 
                 request.IsMatch = isMatch;
                 request.IsExist = isExist;
@@ -177,8 +157,8 @@ namespace PomixPMOService.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing combined request for NationalId={NationalId}", model.NationalId);
-                return StatusCode(500, $"خطای سرور: {ex.Message}");
+                _logger.LogError(ex, "Error processing combined request for {RequestId}", requestId);
+                return StatusCode(500, $"خطا در پردازش درخواست: {ex.Message}");
             }
         }
 

@@ -213,6 +213,45 @@ namespace PomixPMOService.API.Controllers
             return Ok($"دسترسی {model.Permission} از کاربر {user?.Username ?? "Unknown"} حذف شد.");
         }
 
+        [HttpGet("GetCurrentUser")]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst("UserId")?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+                {
+                    return Unauthorized("کاربر شناسایی نشد.");
+                }
+
+                var user = await _context.Users
+                    .Include(u => u.Role)
+                    .FirstOrDefaultAsync(u => u.UserId == userId);
+
+                if (user == null)
+                {
+                    return NotFound("کاربر یافت نشد.");
+                }
+
+                var userInfo = new
+                {
+                    user.UserId,
+                    user.Username,
+                    user.Name,
+                    user.LastName,
+                    Role = user.Role?.RoleName ?? "بدون نقش"
+                };
+
+                return Ok(userInfo);
+            }
+            catch (Exception ex)
+            {
+                await LogAction(0, "GetCurrentUser_Error", null, ex.Message);
+                return StatusCode(500, "خطا در سرور: " + ex.Message);
+            }
+        }
+
         private async Task LogAction(long userId, string action, string? username, string result)
         {
             try

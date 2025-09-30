@@ -46,10 +46,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseAuthorization();
-
-// افزودن middleware برای Session
 app.UseSession();
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",

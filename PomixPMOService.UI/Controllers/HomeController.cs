@@ -1,7 +1,9 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
 using PomixPMOService.UI.ViewModels;
+using System.Drawing;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
@@ -19,6 +21,8 @@ namespace PomixPMOService.UI.Controllers
             _client = httpClientFactory.CreateClient("PomixApi");
             _captchaValidatorService = captchaValidatorService ?? throw new ArgumentNullException(nameof(captchaValidatorService));
         }
+
+        #region Login
 
         [HttpGet]
         public IActionResult LoginPage()
@@ -76,12 +80,14 @@ namespace PomixPMOService.UI.Controllers
             }
         }
 
+        #endregion
 
         //public IActionResult Cartable()
         //{
         //    return View("~/Views/Cartable/Index.cshtml", new List<object>());
         //}
 
+        #region Users
         public async Task<IActionResult> Users()
         {
             try
@@ -112,6 +118,7 @@ namespace PomixPMOService.UI.Controllers
                 return View(new List<UserViewModel>());
             }
         }
+
 
         //[HttpPost]
         //[ValidateAntiForgeryToken]
@@ -160,9 +167,39 @@ namespace PomixPMOService.UI.Controllers
         //    }
         //}
 
-        public IActionResult EditProfile()
+        #endregion
+
+        [HttpGet]
+        public async Task<IActionResult> EditProfile()
         {
-            return View();
+            try
+            {
+                var jwtToken = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return RedirectToAction("LoginPage");
+                }
+
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+
+                var response = await _client.GetAsync("Auth/GetCurrentUser");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var user = await response.Content.ReadFromJsonAsync<UserInfo>();
+                    return View(user); 
+                }
+                else
+                {
+                    ViewBag.ErrorMessage = "خطا در دریافت اطلاعات کاربر.";
+                    return View(new UserInfo());
+                }
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = $"خطا در ارتباط با سرور: {ex.Message}";
+                return View(new UserInfo());
+            }
         }
 
         public IActionResult Shahkar()

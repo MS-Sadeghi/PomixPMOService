@@ -206,7 +206,7 @@ namespace PomixPMOService.UI.Controllers
                     ViewBag.VerifyDocData = verifyDocData;
                     ViewBag.ShowDocumentTab = true;
                     ViewBag.SuccessMessage = "درخواست با موفقیت ثبت شد و سند آماده نمایش است.";
-                    ViewBag.FormModel = new CartableFormViewModel(); // ریست فرم
+                    ViewBag.FormModel = new CartableFormViewModel();
                     return View("Index", await GetCartableData(1, ""));
                 }
                 else

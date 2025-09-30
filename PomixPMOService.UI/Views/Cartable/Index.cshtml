@@ -47,6 +47,9 @@
                                     <th class="wd-10p border-bottom-0 sorting"> احراز هویت متقاضی </th>
                                     <th class="wd-10p border-bottom-0 sorting">احراز اصالت سند </th>
                                     <th class="wd-10p border-bottom-0 sorting">احراز وکالت</th>
+                                    <th class="wd-10p border-bottom-0 sorting">احراز هویت متقاضی</th>
+                                    <th class="wd-10p border-bottom-0 sorting">احراز اصالت سند</th>
+                                    <th class="wd-10p border-bottom-0 sorting">اصالت وکالت</th>
                                     <th class="wd-20p border-bottom-0 sorting">توضیحات</th>
                                 </tr>
                             </thead>
@@ -77,9 +80,61 @@
                                         <td>@item.MobileNumber</td>
                                         <td>@item.DocumentNumber</td>
                                         <td>@item.VerificationCode</td>
-                                        <td>@(item.IsMatch.HasValue ? (item.IsMatch.Value ? "تایید شده" : "تایید نشده") : "نامشخص")</td>
-                                        <td>@(item.IsExist.HasValue ? (item.IsExist.Value ? "وجود دارد" : "وجود ندارد") : "نامشخص")</td>
-                                        <td>@(item.IsNationalIdInResponse.HasValue ? (item.IsNationalIdInResponse.Value ? "تایید شده" : "تایید نشده") : "نامشخص")</td>
+                                        <!-- احراز هویت متقاضی -->
+                                        <td class="text-center">
+                                            @if (item.IsMatch.HasValue)
+                                            {
+                                                if (item.IsMatch.Value)
+                                                {
+                                                    <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="تایید شده"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="zmdi zmdi-close text-danger" data-bs-toggle="tooltip" title="تایید نشده"></i>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">نامشخص</span>
+                                            }
+                                        </td>
+                                        <!-- احراز اصالت سند -->
+                                        <td class="text-center">
+                                            @if (item.IsExist.HasValue)
+                                            {
+                                                if (item.IsExist.Value)
+                                                {
+                                                    <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="وجود دارد"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="zmdi zmdi-close text-danger" data-bs-toggle="tooltip" title="وجود ندارد"></i>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">نامشخص</span>
+                                            }
+                                        </td>
+                                        <!-- اصالت وکالت -->
+                                        <td class="text-center">
+                                            @if (item.IsNationalIdInResponse.HasValue)
+                                            {
+                                                if (item.IsNationalIdInResponse.Value)
+                                                {
+                                                    <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="تایید شده"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="zmdi zmdi-close text-danger" data-bs-toggle="tooltip" title="تایید نشده"></i>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">نامشخص</span>
+                                            }
+                                        </td>
+                                        <!-- توضیحات -->
                                         <td>
                                             @if (!string.IsNullOrEmpty(explanation) && explanation != "بدون مشکل")
                                             {
@@ -87,7 +142,7 @@
                                             }
                                             else
                                             {
-                                                @explanation
+                                                <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="بدون مشکل"></i>
                                             }
                                         </td>
                                     </tr>
@@ -262,13 +317,13 @@
                 $('.nav-tabs a[href="#tab1"]').tab('show');
             });
 
-        @if (showDocumentTab)
-        {
-            <text>
-                    $('#scrollingmodal').modal('show');
-                    $('.nav-tabs a[href="#tab2"]').tab('show');
-            </text>
-        }
+            @if (showDocumentTab)
+            {
+                <text>
+                $('#scrollingmodal').modal('show');
+                $('.nav-tabs a[href="#tab2"]').tab('show');
+                </text>
+            }
         });
     </script>
 }

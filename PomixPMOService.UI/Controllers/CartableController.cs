@@ -1,6 +1,8 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
 using PomixPMOService.UI.ViewModels;
+using System.Dynamic;
+using System.Text.Json;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -171,7 +173,39 @@ namespace PomixPMOService.UI.Controllers
                 var response = await _client.PostAsJsonAsync("Service/ProcessCombinedRequest", requestData);
                 if (response.IsSuccessStatusCode)
                 {
-                    ViewBag.SuccessMessage = "درخواست با موفقیت ثبت شد.";
+                    var combinedResult = await response.Content.ReadFromJsonAsync<dynamic>();
+                    var verifyDoc = combinedResult.VerifyDoc;
+                    var verifyDocResponseText = (string)verifyDoc.ResponseText;
+
+                    dynamic verifyDocData = new ExpandoObject();
+                    ViewBag.DocumentError = null;
+
+                    try
+                    {
+                        var responseTextDoc = JsonDocument.Parse(verifyDocResponseText);
+                        var dataElement = responseTextDoc.RootElement.GetProperty("result").GetProperty("data");
+
+                        verifyDocData.DocType = dataElement.TryGetProperty("DocType", out var docType) ? docType.GetString() : null;
+                        verifyDocData.SignSubject = dataElement.TryGetProperty("SignSubject", out var signSubject) ? signSubject.GetString() : null;
+                        verifyDocData.DocDate = dataElement.TryGetProperty("DocDate", out var docDate) ? docDate.GetString() : null;
+                        verifyDocData.Desc = dataElement.TryGetProperty("Desc", out var desc) ? desc.GetString() : null;
+                        verifyDocData.DocImage = dataElement.TryGetProperty("DocImage", out var docImage) ? docImage.GetString() : null;
+                        verifyDocData.DocImage_Base64 = dataElement.TryGetProperty("DocImage_Base64", out var docImageBase64) ? docImageBase64.GetString() : null;
+
+                        var lstPersons = dataElement.TryGetProperty("LstFindPersonInQuery", out var personsElement) && personsElement.ValueKind == JsonValueKind.Array
+                            ? JsonSerializer.Deserialize<List<dynamic>>(personsElement.GetRawText())
+                            : new List<dynamic>();
+
+                        verifyDocData.LstFindPersonInQuery = lstPersons;
+                    }
+                    catch (Exception)
+                    {
+                        ViewBag.DocumentError = "خطا در پردازش محتوای سند.";
+                    }
+
+                    ViewBag.VerifyDocData = verifyDocData;
+                    ViewBag.ShowDocumentTab = true;
+                    ViewBag.SuccessMessage = "درخواست با موفقیت ثبت شد و سند آماده نمایش است.";
                     ViewBag.FormModel = new CartableFormViewModel(); // ریست فرم
                     return View("Index", await GetCartableData(1, ""));
                 }
@@ -276,8 +310,8 @@ namespace PomixPMOService.UI.Controllers
         public bool? IsMatch { get; set; }
         public bool? IsExist { get; set; }
         public bool? IsNationalIdInResponse { get; set; }
-        public bool? ValidateByExpert { get; set; } 
-        public string Description { get; set; } = string.Empty; 
+        public bool? ValidateByExpert { get; set; }
+        public string Description { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public string CreatedBy { get; set; } = string.Empty;
     }

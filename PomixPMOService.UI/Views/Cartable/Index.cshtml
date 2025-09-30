@@ -3,6 +3,9 @@
     ViewData["Title"] = "کارتابل";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var formModel = ViewBag.FormModel as PomixPMOService.UI.Controllers.CartableFormViewModel ?? new PomixPMOService.UI.Controllers.CartableFormViewModel();
+    var verifyDocData = ViewBag.VerifyDocData as dynamic ?? null;
+    var showDocumentTab = ViewBag.ShowDocumentTab as bool? ?? false;
+    var documentError = ViewBag.DocumentError as string ?? null;
 }
 
 <div class="input-group mb-5">
@@ -50,6 +53,24 @@
                             <tbody id="cartableBody">
                                 @foreach (var item in Model.Items)
                                 {
+                                    var explanation = "";
+                                    if (!item.IsMatch.HasValue || !item.IsMatch.Value)
+                                    {
+                                        explanation += "کد ملی و شماره موبایل تطابق ندارند. ";
+                                    }
+                                    if (!item.IsExist.HasValue || !item.IsExist.Value)
+                                    {
+                                        explanation += "سند وجود ندارد. ";
+                                    }
+                                    if (!item.IsNationalIdInResponse.HasValue || !item.IsNationalIdInResponse.Value)
+                                    {
+                                        explanation += "کد ملی در سند یافت نشد. ";
+                                    }
+                                    if (string.IsNullOrEmpty(explanation))
+                                    {
+                                        explanation = "بدون مشکل";
+                                    }
+
                                     <tr>
                                         <td>@item.RequestId</td>
                                         <td>@item.NationalId</td>
@@ -59,6 +80,16 @@
                                         <td>@(item.IsMatch.HasValue ? (item.IsMatch.Value ? "تایید شده" : "تایید نشده") : "نامشخص")</td>
                                         <td>@(item.IsExist.HasValue ? (item.IsExist.Value ? "وجود دارد" : "وجود ندارد") : "نامشخص")</td>
                                         <td>@(item.IsNationalIdInResponse.HasValue ? (item.IsNationalIdInResponse.Value ? "تایید شده" : "تایید نشده") : "نامشخص")</td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(explanation) && explanation != "بدون مشکل")
+                                            {
+                                                <i class="fa fa-exclamation-circle text-danger" title="@explanation" style="cursor: pointer;"></i> @explanation
+                                            }
+                                            else
+                                            {
+                                                @explanation
+                                            }
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -105,7 +136,7 @@
                                 <div class="tabs-menu1">
                                     <ul class="nav panel-tabs">
                                         <li><a href="#tab1" data-bs-toggle="tab" class="active">ایجاد سند جدید</a></li>
-                                        <li><a href="#tab2" data-bs-toggle="tab" class="disabled">نمایش سند</a></li>
+                                        <li><a href="#tab2" data-bs-toggle="tab">نمایش سند</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -172,7 +203,44 @@
                                         </form>
                                     </div>
                                     <div class="tab-pane" id="tab2">
-                                        @* محتوای سند *@
+                                        @if (!string.IsNullOrEmpty(documentError))
+                                        {
+                                            <div class="alert alert-danger">@documentError</div>
+                                        }
+                                        else if (verifyDocData != null)
+                                        {
+                                            <div class="document-details">
+                                                <h4>جزئیات سند</h4>
+                                                <p><strong>نوع سند:</strong> @verifyDocData.DocType</p>
+                                                <p><strong>موضوع سند:</strong> @verifyDocData.SignSubject</p>
+                                                <p><strong>تاریخ سند:</strong> @verifyDocData.DocDate</p>
+                                                <p><strong>توضیحات:</strong> @verifyDocData.Desc</p>
+                                                @if (!string.IsNullOrEmpty(verifyDocData.DocImage_Base64))
+                                                {
+                                                    <h5>تصویر سند:</h5>
+                                                    <img src="data:image/png;base64,@verifyDocData.DocImage_Base64" alt="تصویر سند" class="img-fluid" />
+                                                }
+                                                else if (!string.IsNullOrEmpty(verifyDocData.DocImage))
+                                                {
+                                                    <h5>تصویر سند:</h5>
+                                                    <img src="@verifyDocData.DocImage" alt="تصویر سند" class="img-fluid" />
+                                                }
+                                                @if (verifyDocData.LstFindPersonInQuery != null && verifyDocData.LstFindPersonInQuery.Count > 0)
+                                                {
+                                                    <h5>افراد مرتبط:</h5>
+                                                    <ul>
+                                                        @foreach (var person in verifyDocData.LstFindPersonInQuery)
+                                                        {
+                                                            <li>@person.Name @person.Family (کد ملی: @person.NationalNo)</li>
+                                                        }
+                                                    </ul>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <p>سندی برای نمایش وجود ندارد.</p>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -191,7 +259,16 @@
             $('#scrollingmodal').on('hidden.bs.modal', function() {
                 $('#needs-validation-form')[0].reset();
                 $('.form-text').text('');
+                $('.nav-tabs a[href="#tab1"]').tab('show');
             });
+
+        @if (showDocumentTab)
+        {
+            <text>
+                    $('#scrollingmodal').modal('show');
+                    $('.nav-tabs a[href="#tab2"]').tab('show');
+            </text>
+        }
         });
     </script>
 }

@@ -50,7 +50,10 @@ namespace ServicePomixPMO.API.Controllers
                     AssignedToName = ci.AssignedToUser != null ? $"{ci.AssignedToUser.Name} {ci.AssignedToUser.LastName}" : null,
                     AssignedAt = ci.AssignedAt,
                     ViewedAt = ci.ViewedAt,
-                    Status = ci.Status
+                    Status = ci.Status,
+                    Description = ci.Description,
+                    ValidateByExpert = ci.ValidateByExpert
+                    
                 })
                 .ToListAsync();
 

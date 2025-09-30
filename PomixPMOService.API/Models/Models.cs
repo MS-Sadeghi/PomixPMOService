@@ -91,7 +91,8 @@ namespace ServicePomixPMO.API.Models
 
         [ForeignKey("User")]
         public long? AssignedTo { get; set; }
-
+        public bool? ValidateByExpert { get; set; } // اضافه شده
+        public string? Description { get; set; }
         public User? AssignedToUser { get; set; }
 
         public DateTime AssignedAt { get; set; } = DateTime.UtcNow;

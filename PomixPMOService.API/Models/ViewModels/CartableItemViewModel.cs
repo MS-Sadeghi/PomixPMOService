@@ -12,6 +12,8 @@ namespace PomixPMOService.API.Models.ViewModels
         public bool IdentityVerified { get; set; }
         public bool DocumentVerified { get; set; }
         public bool DocumentMatch { get; set; }
+        public bool? ValidateByExpert { get; set; } // اضافه شده
+        public string? Description { get; set; }
         public bool TextApproved { get; set; }
         public string? RequestStatus { get; set; }
         public long? AssignedTo { get; set; }

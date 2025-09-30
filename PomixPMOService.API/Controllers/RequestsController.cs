@@ -10,75 +10,86 @@ namespace ServicePomixPMO.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class RequestsController : ControllerBase
+    public class RequestController : ControllerBase
     {
         private readonly PomixServiceContext _context;
 
-        public RequestsController(PomixServiceContext context)
+        public RequestController(PomixServiceContext context)
         {
             _context = context;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RequestViewModel>>> GetRequests()
+        public async Task<ActionResult<PaginatedResponse<RequestViewModel>>> GetAll(int page = 1, int pageSize = 10, string search = "")
         {
-            var callerUserId = long.Parse(User.FindFirst("UserId")?.Value ?? "0");
-            if (callerUserId == 0)
-                return Unauthorized("کاربر شناسایی نشد.");
+            var query = _context.Request.AsQueryable();
 
-            return await _context.Request
-                .Include(r => r.Expert)
-                .Where(r => r.ExpertId == callerUserId)
+            // اعمال فیلتر جستجو
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(r => r.NationalId.Contains(search) ||
+                                        r.MobileNumber.Contains(search) ||
+                                        r.DocumentNumber.Contains(search));
+            }
+
+            // شمارش کل ردیف‌ها
+            var totalCount = await query.CountAsync();
+
+            // اعمال صفحه‌بندی
+            var items = await query
                 .Select(r => new RequestViewModel
                 {
                     RequestId = r.RequestId,
+                    RequestCode = r.RequestCode,
                     NationalId = r.NationalId,
+                    MobileNumber = r.MobileNumber,
                     DocumentNumber = r.DocumentNumber,
                     VerificationCode = r.VerificationCode,
-                    IdentityVerified = r.IdentityVerified,
-                    DocumentVerified = r.DocumentVerified,
-                    DocumentMatch = r.DocumentMatch,
-                    TextApproved = r.TextApproved,
-                    ExpertId = r.ExpertId,
-                    ExpertName = r.Expert != null ? $"{r.Expert.Name} {r.Expert.LastName}" : null,
-                    RequestStatus = r.RequestStatus,
+                    IsMatch = r.IsMatch ?? false,
+                    IsExist = r.IsExist ?? false,
+                    IsNationalIdInResponse = r.IsNationalIdInResponse ?? false,
+                    ValidateByExpert = r.ValidateByExpert,
+                    Description = r.Description,
                     CreatedAt = r.CreatedAt,
-                    UpdatedAt = r.UpdatedAt,
-                    DocumentText = r.DocumentText,
-                    MobileNumber = r.MobileNumber
+                    CreatedBy = r.CreatedBy
                 })
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            var response = new PaginatedResponse<RequestViewModel>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<RequestViewModel>> GetRequest(long id)
+        public async Task<ActionResult<RequestViewModel>> Get(long id)
         {
-            var callerUserId = long.Parse(User.FindFirst("UserId")?.Value ?? "0");
-            if (callerUserId == 0)
-                return Unauthorized("کاربر شناسایی نشد.");
-
             var request = await _context.Request
-                .Include(r => r.Expert)
-                .Where(r => r.ExpertId == callerUserId)
+                .Where(r => r.RequestId == id)
                 .Select(r => new RequestViewModel
                 {
                     RequestId = r.RequestId,
+                    RequestCode = r.RequestCode,
                     NationalId = r.NationalId,
+                    MobileNumber = r.MobileNumber,
                     DocumentNumber = r.DocumentNumber,
                     VerificationCode = r.VerificationCode,
-                    IdentityVerified = r.IdentityVerified,
-                    DocumentVerified = r.DocumentVerified,
-                    DocumentMatch = r.DocumentMatch,
-                    TextApproved = r.TextApproved,
-                    ExpertId = r.ExpertId,
-                    ExpertName = r.Expert != null ? $"{r.Expert.Name} {r.Expert.LastName}" : null,
-                    RequestStatus = r.RequestStatus,
+                    IsMatch = r.IsMatch ?? false,
+                    IsExist = r.IsExist ?? false,
+                    IsNationalIdInResponse = r.IsNationalIdInResponse ?? false,
+                    ValidateByExpert = r.ValidateByExpert, // اضافه شده
+                    Description = r.Description,           // اضافه شده
                     CreatedAt = r.CreatedAt,
-                    UpdatedAt = r.UpdatedAt,
-                    DocumentText = r.DocumentText,
-                    MobileNumber = r.MobileNumber
+                    CreatedBy = r.CreatedBy
                 })
-                .FirstOrDefaultAsync(r => r.RequestId == id);
+                .FirstOrDefaultAsync();
 
             if (request == null)
                 return NotFound();
@@ -86,90 +97,121 @@ namespace ServicePomixPMO.API.Controllers
             return request;
         }
 
-        [HttpPost]
-        public async Task<ActionResult<RequestViewModel>> CreateRequest(CreateRequestViewModel viewModel)
+
+
+        [HttpPost("CreateNewRequest")]
+        [Authorize]
+        public async Task<IActionResult> CreateNewRequest(NewRequestViewModel model)
         {
-            var callerUserId = long.Parse(User.FindFirst("UserId")?.Value ?? "0");
-            if (callerUserId == 0)
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
+            {
                 return Unauthorized("کاربر شناسایی نشد.");
+            }
 
-            var request = new Request
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                NationalId = viewModel.NationalId,
-                DocumentNumber = viewModel.DocumentNumber,
-                VerificationCode = viewModel.VerificationCode,
-                DocumentText = viewModel.DocumentText,
-                ExpertId = callerUserId,
-                CreatedAt = DateTime.UtcNow,
-                RequestStatus = "Pending",
-                MobileNumber = viewModel.MobileNumber
-            };
+                var newRequest = new Request
+                {
+                    NationalId = model.NationalId,
+                    MobileNumber = model.MobileNumber,
+                    DocumentNumber = model.DocumentNumber,
+                    VerificationCode = model.VerificationCode,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = User.Identity?.Name ?? "Unknown"
+                };
+                _context.Request.Add(newRequest);
+                await _context.SaveChangesAsync();
 
-            _context.Request.Add(request);
-            await _context.SaveChangesAsync();
+                var shahkarLog = new ShahkarLog
+                {
+                    NationalId = model.NationalId,
+                    MobileNumber = model.MobileNumber,
+                    RequestCode = newRequest.RequestCode,
+                    ExpertId = userId,
+                    RequestId = newRequest.RequestId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ShahkarLog.Add(shahkarLog);
+                await _context.SaveChangesAsync();
 
-            _context.RequestLogs.Add(new RequestLog
+                var verifyLog = new VerifyDocLog
+                {
+                    DocumentNumber = model.DocumentNumber,
+                    VerificationCode = model.VerificationCode,
+                    ResponseText = "", 
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = userId.ToString(),
+                    RequestId = newRequest.RequestId
+                };
+                _context.VerifyDocLog.Add(verifyLog);
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    RequestId = newRequest.RequestId,
+                    Message = "درخواست جدید با موفقیت ایجاد شد."
+                });
+            }
+            catch (Exception ex)
             {
-                RequestId = request.RequestId,
-                UserId = callerUserId,
-                Action = "Create",
-                Details = $"درخواست جدید با شماره سند {request.DocumentNumber} ایجاد شد",
-                ActionTime = DateTime.UtcNow
-            });
-            await _context.SaveChangesAsync();
-
-            var result = new RequestViewModel
-            {
-                RequestId = request.RequestId,
-                NationalId = request.NationalId,
-                DocumentNumber = request.DocumentNumber,
-                VerificationCode = request.VerificationCode,
-                IdentityVerified = request.IdentityVerified,
-                DocumentVerified = request.DocumentVerified,
-                DocumentMatch = request.DocumentMatch,
-                TextApproved = request.TextApproved,
-                RequestStatus = request.RequestStatus,
-                CreatedAt = request.CreatedAt,
-                UpdatedAt = request.UpdatedAt,
-                DocumentText = request.DocumentText,
-                MobileNumber = request.MobileNumber
-            };
-
-            return CreatedAtAction(nameof(GetRequest), new { id = request.RequestId }, result);
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"خطا در ایجاد درخواست: {ex.Message}");
+            }
         }
 
-        [HttpPut("{id}/approve-text")]
-        public async Task<IActionResult> ApproveText(long id, ApproveTextViewModel viewModel)
+        [HttpPost("ValidateRequest")]
+        [Authorize(Policy = "CanValidateRequest")]
+        public async Task<IActionResult> ValidateRequest([FromBody] ValidateRequestViewModel model)
         {
-            var callerUserId = long.Parse(User.FindFirst("UserId")?.Value ?? "0");
-            if (callerUserId == 0)
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
+            {
                 return Unauthorized("کاربر شناسایی نشد.");
+            }
 
-            var request = await _context.Request.FindAsync(id);
+            var request = await _context.Request.FindAsync(model.RequestId);
             if (request == null)
-                return NotFound();
+                return NotFound("درخواست یافت نشد.");
 
-            if (request.ExpertId != callerUserId)
-                return Forbid("شما مجاز به ویرایش این درخواست نیستید.");
-
-            request.TextApproved = viewModel.IsApproved;
+            request.ValidateByExpert = model.ValidateByExpert;
+            request.Description = model.Description;
             request.UpdatedAt = DateTime.UtcNow;
-            request.RequestStatus = viewModel.IsApproved ? "Approved" : "Rejected";
-            request.ExpertId = callerUserId;
+            request.UpdatedBy = User.Identity?.Name ?? userId.ToString();
 
+            _context.Request.Update(request);
             await _context.SaveChangesAsync();
 
+            // لاگ کردن عملیات
             _context.RequestLogs.Add(new RequestLog
             {
-                RequestId = id,
-                UserId = callerUserId,
-                Action = "TextApproval",
-                Details = $"متن سند توسط کارشناس {(viewModel.IsApproved ? "تأیید" : "رد")} شد",
+                RequestId = request.RequestId,
+                UserId = userId,
+                Action = model.ValidateByExpert ? "ValidateRequest_Approved" : "ValidateRequest_Rejected",
+                Details = $"تأیید درخواست توسط کارشناس حراست: {model.Description}",
                 ActionTime = DateTime.UtcNow
             });
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new
+            {
+                RequestId = request.RequestId,
+                Message = model.ValidateByExpert ? "درخواست با موفقیت تأیید شد." : "درخواست رد شد."
+            });
         }
+
+        public class NewRequestViewModel
+        {
+            public string NationalId { get; set; } = string.Empty;  
+            public string MobileNumber { get; set; } = string.Empty;   
+            public string DocumentNumber { get; set; } = string.Empty;   
+            public string VerificationCode { get; set; } = string.Empty; 
+        }
+
+
     }
 }

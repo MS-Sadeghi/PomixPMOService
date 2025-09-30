@@ -12,6 +12,8 @@ namespace PomixPMOService.API.Models.ViewModels
         public bool IdentityVerified { get; set; }
         public bool DocumentVerified { get; set; }
         public bool DocumentMatch { get; set; }
+        public bool? ValidateByExpert { get; set; } // اضافه شده
+        public string? Description { get; set; }
         public bool TextApproved { get; set; }
         public string? RequestStatus { get; set; }
         public long? AssignedTo { get; set; }
@@ -19,6 +21,11 @@ namespace PomixPMOService.API.Models.ViewModels
         public DateTime AssignedAt { get; set; }
         public DateTime? ViewedAt { get; set; }
         public string? Status { get; set; }
+        public bool? IsMatch { get; internal set; }
+        public bool? IsExist { get; internal set; }
+        public bool? IsNationalIdInResponse { get;  set; }
+        public bool? IsNationalIdInLawyers { get; set; }
+        public DateTime CreatedAt { get; internal set; }
     }
 
     public class AssignCartableItemViewModel

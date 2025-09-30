@@ -1,14 +1,22 @@
-﻿@model IEnumerable<PomixPMOService.UI.ViewModels.CartableItemViewModel>
+﻿@model PomixPMOService.UI.Controllers.PaginatedCartableViewModel
 @{
     ViewData["Title"] = "کارتابل";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var formModel = ViewBag.FormModel as PomixPMOService.UI.Controllers.CartableFormViewModel ?? new PomixPMOService.UI.Controllers.CartableFormViewModel();
+    var verifyDocData = ViewBag.VerifyDocData as dynamic ?? null;
+    var showDocumentTab = ViewBag.ShowDocumentTab as bool? ?? false;
+    var documentError = ViewBag.DocumentError as string ?? null;
 }
 
 <div class="input-group mb-5">
-    <input type="text" class="form-control" placeholder="جستجو">
-    <div class="input-group-text btn btn-primary">
-        <i class="fa fa-search" aria-hidden="true"></i>
-    </div>
+    <form asp-action="Index" method="get" class="w-100">
+        <div class="input-group">
+            <input type="text" class="form-control" name="search" value="@Model.SearchQuery" placeholder="جستجو">
+            <button type="submit" class="input-group-text btn btn-primary">
+                <i class="fa fa-search" aria-hidden="true"></i>
+            </button>
+        </div>
+    </form>
 </div>
 <div class="card">
     <div class="card-header">
@@ -16,6 +24,14 @@
         <button id="AddDoc" type="button" class="btn btn-primary btn-pill left-btn" data-bs-toggle="modal" data-bs-target="#scrollingmodal">سند جدید</button>
     </div>
     <div class="card-body">
+        @if (ViewBag.ErrorMessage != null)
+        {
+            <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+        }
+        @if (ViewBag.SuccessMessage != null)
+        {
+            <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+        }
         <div class="table-responsive">
             <div id="basic-datatable_wrapper" class="dataTables_wrapper dt-bootstrap5 no-footer">
                 <div class="row">
@@ -23,22 +39,161 @@
                         <table id="cartableTable" class="table table-bordered text-nowrap border-bottom">
                             <thead>
                                 <tr role="row">
-                                    <th class="wd-15p border-bottom-0 sorting sorting_asc">شماره درخواست</th>
+                                    <th class="wd-10p border-bottom-0 sorting sorting_asc">شماره درخواست</th>
                                     <th class="wd-15p border-bottom-0 sorting">کد ملی</th>
-                                    <th class="wd-20p border-bottom-0 sorting">شماره همراه</th>
+                                    <th class="wd-15p border-bottom-0 sorting">شماره همراه</th>
                                     <th class="wd-15p border-bottom-0 sorting">شناسه سند</th>
                                     <th class="wd-10p border-bottom-0 sorting">رمز تصدیق</th>
-                                    <th class="wd-10p border-bottom-0 sorting">وضعیت احراز هویت</th>
-                                    <th class="wd-10p border-bottom-0 sorting">وجود سند</th>
-                                    <th class="wd-15p border-bottom-0 sorting">بررسی سند</th>
+                                    <th class="wd-10p border-bottom-0 sorting"> احراز هویت متقاضی </th>
+                                    <th class="wd-10p border-bottom-0 sorting">احراز اصالت سند </th>
+                                    <th class="wd-10p border-bottom-0 sorting">ارتباط متقاضی با سند </th>
+                                    <th class="wd-10p border-bottom-0 sorting">احراز وکالت</th>
+                                    <th class="wd-20p border-bottom-0 sorting">توضیحات</th>
                                 </tr>
                             </thead>
                             <tbody id="cartableBody">
-                                <!-- داده‌ها به‌صورت داینامیک با JavaScript پر می‌شوند -->
+                                @foreach (var item in Model.Items)
+                                {
+                                    var explanation = "";
+                                    if (!item.IsMatch.HasValue || !item.IsMatch.Value)
+                                    {
+                                        explanation += "کد ملی و شماره موبایل تطابق ندارند. ";
+                                    }
+                                    if (!item.IsExist.HasValue || !item.IsExist.Value)
+                                    {
+                                        explanation += "سند وجود ندارد. ";
+                                    }
+                                    if (!item.IsNationalIdInResponse.HasValue || !item.IsNationalIdInResponse.Value)
+                                    {
+                                        explanation += "کد ملی در سند یافت نشد. ";
+                                    }
+                                    if (!item.IsNationalIdInLawyers.HasValue || !item.IsNationalIdInLawyers.Value)
+                                    {
+                                        explanation += "کد ملی در سند یافت نشد. ";
+                                    }
+                                    if (string.IsNullOrEmpty(explanation))
+                                    {
+                                        explanation = "بدون مشکل";
+                                    }
+
+                                    <tr>
+                                        <td>@item.RequestId</td>
+                                        <td>@item.NationalId</td>
+                                        <td>@item.MobileNumber</td>
+                                        <td>@item.DocumentNumber</td>
+                                        <td>@item.VerificationCode</td>
+                                        <!-- احراز هویت متقاضی -->
+                                        <td class="text-center">
+                                            @if (item.IsMatch.HasValue)
+                                            {
+                                                if (item.IsMatch.Value)
+                                                {
+                                                    <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="تایید شده"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="zmdi zmdi-close text-danger" data-bs-toggle="tooltip" title="تایید نشده"></i>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">نامشخص</span>
+                                            }
+                                        </td>
+                                        <!-- احراز اصالت سند -->
+                                        <td class="text-center">
+                                            @if (item.IsExist.HasValue)
+                                            {
+                                                if (item.IsExist.Value)
+                                                {
+                                                    <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="وجود دارد"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="zmdi zmdi-close text-danger" data-bs-toggle="tooltip" title="وجود ندارد"></i>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">نامشخص</span>
+                                            }
+                                        </td>
+                                        <!-- اصالت وکالت -->
+                                        <td class="text-center">
+                                            @if (item.IsNationalIdInResponse.HasValue)
+                                            {
+                                                if (item.IsNationalIdInResponse.Value)
+                                                {
+                                                    <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="تایید شده"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="zmdi zmdi-close text-danger" data-bs-toggle="tooltip" title="تایید نشده"></i>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">نامشخص</span>
+                                            }
+                                        </td>
+                                        <!--ارتباط متقاضی با سند  -->
+                                        <td class="text-center">
+                                            @if (item.IsNationalIdInLawyers.HasValue)
+                                            {
+                                                if (item.IsNationalIdInLawyers.Value)
+                                                {
+                                                    <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="تایید شده"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="zmdi zmdi-close text-danger" data-bs-toggle="tooltip" title="تایید نشده"></i>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">نامشخص</span>
+                                            }
+                                        </td>
+                                        <!-- توضیحات -->
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(explanation) && explanation != "بدون مشکل")
+                                            {
+                                                <i class="fa fa-exclamation-circle text-danger" title="@explanation" style="cursor: pointer;"></i> @explanation
+                                            }
+                                            else
+                                            {
+                                                <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="بدون مشکل"></i>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
                 </div>
+                <!-- صفحه‌بندی -->
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-end">
+                        <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { page = Model.CurrentPage - 1, search = Model.SearchQuery })">
+                                <i class="fa fa-angle-right"></i>
+                                <span class="sr-only">قبلی</span>
+                            </a>
+                        </li>
+                        @for (var i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { page = i, search = Model.SearchQuery })">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(Model.CurrentPage == Model.TotalPages || Model.TotalPages == 0 ? "disabled" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { page = Model.CurrentPage + 1, search = Model.SearchQuery })">
+                                <i class="fa fa-angle-left"></i>
+                                <span class="sr-only">بعدی</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
@@ -48,99 +203,123 @@
 <div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="scrollingmodalLabel">ایجاد درخواست جدید</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
             <div class="modal-body">
-                <div id="wizard2" role="application" class="wizard clearfix">
-                    <!-- مراحل -->
-                    <div class="steps clearfix">
-                        <ul role="tablist">
-                            <li role="tab" class="first current" aria-disabled="false" aria-selected="true">
-                                <a id="wizard2-t-0" href="#wizard2-h-0" aria-controls="wizard2-p-0">
-                                    <span class="current-info audible">current step: </span>
-                                    <span class="number">1</span>
-                                    <span class="title">احراز هویت</span>
-                                </a>
-                            </li>
-                            <li role="tab" class="disabled" aria-disabled="true">
-                                <a id="wizard2-t-1" href="#wizard2-h-1" aria-controls="wizard2-p-1">
-                                    <span class="number">2</span>
-                                    <span class="title">احراز سند</span>
-                                </a>
-                            </li>
-                            <li role="tab" class="disabled last" aria-disabled="true">
-                                <a id="wizard2-t-2" href="#wizard2-h-2" aria-controls="wizard2-p-2">
-                                    <span class="number">3</span>
-                                    <span class="title">تطابق کد ملی</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="content clearfix">
-                        <!-- Step 1 -->
-                        <section id="wizard2-p-0" role="tabpanel" aria-labelledby="wizard2-h-0" class="body current" aria-hidden="false">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="form-control-label">کد ملی:</label>
-                                    <input class="form-control" id="national_code" name="national_code" placeholder="کد ملی را وارد کنید" required type="text">
-                                </div>
-                                <div class="col-md-6 mg-t-20 mg-md-t-0">
-                                    <label class="form-control-label">شماره موبایل:</label>
-                                    <input class="form-control" id="mobile_number" name="mobile_number" placeholder="09xxxxxxxxx" required type="text">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="panel panel-primary">
+                            <div class="tab-menu-heading">
+                                <div class="tabs-menu1">
+                                    <ul class="nav panel-tabs">
+                                        <li><a href="#tab1" data-bs-toggle="tab" class="active">ایجاد سند جدید</a></li>
+                                        <li><a href="#tab2" data-bs-toggle="tab">نمایش سند</a></li>
+                                    </ul>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary mt-1" form="needs-validation-form">تایید</button>
-                            <button class="btn btn-primary my-1 loading-btn" type="button" style="display:none;">
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span class="visually-hidden">Loading...</span>
-                            </button>
-                        </section>
-
-                        <!-- Step 2 -->
-                        <section id="wizard2-p-1" role="tabpanel" aria-labelledby="wizard2-h-1" class="body" aria-hidden="true" style="display:none;">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="form-control-label">رمز تصدیق:</label>
-                                    <input class="form-control" id="verify_code" name="verify_code" placeholder="رمز تصدیق را وارد کنید" required type="text">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-control-label">شماره سند:</label>
-                                    <input class="form-control" id="document_number" name="document_number" placeholder="شماره سند را وارد کنید" required type="text">
+                            <div class="panel-body tabs-menu-body">
+                                <div class="tab-content">
+                                    <div class="tab-pane active" id="tab1">
+                                        <form asp-action="ValidateSteps" method="post" class="form-horizontal" id="needs-validation-form">
+                                            @Html.AntiForgeryToken()
+                                            <!-- Step 1: احراز هویت -->
+                                            <div class="row mb-4">
+                                                <label class="col-md-3 form-label">احراز هویت:</label>
+                                                <div class="col-md-9">
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-2 mb-md-0">
+                                                            <input class="form-control" asp-for="@formModel.NationalCode" placeholder="کد ملی" required type="text" autocomplete="username">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <input class="form-control" asp-for="@formModel.MobileNumber" placeholder="شماره موبایل" required type="text" autocomplete="username">
+                                                        </div>
+                                                    </div>
+                                                    <span class="form-text text-@(string.IsNullOrEmpty(formModel?.Step1Message) || formModel.Step1Message.Contains("معتبر") ? "success" : "danger")">@formModel?.Step1Message</span>
+                                                </div>
+                                            </div>
+                                            <!-- Step 2: احراز سند -->
+                                            <div class="row mb-4">
+                                                <label class="col-md-3 form-label">احراز سند:</label>
+                                                <div class="col-md-9">
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-2 mb-md-0">
+                                                            <input class="form-control" asp-for="@formModel.VerifyCode" placeholder="رمز تصدیق" required type="text">
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <input class="form-control" asp-for="@formModel.DocumentNumber" placeholder="شناسه سند" required type="text">
+                                                        </div>
+                                                    </div>
+                                                    <span class="form-text text-@(string.IsNullOrEmpty(formModel?.Step2Message) || formModel.Step2Message.Contains("معتبر") ? "success" : "danger")">@formModel?.Step2Message</span>
+                                                </div>
+                                            </div>
+                                            <!-- Step 3: تطابق کد ملی -->
+                                            <div class="row mb-4">
+                                                <label class="col-md-3 form-label">تطابق کد ملی:</label>
+                                                <div class="col-md-9">
+                                                    <input class="form-control" asp-for="@formModel.ClientNationalCode" placeholder="کد ملی موکل" required type="text">
+                                                    <span class="form-text text-@(string.IsNullOrEmpty(formModel?.Step3Message) || formModel.Step3Message.Contains("معتبر") ? "success" : "danger")">@formModel?.Step3Message</span>
+                                                </div>
+                                            </div>
+                                            <!-- Checkbox -->
+                                            <div class="mb-4 row justify-content-end">
+                                                <div class="col-md-9">
+                                                    <label class="custom-control custom-checkbox">
+                                                        <input type="checkbox" class="custom-control-input" asp-for="@formModel.AgreeToTerms" required>
+                                                        <span class="custom-control-label">با شرایط موافق هستم</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <!-- Buttons -->
+                                            <div class="modal-footer">
+                                                <div class="col-md-9">
+                                                    <button type="submit" class="btn btn-primary me-5">بررسی</button>
+                                                </div>
+                                                <button type="submit" formaction="@Url.Action("SubmitRequest")" class="btn btn-azure">ثبت</button>
+                                                <button type="button" class="btn btn-default" data-bs-dismiss="modal">انصراف</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="tab-pane" id="tab2">
+                                        @if (!string.IsNullOrEmpty(documentError))
+                                        {
+                                            <div class="alert alert-danger">@documentError</div>
+                                        }
+                                        else if (verifyDocData != null)
+                                        {
+                                            <div class="document-details">
+                                                <h4>جزئیات سند</h4>
+                                                <p><strong>نوع سند:</strong> @verifyDocData.DocType</p>
+                                                <p><strong>موضوع سند:</strong> @verifyDocData.SignSubject</p>
+                                                <p><strong>تاریخ سند:</strong> @verifyDocData.DocDate</p>
+                                                <p><strong>توضیحات:</strong> @verifyDocData.Desc</p>
+                                                @if (!string.IsNullOrEmpty(verifyDocData.DocImage_Base64))
+                                                {
+                                                    <h5>تصویر سند:</h5>
+                                                    <img src="data:image/png;base64,@verifyDocData.DocImage_Base64" alt="تصویر سند" class="img-fluid" />
+                                                }
+                                                else if (!string.IsNullOrEmpty(verifyDocData.DocImage))
+                                                {
+                                                    <h5>تصویر سند:</h5>
+                                                    <img src="@verifyDocData.DocImage" alt="تصویر سند" class="img-fluid" />
+                                                }
+                                                @if (verifyDocData.LstFindPersonInQuery != null && verifyDocData.LstFindPersonInQuery.Count > 0)
+                                                {
+                                                    <h5>افراد مرتبط:</h5>
+                                                    <ul>
+                                                        @foreach (var person in verifyDocData.LstFindPersonInQuery)
+                                                        {
+                                                            <li>@person.Name @person.Family (کد ملی: @person.NationalNo)</li>
+                                                        }
+                                                    </ul>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <p>سندی برای نمایش وجود ندارد.</p>
+                                        }
+                                    </div>
                                 </div>
                             </div>
-                            <button type="submit" class="btn btn-primary mt-1" form="needs-validation-form">تایید</button>
-                            <button class="btn btn-primary my-1 loading-btn mt-1" type="button" style="display:none;">
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span class="visually-hidden">Loading...</span>
-                            </button>
-                        </section>
-
-                        <!-- Step 3 -->
-                        <section id="wizard2-p-2" role="tabpanel" aria-labelledby="wizard2-h-2" class="body" aria-hidden="true" style="display:none;" >
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="form-control-label">کد ملی موکل:</label>
-                                    <input class="form-control" id="client_national_code" name="client_national_code" placeholder="کد ملی موکل را وارد کنید" required type="text">
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary mt-1" form="needs-validation-form">تایید</button>
-                            <button class="btn btn-primary my-1 loading-btn" type="button" style="display:none;">
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span class="visually-hidden">Loading...</span>
-                            </button>
-                        </section>
-                    </div>
-
-                    <!-- دکمه‌ها -->
-                    <div class="actions clearfix">
-                        <ul role="menu" aria-label="Pagination">
-                            <li class="btn btn-sm disabled" aria-disabled="true"><a href="#previous" role="menuitem">قبلی</a></li>
-                            <li class="btn btn-sm" aria-hidden="false" aria-disabled="false"><a href="#next" role="menuitem">بعدی</a></li>
-                            <li class="btn btn-sm" aria-hidden="true" style="display:none;"><a href="#finish" role="menuitem">ثبت</a></li>
-                        </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -150,240 +329,21 @@
 
 @section Scripts {
     <script>
-                $(document).ready(function () {
-            // Wizard navigation variables
-            let currentStep = 0;
-            const steps = $('.wizard .content section');
-            const tabs = $('.wizard .steps li');
-            const prevBtn = $('.wizard .actions li:first-child a');
-            const nextBtn = $('.wizard .actions li:nth-child(2) a');
-            const finishBtn = $('.wizard .actions li:last-child a');
+        // فقط برای ریست فرم هنگام بسته شدن مودال
+        $(document).ready(function() {
+            $('#scrollingmodal').on('hidden.bs.modal', function() {
+                $('#needs-validation-form')[0].reset();
+                $('.form-text').text('');
+                $('.nav-tabs a[href="#tab1"]').tab('show');
+            });
 
-            // Function to show specific step
-            function showStep(stepIndex) {
-                if (stepIndex < 0 || stepIndex >= steps.length) return;
-
-                tabs.removeClass('current disabled').attr('aria-disabled', 'true');
-                tabs.eq(stepIndex).addClass('current').attr('aria-disabled', 'false').attr('aria-selected', 'true');
-                for (let i = 0; i < stepIndex; i++) {
-                    tabs.eq(i).addClass('disabled').attr('aria-disabled', 'true');
-                }
-                for (let i = stepIndex + 1; i < tabs.length; i++) {
-                    tabs.eq(i).addClass('disabled').attr('aria-disabled', 'true');
-                }
-
-                steps.removeClass('current').attr('aria-hidden', 'true').hide();
-                steps.eq(stepIndex).addClass('current').attr('aria-hidden', 'false').show();
-
-                prevBtn.parent().toggleClass('disabled', stepIndex === 0).attr('aria-disabled', stepIndex === 0);
-                nextBtn.parent().toggleClass('disabled', stepIndex === steps.length - 1).attr('aria-disabled', stepIndex === steps.length - 1);
-                nextBtn.parent().attr('aria-hidden', stepIndex === steps.length - 1);
-                finishBtn.parent().attr('aria-hidden', stepIndex !== steps.length - 1);
-
-                currentStep = stepIndex;
+            @if (showDocumentTab)
+            {
+                <text>
+                $('#scrollingmodal').modal('show');
+                $('.nav-tabs a[href="#tab2"]').tab('show');
+                </text>
             }
-
-            // Initial setup
-            showStep(0);
-
-            // Next button click
-            nextBtn.on('click', function (e) {
-                e.preventDefault();
-                showStep(currentStep + 1);
-            });
-
-            // Previous button click
-            prevBtn.on('click', function (e) {
-                e.preventDefault();
-                showStep(currentStep - 1);
-            });
-
-            // Finish button click
-            finishBtn.on('click', function (e) {
-                e.preventDefault();
-                alert('ثبت نهایی انجام شد!');
-                $('#scrollingmodal').modal('hide');
-            });
-
-                // Handle confirmation in Step 1 (احراز هویت)
-        const step1ConfirmBtn = $('#wizard2-p-0 button[type="submit"]');
-        const step1LoadingBtn = $('#wizard2-p-0 .loading-btn');
-        let resultMessage = $('<p class="mt-2 text-center"></p>');
-        $('#wizard2-p-0').append(resultMessage);
-
-        step1ConfirmBtn.on('click', function (e) {
-            e.preventDefault();
-
-            const nationalCode = $('#national_code').val().trim();
-            const mobileNumber = $('#mobile_number').val().trim();
-
-            // Client-side validation
-            if (!nationalCode || nationalCode.length !== 10 || !/^\d{10}$/.test(nationalCode)) {
-                resultMessage.text('کد ملی باید ۱۰ رقم باشد.').addClass('text-danger').removeClass('text-success');
-                return;
-            }
-            if (!mobileNumber || mobileNumber.length !== 11 || !/^09\d{9}$/.test(mobileNumber)) {
-                resultMessage.text('شماره موبایل باید ۱۱ رقم و با ۰۹ شروع شود.').addClass('text-danger').removeClass('text-success');
-                return;
-            }
-
-            // Get JWT token
-            const token = localStorage.getItem('jwtToken');
-            console.log('Sending request with JWT Token:', token); // برای دیباگ
-            if (!token) {
-                resultMessage.text('لطفاً ابتدا وارد شوید.').addClass('text-danger').removeClass('text-success');
-                window.location.href = '/Home/LoginPage';
-                return;
-            }
-
-            // Show loading state
-            step1ConfirmBtn.hide();
-            step1LoadingBtn.show();
-            resultMessage.text('').removeClass('text-success text-danger');
-
-            // Send POST request to API
-            $.ajax({
-                url: 'http://localhost:5066/api/Service/CheckMobileNationalCode',
-                type: 'POST',
-                contentType: 'application/json',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                data: JSON.stringify({
-                    nationalId: nationalCode,
-                    mobileNumber: mobileNumber
-                }),
-                success: function (response) {
-                    console.log('API response:', response); // برای دیباگ
-                    if (response.isSuccessful) {
-                        resultMessage.text('تایید شد').addClass('text-success').removeClass('text-danger');
-                        setTimeout(() => {
-                            showStep(currentStep + 1);
-                        }, 1000);
-                    } else {
-                        resultMessage.text(response.errorDescription || 'شماره موبایل و کد ملی مطابقت ندارند.').addClass('text-danger').removeClass('text-success');
-                    }
-                },
-                error: function (xhr) {
-                    console.log('API error:', xhr); // برای دیباگ
-                    let errorMsg = 'خطا در ارتباط با سرویس.';
-                    if (xhr.status === 401) {
-                        errorMsg = 'عدم دسترسی: لطفاً دوباره وارد شوید.';
-                        window.location.href = '/Home/LoginPage';
-                    } else if (xhr.status === 429) {
-                        errorMsg = 'تعداد درخواست‌ها بیش از حد مجاز است.';
-                    } else if (xhr.responseJSON && xhr.responseJSON.errorDescription) {
-                        errorMsg = xhr.responseJSON.errorDescription;
-                    }
-                    resultMessage.text(errorMsg).addClass('text-danger').removeClass('text-success');
-                },
-                complete: function () {
-                    step1LoadingBtn.hide();
-                    step1ConfirmBtn.show();
-                }
-            });
-        });
-
-            // Handle confirmation in Step 2 (احراز سند)
-            const step2ConfirmBtn = $('#wizard2-p-1 button[type="submit"]');
-            const step2LoadingBtn = $('#wizard2-p-1 .loading-btn');
-            let step2ResultMessage = $('<p class="mt-2 text-center"></p>');
-            $('#wizard2-p-1').append(step2ResultMessage);
-
-            step2ConfirmBtn.on('click', function (e) {
-                e.preventDefault();
-
-                const verifyCode = $('#verify_code').val().trim();
-                const documentNumber = $('#document_number').val().trim();
-
-                // Client-side validation
-                if (!verifyCode || verifyCode.length !== 6 || !/^\d{6}$/.test(verifyCode)) {
-                    step2ResultMessage.text('رمز تصدیق باید ۶ رقم باشد.').addClass('text-danger').removeClass('text-success');
-                    return;
-                }
-                if (!documentNumber || documentNumber.length !== 18 || !/^\d{18}$/.test(documentNumber)) {
-                    step2ResultMessage.text('شناسه سند باید ۱۸ رقم باشد.').addClass('text-danger').removeClass('text-success');
-                    return;
-                }
-
-                // Show loading state
-                step2ConfirmBtn.hide();
-                step2LoadingBtn.show();
-                step2ResultMessage.text('').removeClass('text-success text-danger');
-
-                // Get JWT token
-                const token = localStorage.getItem('jwtToken');
-
-                // Send POST request to API
-                $.ajax({
-                    url: 'http://localhost:5066/api/Service/VerifyDocument', // پورت API
-                    type: 'POST',
-                    contentType: 'application/json',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    data: JSON.stringify({
-                        verificationCode: verifyCode,
-                        documentNumber: documentNumber
-                    }),
-                    success: function (response) {
-                        if (response.isSuccessful) {
-                            step2ResultMessage.text('تایید شد').addClass('text-success').removeClass('text-danger');
-                            setTimeout(() => {
-                                showStep(currentStep + 1);
-                            }, 1000);
-                        } else {
-                            step2ResultMessage.text(response.errorDescription || 'اطلاعات سند مطابقت ندارد.').addClass('text-danger').removeClass('text-success');
-                        }
-                    },
-                    error: function (xhr) {
-                        let errorMsg = 'خطا در ارتباط با سرویس.';
-                        if (xhr.status === 401) {
-                            errorMsg = 'عدم دسترسی: لطفاً دوباره وارد شوید.';
-                        } else if (xhr.status === 429) {
-                            errorMsg = 'تعداد درخواست‌ها بیش از حد مجاز است.';
-                        } else if (xhr.responseJSON && xhr.responseJSON.errorDescription) {
-                            errorMsg = xhr.responseJSON.errorDescription;
-                        }
-                        step2ResultMessage.text(errorMsg).addClass('text-danger').removeClass('text-success');
-                    },
-                    complete: function () {
-                        step2LoadingBtn.hide();
-                        step2ConfirmBtn.show();
-                    }
-                });
-            });
-
-            // Handle confirmation in Step 3 (تطابق کد ملی)
-            const step3ConfirmBtn = $('#wizard2-p-2 button[type="submit"]');
-            const step3LoadingBtn = $('#wizard2-p-2 .loading-btn');
-            let step3ResultMessage = $('<p class="mt-2 text-center"></p>');
-            $('#wizard2-p-2').append(step3ResultMessage);
-
-            step3ConfirmBtn.on('click', function (e) {
-                e.preventDefault();
-
-                const clientNationalCode = $('#client_national_code').val().trim();
-
-                // Client-side validation
-                if (!clientNationalCode || clientNationalCode.length !== 10 || !/^\d{10}$/.test(clientNationalCode)) {
-                    step3ResultMessage.text('کد ملی باید ۱۰ رقم باشد.').addClass('text-danger').removeClass('text-success');
-                    return;
-                }
-
-                // Show loading state
-                step3ConfirmBtn.hide();
-                step3LoadingBtn.show();
-                step3ResultMessage.text('').removeClass('text-success text-danger');
-
-                // Placeholder for Step 3 logic
-                setTimeout(() => {
-                    step3ResultMessage.text('تایید شد').addClass('text-success').removeClass('text-danger');
-                    finishBtn.click();
-                    step3LoadingBtn.hide();
-                    step3ConfirmBtn.show();
-                }, 1500);
-            });
         });
     </script>
 }

@@ -20,10 +20,23 @@ namespace ServicePomixPMO.API.Controllers
         }
 
         [HttpGet]
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<RequestViewModel>>> GetAll()
+        public async Task<ActionResult<PaginatedResponse<RequestViewModel>>> GetAll(int page = 1, int pageSize = 10, string search = "")
         {
-            return await _context.Request
+            var query = _context.Request.AsQueryable();
+
+            // اعمال فیلتر جستجو
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(r => r.NationalId.Contains(search) ||
+                                        r.MobileNumber.Contains(search) ||
+                                        r.DocumentNumber.Contains(search));
+            }
+
+            // شمارش کل ردیف‌ها
+            var totalCount = await query.CountAsync();
+
+            // اعمال صفحه‌بندی
+            var items = await query
                 .Select(r => new RequestViewModel
                 {
                     RequestId = r.RequestId,
@@ -35,12 +48,24 @@ namespace ServicePomixPMO.API.Controllers
                     IsMatch = r.IsMatch ?? false,
                     IsExist = r.IsExist ?? false,
                     IsNationalIdInResponse = r.IsNationalIdInResponse ?? false,
-                    ValidateByExpert = r.ValidateByExpert, // اضافه شده
-                    Description = r.Description,           // اضافه شده
+                    ValidateByExpert = r.ValidateByExpert,
+                    Description = r.Description,
                     CreatedAt = r.CreatedAt,
                     CreatedBy = r.CreatedBy
                 })
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            var response = new PaginatedResponse<RequestViewModel>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                CurrentPage = page,
+                PageSize = pageSize
+            };
+
+            return Ok(response);
         }
 
         [HttpGet("{id}")]

@@ -21,7 +21,6 @@ namespace PomixPMOService.UI.Controllers
         public async Task<IActionResult> Index(int page = 1, string search = "")
         {
             var model = await GetCartableData(page, search);
-            // اضافه کردن یک مدل خالی برای فرم مودال
             ViewBag.FormModel = new CartableFormViewModel();
             return View(model);
         }
@@ -129,7 +128,6 @@ namespace PomixPMOService.UI.Controllers
                 ViewBag.SuccessMessage = "همه گام‌ها معتبر هستند.";
             }
 
-            // برگرداندن مدل فرم به ViewBag و داده‌های جدول به مدل اصلی
             ViewBag.FormModel = model;
             return View("Index", await GetCartableData(1, ""));
         }
@@ -270,6 +268,7 @@ namespace PomixPMOService.UI.Controllers
     public class CartableItemViewModel
     {
         public long RequestId { get; set; }
+        public string RequestCode { get; set; } = string.Empty;
         public string NationalId { get; set; } = string.Empty;
         public string MobileNumber { get; set; } = string.Empty;
         public string DocumentNumber { get; set; } = string.Empty;
@@ -277,5 +276,9 @@ namespace PomixPMOService.UI.Controllers
         public bool? IsMatch { get; set; }
         public bool? IsExist { get; set; }
         public bool? IsNationalIdInResponse { get; set; }
+        public bool? ValidateByExpert { get; set; } 
+        public string Description { get; set; } = string.Empty; 
+        public DateTime CreatedAt { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;
     }
 }

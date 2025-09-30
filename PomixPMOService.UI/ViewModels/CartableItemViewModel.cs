@@ -6,6 +6,9 @@ namespace PomixPMOService.UI.ViewModels
     {
         public long ItemId { get; set; }
         public long RequestId { get; set; }
+        public string RequestCode { get; set; } = string.Empty; 
+        public bool? ValidateByExpert { get; set; } 
+        public string Description { get; set; } = string.Empty; 
         public string? NationalId { get; set; }
         public string? DocumentNumber { get; set; }
         public string? MobileNumber { get; set; }

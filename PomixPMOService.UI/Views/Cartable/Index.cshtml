@@ -46,10 +46,8 @@
                                     <th class="wd-10p border-bottom-0 sorting">رمز تصدیق</th>
                                     <th class="wd-10p border-bottom-0 sorting"> احراز هویت متقاضی </th>
                                     <th class="wd-10p border-bottom-0 sorting">احراز اصالت سند </th>
+                                    <th class="wd-10p border-bottom-0 sorting">ارتباط متقاضی با سند </th>
                                     <th class="wd-10p border-bottom-0 sorting">احراز وکالت</th>
-                                    <th class="wd-10p border-bottom-0 sorting">احراز هویت متقاضی</th>
-                                    <th class="wd-10p border-bottom-0 sorting">احراز اصالت سند</th>
-                                    <th class="wd-10p border-bottom-0 sorting">اصالت وکالت</th>
                                     <th class="wd-20p border-bottom-0 sorting">توضیحات</th>
                                 </tr>
                             </thead>
@@ -66,6 +64,10 @@
                                         explanation += "سند وجود ندارد. ";
                                     }
                                     if (!item.IsNationalIdInResponse.HasValue || !item.IsNationalIdInResponse.Value)
+                                    {
+                                        explanation += "کد ملی در سند یافت نشد. ";
+                                    }
+                                    if (!item.IsNationalIdInLawyers.HasValue || !item.IsNationalIdInLawyers.Value)
                                     {
                                         explanation += "کد ملی در سند یافت نشد. ";
                                     }
@@ -121,6 +123,24 @@
                                             @if (item.IsNationalIdInResponse.HasValue)
                                             {
                                                 if (item.IsNationalIdInResponse.Value)
+                                                {
+                                                    <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="تایید شده"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="zmdi zmdi-close text-danger" data-bs-toggle="tooltip" title="تایید نشده"></i>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">نامشخص</span>
+                                            }
+                                        </td>
+                                        <!--ارتباط متقاضی با سند  -->
+                                        <td class="text-center">
+                                            @if (item.IsNationalIdInLawyers.HasValue)
+                                            {
+                                                if (item.IsNationalIdInLawyers.Value)
                                                 {
                                                     <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="تایید شده"></i>
                                                 }

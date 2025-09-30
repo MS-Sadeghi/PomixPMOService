@@ -45,6 +45,7 @@ namespace ServicePomixPMO.API.Controllers
                     IsMatch = ci.Request!.IsMatch,
                     IsExist = ci.Request!.IsExist,
                     IsNationalIdInResponse = ci.Request!.IsNationalIdInResponse,
+                    IsNationalIdInLawyers = ci.Request!.IsNationalIdInLawyers,
                     CreatedAt = ci.Request!.CreatedAt,
                     AssignedTo = ci.AssignedTo,
                     AssignedToName = ci.AssignedToUser != null ? $"{ci.AssignedToUser.Name} {ci.AssignedToUser.LastName}" : null,

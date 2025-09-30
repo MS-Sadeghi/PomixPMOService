@@ -310,6 +310,7 @@ namespace PomixPMOService.UI.Controllers
         public bool? IsMatch { get; set; }
         public bool? IsExist { get; set; }
         public bool? IsNationalIdInResponse { get; set; }
+        public bool? IsNationalIdInLawyers { get; set; }
         public bool? ValidateByExpert { get; set; }
         public string Description { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

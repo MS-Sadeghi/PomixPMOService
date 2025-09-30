@@ -5,6 +5,12 @@
     Layout = "~/Views/Shared/_LayoutAuth.cshtml";
 }
 
+<style>
+    #methodSelect {
+        color: #000 !important;
+    }
+</style>
+
 <div class="page">
     <div class="container-login100">
         <div class="wrap-login100 p-6">
@@ -42,11 +48,11 @@
                 </div>
 
                 <!-- Two-Factor Authentication Type -->
-                <div class="wrap-input100 validate-input input-group mb-3">
-                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                <div class="input-group mb-3">
+                    <span class="input-group-text bg-white text-muted">
                         <i class="zmdi zmdi-key" aria-hidden="true"></i>
-                    </a>
-                    <select class="input100 border-start-0 form-control ms-0" id="methodSelect">
+                    </span>
+                    <select class="form-select" id="methodSelect">
                         <option value="security" selected>کد امنیتی</option>
                         <option value="sms">پیامک</option>
                     </select>
@@ -54,6 +60,9 @@
 
                 <!-- Google Authenticator Section -->
                 <div id="securitySection" class="input-group mb-3">
+                    @* <span class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
+                    </span> *@
                     <dnt-captcha asp-captcha-generator-max="9999"
                                  asp-captcha-generator-min="1000"
                                  asp-captcha-generator-language="English"
@@ -66,12 +75,13 @@
                                  asp-font-size="30"
                                  asp-fore-color="#3333333"
                                  asp-back-color="#FCF6F5FF"
-                                 asp-text-box-class="form-control captchaInput"
-                                 asp-text-box-template="<div class='form-group'>{0}</div>"
+                                 asp-text-box-class="form-control input100"
+                                 asp-text-box-template="{0}"
                                  asp-validation-message-class="text-danger"
                                  asp-refresh-button-class="icon icon-refresh btn"
                                  asp-show-refresh-button="true" />
                 </div>
+
 
                 <!-- SMS Section -->
                 <div id="smsSection" class="input-group mb-3" style="display:none;">

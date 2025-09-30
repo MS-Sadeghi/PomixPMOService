@@ -1,6 +1,6 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
-using PomixPMOService.UI.ViewModels;
+using PomixPMOService.API.Controllers;
 using System.Dynamic;
 using System.Text.Json;
 
@@ -58,10 +58,12 @@ namespace PomixPMOService.UI.Controllers
                     }
                     _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                    var response = await _client.PostAsJsonAsync("Service/CheckMobileNationalCode", new
+                    var response = await _client.PostAsJsonAsync("Service/ProcessCombinedRequest", new CombinedRequestViewModel
                     {
                         NationalId = model.NationalCode,
-                        MobileNumber = model.MobileNumber
+                        MobileNumber = model.MobileNumber,
+                        DocumentNumber = model.DocumentNumber,
+                        VerificationCode = model.VerifyCode
                     });
 
                     if (response.IsSuccessStatusCode)

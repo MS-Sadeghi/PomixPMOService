@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -13,6 +14,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Request = ServicePomixPMO.API.Models.Request;
 
 namespace PomixPMOService.API.Controllers
 {
@@ -60,7 +62,6 @@ namespace PomixPMOService.API.Controllers
                             retryCount, timeSpan.TotalSeconds, result.Exception?.Message ?? $"StatusCode: {result.Result?.StatusCode}");
                     });
         }
-
         [HttpPost("ProcessCombinedRequest")]
         [Authorize(Policy = "CanAccessShahkar")]
         public async Task<IActionResult> ProcessCombinedRequest([FromBody] CombinedRequestViewModel model)
@@ -78,10 +79,11 @@ namespace PomixPMOService.API.Controllers
                 return Unauthorized("کاربر شناسایی نشد.");
             }
 
-            var requestId = GenerateRequestId();
+            var requestCode = GenerateRequestId(); // رشته برای RequestCode
             var request = new Request
             {
-                RequestCode = requestId,
+                // RequestId توسط دیتابیس به‌صورت Auto-increment تولید می‌شود
+                RequestCode = requestCode, // استفاده از رشته تولیدشده
                 NationalId = model.NationalId,
                 MobileNumber = model.MobileNumber,
                 DocumentNumber = model.DocumentNumber,
@@ -91,7 +93,7 @@ namespace PomixPMOService.API.Controllers
             };
 
             _context.Request.Add(request);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(); // RequestId توسط دیتابیس پر می‌شود
 
             long expertId = userId;
 
@@ -101,7 +103,7 @@ namespace PomixPMOService.API.Controllers
                     model.NationalId,
                     model.MobileNumber,
                     request.RequestCode,
-                    request.RequestId,
+                    request.RequestId, // حالا long و توسط دیتابیس تولید شده
                     expertId
                 );
 
@@ -110,7 +112,8 @@ namespace PomixPMOService.API.Controllers
                     model.VerificationCode,
                     request.RequestCode,
                     request.RequestId,
-                    userId
+                    userId,
+                    model.NationalId
                 );
 
                 await Task.WhenAll(shahkarTask, verifyDocTask);
@@ -126,7 +129,7 @@ namespace PomixPMOService.API.Controllers
                         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
                     );
                     isMatch = internalShahkarResponse?.Result?.Data?.Response == 200;
-                    _logger.LogInformation("Shahkar IsMatch for {RequestId}: {IsMatch}", requestId, isMatch);
+                    _logger.LogInformation("Shahkar IsMatch for {RequestId}: {IsMatch}", request.RequestId, isMatch);
                 }
                 catch (System.Text.Json.JsonException ex)
                 {
@@ -134,14 +137,16 @@ namespace PomixPMOService.API.Controllers
                 }
 
                 bool isExist = verifyDocResult.ExistDoc;
-                bool isNationalIdInResponse = verifyDocResult.PersonsInQuery?.Any(p => p.NationalNo == model.NationalId) ?? false;
+                bool isNationalIdInResponse = verifyDocResult.IsNationalIdInResponse;
+                bool isNationalIdInLawyers = verifyDocResult.IsNationalIdInLawyers;
 
-                _logger.LogInformation("VerifyDoc results for {RequestId}: IsExist={IsExist}, IsNationalIdInResponse={IsNationalIdInResponse}",
-                    requestId, isExist, isNationalIdInResponse);
+                _logger.LogInformation("VerifyDoc results for {RequestId}: IsExist={IsExist}, IsNationalIdInResponse={IsNationalIdInResponse}, IsNationalIdInLawyers={IsNationalIdInLawyers}",
+                    request.RequestId, isExist, isNationalIdInResponse, isNationalIdInLawyers);
 
                 request.IsMatch = isMatch;
                 request.IsExist = isExist;
                 request.IsNationalIdInResponse = isNationalIdInResponse;
+                request.IsNationalIdInLawyers = isNationalIdInLawyers;
                 request.UpdatedAt = DateTime.UtcNow;
                 request.UpdatedBy = User.Identity?.Name ?? "Unknown";
                 _context.Request.Update(request);
@@ -157,7 +162,7 @@ namespace PomixPMOService.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing combined request for {RequestId}", requestId);
+                _logger.LogError(ex, "Error processing combined request for {RequestId}", request.RequestId);
                 return StatusCode(500, $"خطا در پردازش درخواست: {ex.Message}");
             }
         }
@@ -322,7 +327,7 @@ namespace PomixPMOService.API.Controllers
             }
         }
 
-        private async Task<VerifyDocResponse> VerifyDocument_Internal(string documentNumber, string verificationCode, string requestCode, long requestId, long userId)
+        private async Task<VerifyDocResponse> VerifyDocument_Internal(string documentNumber, string verificationCode, string requestCode, long requestId, long userId, string nationalId)
         {
             if (documentNumber.Length != 18 || !documentNumber.All(char.IsDigit))
                 throw new ArgumentException("DocumentNumber نامعتبر است.");
@@ -363,7 +368,9 @@ namespace PomixPMOService.API.Controllers
                 IsSuccessful = false,
                 ResponseText = responseString,
                 PersonsInQuery = new List<PersonInQuery>(),
-                ExistDoc = false
+                ExistDoc = false,
+                IsNationalIdInLawyers = false,
+                IsNationalIdInResponse = false // مقدار پیش‌فرض
             };
 
             bool isExist = false;
@@ -393,6 +400,24 @@ namespace PomixPMOService.API.Controllers
                                 {
                                     PropertyNameCaseInsensitive = true
                                 }) ?? new List<PersonInQuery>();
+
+                                // بررسی وجود کدملی در کل لیست PersonsInQuery
+                                bool isNationalIdInResponse = personsInQuery.Any(p => EqualsNormalized(p.NationalNo, nationalId));
+
+                                // فقط وکلا را نگه می‌داریم
+                                var lawyers = personsInQuery
+                                    .Where(p => !string.IsNullOrWhiteSpace(p.RoleType) && EqualsNormalized(p.RoleType, "وکیل"))
+                                    .ToList();
+
+                                // بررسی وجود کدملی فقط در بین وکلا
+                                bool isApplicantLawyer = lawyers.Any(p => EqualsNormalized(p.NationalNo, nationalId));
+
+                                _logger.LogInformation("Applicant NationalId exists in response: {IsNationalIdInResponse}, among lawyers: {IsApplicantLawyer}",
+                                    isNationalIdInResponse, isApplicantLawyer);
+
+                                // تنظیم مقادیر در پاسخ
+                                result.IsNationalIdInResponse = isNationalIdInResponse;
+                                result.IsNationalIdInLawyers = isApplicantLawyer;
                             }
 
                             _logger.LogInformation("Parsed VerifyDoc data - isExist: {IsExist}, succseed: {Succseed}, personsInQuery count: {PersonsInQueryCount}",
@@ -415,10 +440,12 @@ namespace PomixPMOService.API.Controllers
 
                 result = new VerifyDocResponse
                 {
-                    IsSuccessful = isExist || succseed, // Ensure IsSuccessful is true if ExistDoc is true
+                    IsSuccessful = isExist || succseed,
                     ResponseText = responseString,
                     PersonsInQuery = personsInQuery,
-                    ExistDoc = isExist // Explicitly set ExistDoc
+                    ExistDoc = isExist,
+                    IsNationalIdInResponse = result.IsNationalIdInResponse,
+                    IsNationalIdInLawyers = result.IsNationalIdInLawyers
                 };
             }
             catch (JsonException ex)
@@ -430,7 +457,9 @@ namespace PomixPMOService.API.Controllers
                     IsSuccessful = false,
                     ResponseText = responseString,
                     PersonsInQuery = new List<PersonInQuery>(),
-                    ExistDoc = false
+                    ExistDoc = false,
+                    IsNationalIdInResponse = false,
+                    IsNationalIdInLawyers = false
                 };
             }
 
@@ -441,7 +470,7 @@ namespace PomixPMOService.API.Controllers
                 ResponseText = responseString,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = User.Identity?.Name ?? userId.ToString(),
-                IsExist = isExist, // This will be 1 in DB if ExistDoc is true
+                IsExist = isExist,
                 RequestId = requestId
             };
 
@@ -469,6 +498,14 @@ namespace PomixPMOService.API.Controllers
             _logger.LogInformation("Request count for expert {ExpertId} in last hour: {RequestCount}", expertId, requestCount);
             return requestCount < 10;
         }
+
+        private bool EqualsNormalized(string a, string b)
+        {
+            if (string.IsNullOrWhiteSpace(a) || string.IsNullOrWhiteSpace(b)) return false;
+            return a.Trim().Replace("ي", "ی").Replace("ك", "ک") ==
+                   b.Trim().Replace("ي", "ی").Replace("ك", "ک");
+        }
+
 
         private bool IsValidIranianNationalId(string nationalId)
         {
@@ -507,6 +544,9 @@ namespace PomixPMOService.API.Controllers
         public string? ResponseText { get; set; }
         public List<PersonInQuery>? PersonsInQuery { get; set; }
         public bool ExistDoc { get; set; }
+        public bool IsNationalIdInLawyers { get; set; }
+        public bool IsNationalIdInResponse { get; set; }
+
     }
     public class DataWrapper
     {

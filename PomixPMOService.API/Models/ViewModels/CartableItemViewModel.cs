@@ -23,7 +23,8 @@ namespace PomixPMOService.API.Models.ViewModels
         public string? Status { get; set; }
         public bool? IsMatch { get; internal set; }
         public bool? IsExist { get; internal set; }
-        public bool? IsNationalIdInResponse { get; internal set; }
+        public bool? IsNationalIdInResponse { get;  set; }
+        public bool? IsNationalIdInLawyers { get; set; }
         public DateTime CreatedAt { get; internal set; }
     }
 

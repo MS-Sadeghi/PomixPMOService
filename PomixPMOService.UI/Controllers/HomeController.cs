@@ -164,40 +164,12 @@ namespace PomixPMOService.UI.Controllers
 
         #endregion
 
-        [HttpGet]
-        public async Task<IActionResult> EditProfile()
-        {
-            try
-            {
-                var jwtToken = HttpContext.Session.GetString("JwtToken");
-                if (string.IsNullOrEmpty(jwtToken))
-                {
-                    return RedirectToAction("LoginPage");
-                }
-
-                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
-
-                var response = await _client.GetAsync("Auth/GetCurrentUser");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var user = await response.Content.ReadFromJsonAsync<UserInfo>();
-                    return View(user); 
-                }
-                else
-                {
-                    ViewBag.ErrorMessage = "خطا در دریافت اطلاعات کاربر.";
-                    return View(new UserInfo());
-                }
-            }
-            catch (Exception ex)
-            {
-                ViewBag.ErrorMessage = $"خطا در ارتباط با سرور: {ex.Message}";
-                return View(new UserInfo());
-            }
-        }
-
         public IActionResult Shahkar()
+        {
+            return View();
+        }
+        
+        public IActionResult EditProfile()
         {
             return View();
         }

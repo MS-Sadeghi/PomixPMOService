@@ -32,6 +32,8 @@ namespace ServicePomixPMO.API.Controllers
                                         r.DocumentNumber.Contains(search));
             }
 
+            query = query.OrderByDescending(r => r.CreatedAt);
+
             // شمارش کل ردیف‌ها
             var totalCount = await query.CountAsync();
 

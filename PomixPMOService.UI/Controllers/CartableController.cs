@@ -121,11 +121,11 @@ namespace PomixPMOService.UI.Controllers
             }
 
             // چک باکس
-            if (!model.AgreeToTerms)
-            {
-                ViewBag.ErrorMessage = "لطفاً با شرایط موافقت کنید.";
-                isValid = false;
-            }
+            //if (!model.AgreeToTerms)
+            //{
+            //    ViewBag.ErrorMessage = "لطفاً با شرایط موافقت کنید.";
+            //    isValid = false;
+            //}
 
             if (isValid)
             {

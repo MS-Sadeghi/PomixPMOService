@@ -10,14 +10,15 @@ builder.Services.AddHttpClient("PomixApi", client =>
 {
     client.BaseAddress = new Uri("http://localhost:5066/api/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.DefaultRequestHeaders.ConnectionClose = true; // کمک به رفع مشکلات اتصال
+    client.DefaultRequestHeaders.ConnectionClose = true;
 }).ConfigurePrimaryHttpMessageHandler(() =>
 {
     var handler = new HttpClientHandler();
-    handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true; // نادیده گرفتن SSL برای تست
+    handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
     return handler;
 });
 
+// DNTCaptcha
 builder.Services.AddDNTCaptcha(options =>
 {
     options.UseCookieStorageProvider()
@@ -26,12 +27,24 @@ builder.Services.AddDNTCaptcha(options =>
            .AbsoluteExpiration(minutes: 7);
 });
 
-builder.Services.AddDistributedMemoryCache(); // برای ذخیره Session در حافظه
+// Session
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // مدت زمان انقضای Session
-    options.Cookie.HttpOnly = true; // امنیت بیشتر برای کوکی Session
-    options.Cookie.IsEssential = true; // برای GDPR و قوانین کوکی
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// CORS (خیلی مهم برای اتصال به API)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
 var app = builder.Build();
@@ -45,16 +58,19 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseRouting();
-app.UseAuthorization();
 
-// افزودن middleware برای Session
+app.UseRouting();
+
+// باید قبل از Authorization بیاد
+app.UseCors("AllowAll");
+
+// Session همیشه قبل از Authorization
 app.UseSession();
+
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=LoginPage}");
-
-
+    pattern: "{controller=Home}/{action=LoginPage}/{id?}");
 
 app.Run();

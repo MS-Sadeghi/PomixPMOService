@@ -251,7 +251,6 @@
                                                 </div>
                                             </div>
                                             <!-- Step 3: تطابق کد ملی -->
-                                           
                                             <!-- Buttons -->
                                             <div class="modal-footer">
                                                 <div class="col-md-9">
@@ -322,13 +321,13 @@
                 $('.nav-tabs a[href="#tab1"]').tab('show');
             });
 
-            @if (showDocumentTab)
-            {
-                <text>
-                $('#scrollingmodal').modal('show');
-                $('.nav-tabs a[href="#tab2"]').tab('show');
-                </text>
-            }
+        @if (showDocumentTab)
+        {
+            <text>
+                    $('#scrollingmodal').modal('show');
+                    $('.nav-tabs a[href="#tab2"]').tab('show');
+            </text>
+        }
         });
     </script>
-}   
+}

@@ -120,12 +120,6 @@ namespace PomixPMOService.UI.Controllers
                 model.Step3Message = "تطابق کد ملی معتبر است.";
             }
 
-            // چک باکس
-            if (!model.AgreeToTerms)
-            {
-                ViewBag.ErrorMessage = "لطفاً با شرایط موافقت کنید.";
-                isValid = false;
-            }
 
             if (isValid)
             {

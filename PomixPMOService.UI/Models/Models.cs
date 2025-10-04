@@ -63,6 +63,7 @@ namespace PomixPMOService.UI.Models
         public bool? IsMatch { get; set; }              // وضعیت احراز هویت
         public bool? IsExist { get; set; }              // وجود سند
         public bool? IsNationalIdInResponse { get; set; } // بررسی نهایی
+        public bool? IsNationalIdInLawyers { get; set; } // بررسی نهایی
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

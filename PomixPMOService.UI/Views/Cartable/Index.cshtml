@@ -44,9 +44,10 @@
                                     <th class="wd-15p border-bottom-0 sorting">شماره همراه</th>
                                     <th class="wd-15p border-bottom-0 sorting">شناسه سند</th>
                                     <th class="wd-10p border-bottom-0 sorting">رمز تصدیق</th>
-                                    <th class="wd-10p border-bottom-0 sorting">احراز هویت متقاضی</th>
-                                    <th class="wd-10p border-bottom-0 sorting">احراز اصالت سند</th>
-                                    <th class="wd-10p border-bottom-0 sorting">اصالت وکالت</th>
+                                    <th class="wd-10p border-bottom-0 sorting"> احراز هویت متقاضی </th>
+                                    <th class="wd-10p border-bottom-0 sorting">احراز اصالت سند </th>
+                                    <th class="wd-10p border-bottom-0 sorting">ارتباط متقاضی با سند </th>
+                                    <th class="wd-10p border-bottom-0 sorting">احراز وکالت</th>
                                     <th class="wd-20p border-bottom-0 sorting">توضیحات</th>
                                 </tr>
                             </thead>
@@ -63,6 +64,10 @@
                                         explanation += "سند وجود ندارد. ";
                                     }
                                     if (!item.IsNationalIdInResponse.HasValue || !item.IsNationalIdInResponse.Value)
+                                    {
+                                        explanation += "کد ملی در سند یافت نشد. ";
+                                    }
+                                    if (!item.IsNationalIdInLawyers.HasValue || !item.IsNationalIdInLawyers.Value)
                                     {
                                         explanation += "کد ملی در سند یافت نشد. ";
                                     }
@@ -118,6 +123,24 @@
                                             @if (item.IsNationalIdInResponse.HasValue)
                                             {
                                                 if (item.IsNationalIdInResponse.Value)
+                                                {
+                                                    <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="تایید شده"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="zmdi zmdi-close text-danger" data-bs-toggle="tooltip" title="تایید نشده"></i>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">نامشخص</span>
+                                            }
+                                        </td>
+                                        <!--ارتباط متقاضی با سند  -->
+                                        <td class="text-center">
+                                            @if (item.IsNationalIdInLawyers.HasValue)
+                                            {
+                                                if (item.IsNationalIdInLawyers.Value)
                                                 {
                                                     <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="تایید شده"></i>
                                                 }
@@ -203,10 +226,10 @@
                                                 <div class="col-md-9">
                                                     <div class="row">
                                                         <div class="col-md-6 mb-2 mb-md-0">
-                                                            <input class="form-control" asp-for="@formModel.NationalCode" placeholder="کد ملی" required type="text" autocomplete="username">
+                                                            <input class="form-control" name="NationalCode" id="NationalCode" placeholder="کد ملی" required type="text">
                                                         </div>
                                                         <div class="col-md-6">
-                                                            <input class="form-control" asp-for="@formModel.MobileNumber" placeholder="شماره موبایل" required type="text" autocomplete="username">
+                                                            <input class="form-control" name="MobileNumber" id="MobileNumber" placeholder="شماره موبایل" required type="text">
                                                         </div>
                                                     </div>
                                                     <span class="form-text text-@(string.IsNullOrEmpty(formModel?.Step1Message) || formModel.Step1Message.Contains("معتبر") ? "success" : "danger")">@formModel?.Step1Message</span>
@@ -218,32 +241,17 @@
                                                 <div class="col-md-9">
                                                     <div class="row">
                                                         <div class="col-md-6 mb-2 mb-md-0">
-                                                            <input class="form-control" asp-for="@formModel.VerifyCode" placeholder="رمز تصدیق" required type="text">
+                                                            <input class="form-control" name="DocumentNumber" id="DocumentNumber" placeholder="شناسه سند" required type="text">
                                                         </div>
                                                         <div class="col-md-6">
-                                                            <input class="form-control" asp-for="@formModel.DocumentNumber" placeholder="شناسه سند" required type="text">
+                                                            <input class="form-control" name="VerifyCode" id="VerifyCode" placeholder="رمز تصدیق" required type="text">
                                                         </div>
                                                     </div>
                                                     <span class="form-text text-@(string.IsNullOrEmpty(formModel?.Step2Message) || formModel.Step2Message.Contains("معتبر") ? "success" : "danger")">@formModel?.Step2Message</span>
                                                 </div>
                                             </div>
                                             <!-- Step 3: تطابق کد ملی -->
-                                            <div class="row mb-4">
-                                                <label class="col-md-3 form-label">تطابق کد ملی:</label>
-                                                <div class="col-md-9">
-                                                    <input class="form-control" asp-for="@formModel.ClientNationalCode" placeholder="کد ملی موکل" required type="text">
-                                                    <span class="form-text text-@(string.IsNullOrEmpty(formModel?.Step3Message) || formModel.Step3Message.Contains("معتبر") ? "success" : "danger")">@formModel?.Step3Message</span>
-                                                </div>
-                                            </div>
-                                            <!-- Checkbox -->
-                                            <div class="mb-4 row justify-content-end">
-                                                <div class="col-md-9">
-                                                    <label class="custom-control custom-checkbox">
-                                                        <input type="checkbox" class="custom-control-input" asp-for="@formModel.AgreeToTerms" required>
-                                                        <span class="custom-control-label">با شرایط موافق هستم</span>
-                                                    </label>
-                                                </div>
-                                            </div>
+                                           
                                             <!-- Buttons -->
                                             <div class="modal-footer">
                                                 <div class="col-md-9">

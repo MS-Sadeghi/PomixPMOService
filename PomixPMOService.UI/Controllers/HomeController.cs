@@ -1,11 +1,6 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
 using PomixPMOService.UI.ViewModels;
-using System.Drawing;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
 
 namespace PomixPMOService.UI.Controllers
 {

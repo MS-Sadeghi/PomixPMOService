@@ -47,8 +47,8 @@ namespace ServicePomixPMO.API.Models
         public string? Description { get; set; }
         public bool? IsMatch { get; set; }              // وضعیت احراز هویت
         public bool? IsExist { get; set; }              // وجود سند
-        public bool? IsNationalIdInResponse { get; set; } // بررسی نهایی
-
+        public bool? IsNationalIdInResponse { get; set; } 
+        public bool? IsNationalIdInLawyers { get; set; } 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [StringLength(100)]

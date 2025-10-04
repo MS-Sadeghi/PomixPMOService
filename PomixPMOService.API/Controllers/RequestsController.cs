@@ -50,6 +50,7 @@ namespace ServicePomixPMO.API.Controllers
                     IsMatch = r.IsMatch ?? false,
                     IsExist = r.IsExist ?? false,
                     IsNationalIdInResponse = r.IsNationalIdInResponse ?? false,
+                    IsNationalIdInLawyers = r.IsNationalIdInLawyers ?? false, 
                     ValidateByExpert = r.ValidateByExpert,
                     Description = r.Description,
                     CreatedAt = r.CreatedAt,
@@ -86,6 +87,7 @@ namespace ServicePomixPMO.API.Controllers
                     IsMatch = r.IsMatch ?? false,
                     IsExist = r.IsExist ?? false,
                     IsNationalIdInResponse = r.IsNationalIdInResponse ?? false,
+                    IsNationalIdInLawyers = r.IsNationalIdInLawyers ?? false, // اضافه شده
                     ValidateByExpert = r.ValidateByExpert, // اضافه شده
                     Description = r.Description,           // اضافه شده
                     CreatedAt = r.CreatedAt,

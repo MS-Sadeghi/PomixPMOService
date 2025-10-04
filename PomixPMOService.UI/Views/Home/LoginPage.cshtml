@@ -59,29 +59,27 @@
                 </div>
 
                 <!-- Google Authenticator Section -->
-                <div id="securitySection" class="input-group mb-3">
-                    @* <span class="input-group-text bg-white text-muted">
-                        <i class="zmdi zmdi-shield-check" aria-hidden="true"></i>
-                    </span> *@
-                    <dnt-captcha asp-captcha-generator-max="9999"
-                                 asp-captcha-generator-min="1000"
-                                 asp-captcha-generator-language="English"
-                                 asp-captcha-generator-display-mode="ShowDigits"
-                                 asp-use-relative-urls="true"
-                                 asp-placeholder="کد امنیتی را وارد کنید"
-                                 asp-validation-error-message=" "
-                                 asp-too-many-requests-error-message="تعداد درخواست ها زیاد است، لطفا چند لحظه صبر کنید!"
-                                 asp-font-name="Tahoma"
-                                 asp-font-size="30"
-                                 asp-fore-color="#3333333"
-                                 asp-back-color="#FCF6F5FF"
-                                 asp-text-box-class="form-control input100"
-                                 asp-text-box-template="{0}"
-                                 asp-validation-message-class="text-danger"
-                                 asp-refresh-button-class="icon icon-refresh btn"
-                                 asp-show-refresh-button="true" />
+                <div id="securitySection" class="row mb-3">
+                    <div class="col-12 text-start">
+                        <dnt-captcha asp-captcha-generator-max="9999"
+                                     asp-captcha-generator-min="1000"
+                                     asp-captcha-generator-language="English"
+                                     asp-captcha-generator-display-mode="ShowDigits"
+                                     asp-use-relative-urls="true"
+                                     asp-placeholder="کد امنیتی را وارد کنید"
+                                     asp-validation-error-message=" "
+                                     asp-too-many-requests-error-message="تعداد درخواست ها زیاد است، لطفا چند لحظه صبر کنید!"
+                                     asp-font-name="Tahoma"
+                                     asp-font-size="30"
+                                     asp-fore-color="#3333333"
+                                     asp-back-color="#FCF6F5FF"
+                                     asp-text-box-class="form-control captchaInput"
+                                     asp-text-box-template="<div class='form-group'>{0}</div>"
+                                     asp-validation-message-class="text-danger"
+                                     asp-refresh-button-class="icon icon-refresh btn"
+                                     asp-show-refresh-button="true" />
+                    </div>
                 </div>
-
 
                 <!-- SMS Section -->
                 <div id="smsSection" class="input-group mb-3" style="display:none;">

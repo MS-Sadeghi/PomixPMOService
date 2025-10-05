@@ -39,7 +39,6 @@ namespace PomixPMOService.API.Models.ViewModels
         public string? Username { get; set; }
 
         [Required]
-        [StringLength(50)]
         public int RoleId { get; set; }
     }
 

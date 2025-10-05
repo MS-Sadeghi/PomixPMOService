@@ -106,8 +106,8 @@
                                                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                                                     <div class="drop-heading">
                                                         <div class="text-center">
-                                                            <h5 class="text-dark mb-0 fs-14 fw-semibold">mel ahmadi</h5>
-                                                            <small class="text-muted">کارشناس حراست</small>
+                                                            <h5 id="user-name" class="text-dark mb-0 fs-14 fw-semibold"></h5>
+                                                            <small id="user-role" class="text-muted"></small>
                                                         </div>
                                                     </div>
                                                     <div class="dropdown-divider m-0"></div>
@@ -119,6 +119,7 @@
                                                     </a>
                                                 </div>
                                             </div>
+
 
                                         </div>
                                     </div>
@@ -304,3 +305,19 @@
 </body>
 
 </html>
+
+
+    <script>
+    $(document).ready(function () {
+        $.get('/Home/GetUserProfile', function (data) {
+            if (data && data.success !== false) {
+                $('#user-name').text(data.name + ' ' + data.lastName);
+                $('#user-role').text(data.role);
+            } else {
+                console.warn(data.message || 'User info not found.');
+            }
+        });
+    });
+</script>
+
+

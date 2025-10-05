@@ -8,13 +8,18 @@
     var showDocumentTab = ViewBag.ShowDocumentTab as bool? ?? false;
     var documentError = ViewBag.DocumentError as string ?? null;
 }
+<style>
+    .input-group-text i {
+        color: #6c757d !important; 
+    }
 
+</style>
 <div class="input-group mb-5">
     <form asp-action="Index" method="get" class="w-100">
         <div class="input-group">
             <input type="text" class="form-control" name="search" value="@Model.SearchQuery" placeholder="جستجو">
             <button type="submit" class="input-group-text btn btn-primary">
-                <i class="fa fa-search" aria-hidden="true"></i>
+                <i class="fa fa-search" aria-hidden="true" style="color: whitesmoke;"></i>
             </button>
         </div>
     </form>
@@ -290,43 +295,64 @@
                                             <!-- Step 1: احراز هویت -->
                                             <div class="form-row mb-4">
                                                 <div class="form-group col-md-12 mb-0">
-                                                    <label class="form-label">احراز هویت:</label>
                                                     <div class="form-row">
                                                         <div class="form-group col-md-6 mb-0">
-                                                            <div class="form-group">
-                                                                <input class="form-control" name="NationalCode" id="NationalCode" placeholder="کد ملی" required type="text">
+                                                            <label class="form-label">کد ملی <span class="text-red">*</span></label>
+                                                            <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا کد ملی را وارد کنید">
+                                                                <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                                                                    <i class="fa fa-vcard-o" data-bs-toggle="tooltip" title="fa fa-vcard-o"></i>
+                                                                </a>
+                                                                <input class="input100 border-start-0 ms-0 form-control" name="NationalCode" id="NationalCode" placeholder="کد ملی" required type="text">
+                                                                <span class="text-danger"></span>
                                                             </div>
                                                         </div>
                                                         <div class="form-group col-md-6 mb-0">
-                                                            <div class="form-group">
-                                                                <input class="form-control" name="MobileNumber" id="MobileNumber" placeholder="شماره موبایل" required type="text">
+                                                            <label class="form-label">شماره موبایل <span class="text-red">*</span></label>
+                                                            <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا شماره موبایل را وارد کنید">
+                                                                <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                                                                    <i class="fa fa-mobile" data-bs-toggle="tooltip" title="fa fa-mobile"></i>
+                                                                </a>
+                                                                <input class="input100 border-start-0 ms-0 form-control" name="MobileNumber" id="MobileNumber" placeholder="شماره موبایل" required type="text">
+                                                                <span class="text-danger"></span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <span class="form-text text-@(string.IsNullOrEmpty(formModel?.Step1Message) || formModel.Step1Message.Contains("معتبر") ? "success" : "danger")">@formModel?.Step1Message</span>
+                                                    <span class="form-text text-@(string.IsNullOrEmpty(formModel?.Step1Message) || formModel.Step1Message.Contains("معتبر") ? "success" : "danger")">
+                                                        @formModel?.Step1Message
+                                                    </span>
                                                 </div>
                                             </div>
-
                                             <!-- Step 2: احراز سند -->
                                             <div class="form-row mb-4">
                                                 <div class="form-group col-md-12 mb-0">
-                                                    <label class="form-label">احراز سند:</label>
                                                     <div class="form-row">
                                                         <div class="form-group col-md-6 mb-0">
-                                                            <div class="form-group">
-                                                                <input class="form-control" name="DocumentNumber" id="DocumentNumber" placeholder="شناسه سند" required type="text">
+                                                            <label class="form-label">شناسه سند <span class="text-red">*</span></label>
+                                                            <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا شناسه سند را وارد کنید">
+                                                                <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                                                                    <i class="fa fa-wpforms" data-bs-toggle="tooltip" title="fa fa-wpforms"></i>
+                                                                </a>
+                                                                <input class="input100 border-start-0 ms-0 form-control" name="DocumentNumber" id="DocumentNumber" placeholder="شناسه سند" required type="text">
+                                                                <span class="text-danger"></span>
                                                             </div>
                                                         </div>
+
                                                         <div class="form-group col-md-6 mb-0">
-                                                            <div class="form-group">
-                                                                <input class="form-control" name="VerifyCode" id="VerifyCode" placeholder="رمز تصدیق" required type="text">
+                                                            <label class="form-label">رمز تصدیق <span class="text-red">*</span></label>
+                                                            <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا رمز تصدیق را وارد کنید">
+                                                                <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                                                                    <i class="fa fa-unlock-alt" data-bs-toggle="tooltip" title="fa fa-unlock-alt"></i>
+                                                                </a>
+                                                                <input class="input100 border-start-0 ms-0 form-control" name="VerifyCode" id="VerifyCode" placeholder="رمز تصدیق" required type="text">
+                                                                <span class="text-danger"></span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <span class="form-text text-@(string.IsNullOrEmpty(formModel?.Step2Message) || formModel.Step2Message.Contains("معتبر") ? "success" : "danger")">@formModel?.Step2Message</span>
+                                                    <span class="form-text text-@(string.IsNullOrEmpty(formModel?.Step2Message) || formModel.Step2Message.Contains("معتبر") ? "success" : "danger")">
+                                                        @formModel?.Step2Message
+                                                    </span>
                                                 </div>
                                             </div>
-
                                             <!-- Buttons -->
                                             <div class="form-footer mt-2 text-end">
                                                 <button type="submit" class="btn btn-primary me-2">بررسی</button>

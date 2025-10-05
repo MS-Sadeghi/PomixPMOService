@@ -4,7 +4,6 @@ using PomixPMOService.API.Controllers;
 using System.Dynamic;
 using System.Globalization;
 using System.Text.Json;
-using System.Globalization;
 
 namespace PomixPMOService.UI.Controllers
 {

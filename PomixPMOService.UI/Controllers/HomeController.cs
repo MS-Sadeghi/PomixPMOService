@@ -17,6 +17,8 @@ namespace PomixPMOService.UI.Controllers
             _captchaValidatorService = captchaValidatorService ?? throw new ArgumentNullException(nameof(captchaValidatorService));
         }
 
+        #region Login
+
         [HttpGet]
         public IActionResult LoginPage()
         {
@@ -73,6 +75,7 @@ namespace PomixPMOService.UI.Controllers
             }
         }
 
+        #endregion
 
 
         //public IActionResult Cartable()
@@ -80,6 +83,7 @@ namespace PomixPMOService.UI.Controllers
         //    return View("~/Views/Cartable/Index.cshtml", new List<object>());
         //}
 
+        #region Users
         public async Task<IActionResult> Users()
         {
             try
@@ -110,6 +114,7 @@ namespace PomixPMOService.UI.Controllers
                 return View(new List<UserViewModel>());
             }
         }
+
 
         //[HttpPost]
         //[ValidateAntiForgeryToken]
@@ -158,12 +163,14 @@ namespace PomixPMOService.UI.Controllers
         //    }
         //}
 
-        public IActionResult EditProfile()
+        #endregion
+
+        public IActionResult Shahkar()
         {
             return View();
         }
-
-        public IActionResult Shahkar()
+        
+        public IActionResult EditProfile()
         {
             return View();
         }

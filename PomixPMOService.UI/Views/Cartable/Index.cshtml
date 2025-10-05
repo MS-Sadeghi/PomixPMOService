@@ -187,16 +187,31 @@
                                                                                     }
                                                                                 }
                                                                             </ul>
+                                                                            <div class="mt-3">
+                                                                                <label for="description-@item.RequestId" class="form-label">توضیحات اضافی</label>
+                                                                                <textarea class="form-control" id="description-@item.RequestId" rows="4" placeholder="توضیحات خود را اینجا وارد کنید..."></textarea>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                             <div class="modal-footer">
+                                                                <button type="button" class="btn btn-primary" onclick="saveDescription('@item.RequestId')">ثبت</button>
                                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                <script>
+                                                    function saveDescription(requestId) {
+                                                        const description = document.getElementById(`description-${requestId}`).value;
+                                                        // Add your logic here to handle the description (e.g., send to server via AJAX)
+                                                        console.log(`Description for Request ${requestId}: ${description}`);
+                                                        // Optionally close the modal after saving
+                                                        // bootstrap.Modal.getInstance(document.getElementById(`explanationModal-${requestId}`)).hide();
+                                                    }
+                                                </script>
                                             }
                                             else
                                             {

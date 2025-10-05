@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using PomixPMOService.API.Controllers;
 using System.Dynamic;
+using System.Globalization;
 using System.Text.Json;
+using System.Globalization;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -259,7 +261,17 @@ namespace PomixPMOService.UI.Controllers
             return new PaginatedCartableViewModel { CurrentPage = page, PageSize = pageSize, SearchQuery = search };
         }
     }
+    public static class PersianDateHelper
+    {
+        public static string ToPersianDate(this DateTime date)
+        {
+            var iranTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time");
+            var iranDateTime = TimeZoneInfo.ConvertTimeFromUtc(date, iranTimeZone);
 
+            var persianCalendar = new PersianCalendar();
+            return $"{persianCalendar.GetYear(iranDateTime)}/{persianCalendar.GetMonth(iranDateTime):D2}/{persianCalendar.GetDayOfMonth(iranDateTime):D2} {iranDateTime:HH:mm:ss}";
+        }
+    }
     // مدل پاسخ API
     public class PaginatedResponse<T>
     {

@@ -1,6 +1,9 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
 using PomixPMOService.UI.ViewModels;
+using System.Net.Http.Headers;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -77,6 +80,7 @@ namespace PomixPMOService.UI.Controllers
 
         #endregion
 
+
         //public IActionResult Cartable()
         //{
         //    return View("~/Views/Cartable/Index.cshtml", new List<object>());
@@ -113,6 +117,25 @@ namespace PomixPMOService.UI.Controllers
                 return View(new List<UserViewModel>());
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUserProfile()
+        {
+            var token = HttpContext.Session.GetString("JwtToken");
+            if (string.IsNullOrEmpty(token))
+                return Json(new { success = false, message = "توکن یافت نشد." });
+
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _client.GetAsync("Auth/GetCurrentUser");
+            if (!response.IsSuccessStatusCode)
+                return Json(new { success = false, message = "دریافت اطلاعات کاربر ناموفق بود." });
+
+            var userInfo = await response.Content.ReadFromJsonAsync<object>();
+            return Json(userInfo);
+        }
+
+
 
 
         //[HttpPost]
@@ -173,6 +196,14 @@ namespace PomixPMOService.UI.Controllers
         {
             return View();
         }
+    }
+
+
+    public class UserProfileViewModel
+    {
+        public string Name { get; set; }
+        public string LastName { get; set; }
+        public string Role { get; set; }
     }
 
     public class LoginResponse

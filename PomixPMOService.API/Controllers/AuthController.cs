@@ -90,12 +90,14 @@ namespace PomixPMOService.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            // بررسی تکراری بودن نام کاربری و کد ملی
             if (await _context.Users.AnyAsync(u => u.Username == viewModel.Username))
                 return BadRequest("نام کاربری قبلاً ثبت شده است.");
 
             if (await _context.Users.AnyAsync(u => u.NationalId == viewModel.NationalId))
                 return BadRequest("کد ملی قبلاً ثبت شده است.");
 
+            // ساخت کاربر جدید
             var user = new User
             {
                 NationalId = viewModel.NationalId,
@@ -103,14 +105,26 @@ namespace PomixPMOService.API.Controllers
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(viewModel.Password),
                 Name = viewModel.Name,
                 LastName = viewModel.LastName,
-                RoleId = viewModel.RoleId  // ← از ViewModel جدید باید RoleId بگیرید
+                RoleId = viewModel.RoleId,
+                CreatedAt = DateTime.Now,
+                IsActive = true
             };
 
             _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(); // کاربر ثبت می‌شود
 
+            // بارگذاری نقش با Include تا از NullReferenceException جلوگیری شود
+            user = await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.UserId == user.UserId);
+
+            if (user == null)
+                return StatusCode(500, "خطا در ثبت کاربر.");
+
+            // ثبت لاگ
             await LogAction(user.UserId, "Register_Success", user.Username, "User registered");
 
+            // آماده‌سازی خروجی
             var result = new UserViewModel
             {
                 UserId = user.UserId,
@@ -118,15 +132,16 @@ namespace PomixPMOService.API.Controllers
                 Username = user.Username,
                 Name = user.Name,
                 LastName = user.LastName,
-                Role = user.Role.RoleName,   // ← اینجا فقط رشته می‌خوایم
+                Role = user.Role?.RoleName ?? "بدون نقش", // RoleName مستقیم از DB
                 CreatedAt = user.CreatedAt,
                 LastLogin = user.LastLogin,
                 IsActive = user.IsActive
             };
 
-
             return CreatedAtAction(nameof(GetUsers), new { id = user.UserId }, result);
         }
+
+
 
         [HttpGet("GetUsers")]
         [AllowAnonymous]

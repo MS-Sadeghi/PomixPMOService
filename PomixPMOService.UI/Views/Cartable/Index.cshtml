@@ -1,4 +1,5 @@
-﻿@model PomixPMOService.UI.Controllers.PaginatedCartableViewModel
+﻿@using PomixPMOService.UI.Controllers;
+@model PomixPMOService.UI.Controllers.PaginatedCartableViewModel
 @{
     ViewData["Title"] = "کارتابل";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -40,6 +41,7 @@
                             <thead>
                                 <tr role="row">
                                     <th class="wd-10p border-bottom-0 sorting sorting_asc">شماره درخواست</th>
+                                    <th class="wd-15p border-bottom-0 sorting">تاریخ ایجاد</th>
                                     <th class="wd-15p border-bottom-0 sorting">کد ملی</th>
                                     <th class="wd-15p border-bottom-0 sorting">شماره همراه</th>
                                     <th class="wd-15p border-bottom-0 sorting">شناسه سند</th>
@@ -79,6 +81,7 @@
 
                                     <tr>
                                         <td>@item.RequestId</td>
+                                        <td>@item.CreatedAt.ToPersianDate()</td>
                                         <td>@item.NationalId</td>
                                         <td>@item.MobileNumber</td>
                                         <td>@item.DocumentNumber</td>
@@ -202,16 +205,6 @@
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                <script>
-                                                    function saveDescription(requestId) {
-                                                        const description = document.getElementById(`description-${requestId}`).value;
-                                                        // Add your logic here to handle the description (e.g., send to server via AJAX)
-                                                        console.log(`Description for Request ${requestId}: ${description}`);
-                                                        // Optionally close the modal after saving
-                                                        // bootstrap.Modal.getInstance(document.getElementById(`explanationModal-${requestId}`)).hide();
-                                                    }
-                                                </script>
                                             }
                                             else
                                             {

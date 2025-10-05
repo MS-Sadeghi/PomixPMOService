@@ -46,32 +46,33 @@ namespace PomixPMOService.UI.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
-                    if (loginResponse?.Tokens?.AccessToken == null)
+
+                    if (loginResponse?.Tokens?.AccessToken != null)
+                    {
+                        // ذخیره توکن و redirect
+                        HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
+                        return RedirectToAction("Index", "Cartable");
+                    }
+                    else
                     {
                         ViewBag.ErrorMessage = "خطا: توکن دریافت نشد.";
-                        return View(model);
+                        return View(model); // ← مسیر جایگزین برای وقتی توکن null است
                     }
-
-                    ViewBag.JwtToken = loginResponse.Tokens.AccessToken;
-                    ViewBag.SuccessMessage = loginResponse.Message;
-
-                    HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
-
-                    return View(model);
                 }
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
                     ViewBag.ErrorMessage = "خطا در ورود: " + error;
-                    return View(model);
+                    return View(model); // ← مسیر جایگزین برای وضعیت ناموفق HTTP
                 }
             }
             catch (Exception ex)
             {
                 ViewBag.ErrorMessage = "خطا در ارتباط با سرور: " + ex.Message;
-                return View(model);
+                return View(model); // ← مسیر جایگزین برای استثنا
             }
         }
+
 
 
         //public IActionResult Cartable()

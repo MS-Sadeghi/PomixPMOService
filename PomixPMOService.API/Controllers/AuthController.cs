@@ -228,6 +228,31 @@ namespace PomixPMOService.API.Controllers
             return Ok($"دسترسی {model.Permission} از کاربر {user?.Username ?? "Unknown"} حذف شد.");
         }
 
+        [HttpPost("ChangePassword")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+                return Unauthorized("کاربر شناسایی نشد.");
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            if (user == null)
+                return NotFound("کاربر یافت نشد.");
+
+            if (!BCrypt.Net.BCrypt.Verify(model.CurrentPassword, user.PasswordHash))
+                return BadRequest("رمز عبور فعلی اشتباه است.");
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+            await _context.SaveChangesAsync();
+
+            await LogAction(userId, "ChangePassword_Success", user.Username, "Password changed successfully");
+            return Ok("رمز عبور با موفقیت تغییر کرد.");
+        }
+
         [HttpGet("GetCurrentUser")]
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
@@ -291,5 +316,12 @@ namespace PomixPMOService.API.Controllers
     public class RefreshRequestViewModel
     {
         public string RefreshToken { get; set; } = string.Empty;
+    }
+
+    public class ChangePasswordViewModel
+    {
+        public string CurrentPassword { get; set; }
+        public string NewPassword { get; set; }
+        public string ConfirmNewPassword { get; set; }
     }
 }

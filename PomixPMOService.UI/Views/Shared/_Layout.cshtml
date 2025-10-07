@@ -29,11 +29,20 @@
 
     <style>
         body {
-            font-family: 'Vazirmatn', sans-serif;
+            font-family: 'FarNazanin', sans-serif;
+            font-size: 1.2rem;
             direction: rtl;
             text-align: right;
             overflow-x: hidden;
-            /* background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); */
+            line-height: 2;
+        }
+
+        thead {
+            font-size: 1.3rem !important;
+        }
+
+        table {
+            font-size: 1.1rem !important;
         }
 
         .header-left-icons {
@@ -306,8 +315,7 @@
 
 </html>
 
-
-    <script>
+<script>
     $(document).ready(function () {
         $.get('/Home/GetUserProfile', function (data) {
             if (data && data.success !== false) {

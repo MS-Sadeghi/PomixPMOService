@@ -1,1 +1,6 @@
-﻿
+﻿@font-face {
+    font-family: 'FarNazanin';
+    src: url('/fonts/Far_Nazanin.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}

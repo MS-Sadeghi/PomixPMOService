@@ -135,9 +135,6 @@ namespace PomixPMOService.UI.Controllers
             return Json(userInfo);
         }
 
-
-
-
         //[HttpPost]
         //[ValidateAntiForgeryToken]
         //public async Task<IActionResult> CreateUser(UserViewModel model)
@@ -185,6 +182,65 @@ namespace PomixPMOService.UI.Controllers
         //    }
         //}
 
+        public async Task<IActionResult> EditProfile()
+        {
+            var token = HttpContext.Session.GetString("JwtToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
+                return RedirectToAction("LoginPage");
+            }
+
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _client.GetAsync("Auth/GetCurrentUser");
+            if (!response.IsSuccessStatusCode)
+            {
+                ViewBag.ErrorMessage = "دریافت اطلاعات کاربر ناموفق بود.";
+                return View(new UserInfo());
+            }
+
+            var userInfo = await response.Content.ReadFromJsonAsync<UserInfo>();
+            return View(userInfo);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.ErrorMessage = "لطفاً همه فیلدها را به درستی پر کنید.";
+                return View("EditProfile", new UserInfo());
+            }
+
+            if (model.NewPassword != model.ConfirmNewPassword)
+            {
+                ViewBag.ErrorMessage = "رمز عبور جدید و تأیید رمز عبور یکسان نیستند.";
+                return View("EditProfile", new UserInfo());
+            }
+
+            var token = HttpContext.Session.GetString("JwtToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
+                return RedirectToAction("LoginPage");
+            }
+
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _client.PostAsJsonAsync("Auth/ChangePassword", model);
+            if (response.IsSuccessStatusCode)
+            {
+                ViewBag.SuccessMessage = "رمز عبور با موفقیت تغییر کرد.";
+                return View("EditProfile", new UserInfo());
+            }
+
+            var error = await response.Content.ReadAsStringAsync();
+            ViewBag.ErrorMessage = $"خطا در تغییر رمز عبور: {error}";
+            return View("EditProfile", new UserInfo());
+        }
+
         #endregion
 
         public IActionResult Shahkar()
@@ -192,12 +248,13 @@ namespace PomixPMOService.UI.Controllers
             return View();
         }
         
-        public IActionResult EditProfile()
-        {
-            return View();
-        }
     }
-
+    public class ChangePasswordViewModel
+    {
+        public string CurrentPassword { get; set; }
+        public string NewPassword { get; set; }
+        public string ConfirmNewPassword { get; set; }
+    }
 
     public class UserProfileViewModel
     {

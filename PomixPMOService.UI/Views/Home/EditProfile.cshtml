@@ -16,6 +16,12 @@
                 @ViewBag.ErrorMessage
             </div>
         }
+        @if (ViewBag.SuccessMessage != null)
+        {
+            <div class="alert alert-success" role="alert">
+                @ViewBag.SuccessMessage
+            </div>
+        }
         <div class="text-center chat-image mb-5">
             <div class="avatar avatar-xxl chat-profile mb-3 brround">
                 <a class="" href="#"><img src="~/assets/images/users/22.jfif" alt="profile-user" class="brround"></a>
@@ -27,36 +33,38 @@
                 <p class="text-muted mt-0 mb-0 pt-0 fs-13">@(Model?.Role ?? "بدون نقش")</p>
             </div>
         </div>
-        <div class="form-group">
-            <label class="form-label">رمز عبور فعلی</label>
-            <div class="wrap-input100 validate-input input-group" id="Password-toggle">
-                <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                    <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
-                </a>
-                <input class="input100 form-control" type="password" placeholder="" autocomplete="current-password">
+        <form asp-action="ChangePassword" method="post">
+            <div class="form-group">
+                <label class="form-label">رمز عبور فعلی</label>
+                <div class="wrap-input100 validate-input input-group" id="Password-toggle">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
+                    </a>
+                    <input class="input100 form-control" type="password" name="CurrentPassword" autocomplete="current-password">
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <label class="form-label">رمز عبور جدید</label>
-            <div class="wrap-input100 validate-input input-group" id="Password-toggle1">
-                <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                    <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
-                </a>
-                <input class="input100 form-control" type="password" placeholder="" autocomplete="new-password">
+            <div class="form-group">
+                <label class="form-label">رمز عبور جدید</label>
+                <div class="wrap-input100 validate-input input-group" id="Password-toggle1">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
+                    </a>
+                    <input class="input100 form-control" type="password" name="NewPassword" autocomplete="new-password">
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <label class="form-label">تایید رمز عبور</label>
-            <div class="wrap-input100 validate-input input-group" id="Password-toggle2">
-                <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                    <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
-                </a>
-                <input class="input100 form-control" type="password" placeholder="" autocomplete="new-password">
+            <div class="form-group">
+                <label class="form-label">تایید رمز عبور</label>
+                <div class="wrap-input100 validate-input input-group" id="Password-toggle2">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
+                    </a>
+                    <input class="input100 form-control" type="password" name="ConfirmNewPassword" autocomplete="new-password">
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="card-footer text-end">
-        <a href="javascript:void(0)" class="btn btn-primary">ثبت</a>
-        <a href="javascript:void(0)" class="btn btn-danger">انصراف</a>
+            <div class="card-footer text-end">
+                <button type="submit" class="btn btn-primary">ثبت</button>
+                <a href="javascript:void(0)" class="btn btn-danger">انصراف</a>
+            </div>
+        </form>
     </div>
 </div>

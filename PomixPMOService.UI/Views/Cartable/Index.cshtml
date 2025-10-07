@@ -9,7 +9,7 @@
     var documentError = ViewBag.DocumentError as string ?? null;
 }
 <style>
-    .input-group-text i {
+    .iColor {
         color: #6c757d !important; 
     }
 
@@ -170,42 +170,49 @@
                                                 <button class="btn btn-sm btn-icon btn-light" data-bs-toggle="modal" data-bs-target="#explanationModal-@item.RequestId" title="مشاهده توضیحات">
                                                     <i class="fa fa-exclamation-circle text-danger"></i>
                                                 </button>
+
                                                 <!-- Modal for Explanation -->
                                                 <div class="modal fade text-start" id="explanationModal-@item.RequestId" tabindex="-1" aria-hidden="true">
-                                                    <div class="modal-dialog modal-dialog-centered">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title">توضیحات درخواست @item.RequestId</h5>
+                                                    <div class="modal-dialog modal-dialog-centered modal-md">
+                                                        <div class="modal-content border-0 shadow">
+                                                            <div class="modal-header border-0 pb-0">
+                                                                <h5 class="modal-title fw-bold text-primary text-center">توضیحات درخواست @item.RequestId</h5>
                                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                             </div>
+                                                            <hr class="mt-4 mb-0 opacity-50">
                                                             <div class="modal-body p-0">
-                                                                <div class="card">
-                                                                    <div class="card-body">
-                                                                        <div class="">
-                                                                            <ul class="list-group">
-                                                                                @{
-                                                                                    var problems = explanation.Split(new[] { ". " }, StringSplitOptions.RemoveEmptyEntries);
-                                                                                    foreach (var problem in problems)
+                                                                <div class="card p-3 pricing-card border-0">
+                                                                    <div class="card-body pt-4 pb-1">
+                                                                        <ul class="ps-0 list-unstyled mb-0">
+                                                                            @{
+                                                                                var problems = explanation.Split(new[] { ". " }, StringSplitOptions.RemoveEmptyEntries);
+                                                                                foreach (var problem in problems)
+                                                                                {
+                                                                                    var cleanProblem = problem.Trim().TrimEnd('.');
+                                                                                    if (!string.IsNullOrEmpty(cleanProblem))
                                                                                     {
-                                                                                        var cleanProblem = problem.Trim().TrimEnd('.');
-                                                                                        if (!string.IsNullOrEmpty(cleanProblem))
-                                                                                        {
-                                                                                            <li class="listunorder">@cleanProblem</li>
-                                                                                        }
+                                                                                        <li class="mb-1 d-flex align-items-start">
+                                                                                            <i class="mdi mdi-close-circle-outline text-gray p-2 fs-16"></i>
+                                                                                            <span>@cleanProblem</span>
+                                                                                        </li>
                                                                                     }
                                                                                 }
-                                                                            </ul>
-                                                                            <div class="mt-3">
-                                                                                <label for="description-@item.RequestId" class="form-label">توضیحات اضافی</label>
-                                                                                <textarea class="form-control" id="description-@item.RequestId" rows="4" placeholder="توضیحات خود را اینجا وارد کنید..."></textarea>
-                                                                            </div>
-                                                                        </div>
+                                                                            }
+                                                                        </ul>
+                                                                    </div>
+                                                                    <div class="card-footer border-top-0 pt-1">
+                                                                        <label for="description-@item.RequestId" class="form-label fw-semibold mb-1">توضیحات </label>
+                                                                        <textarea class="form-control" id="description-@item.RequestId" rows="3" placeholder="توضیحات خود را وارد کنید..."></textarea>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-primary" onclick="saveDescription('@item.RequestId')">ثبت</button>
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                                                            <div class="modal-footer border-0 pb-2">
+                                                                <button type="button" class="btn btn-primary px-3" onclick="saveDescription('@item.RequestId')">
+                                                                    ثبت
+                                                                </button>
+                                                                <button type="button" class="btn btn-outline-default px-3" data-bs-dismiss="modal">
+                                                                    بستن
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -216,23 +223,24 @@
                                                 <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="بدون مشکل"></i>
                                             }
                                         </td>
-                                        <!-- تایید -->
+
                                         <td class="text-center">
-                                            <div class="d-flex justify-content-center align-items-center gap-2">
-                                                <div class="form-check">
-                                                    <input class="form-check-input success-checkbox" type="radio" name="approval-@item.RequestId" id="approve-@item.RequestId" value="true">
-                                                    <label class="form-check-label" for="approve-@item.RequestId">
-                                                        <i class="fa fa-check text-success"></i>
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input danger-checkbox" type="radio" name="approval-@item.RequestId" id="reject-@item.RequestId" value="false">
-                                                    <label class="form-check-label" for="reject-@item.RequestId">
-                                                        <i class="fa fa-times text-danger"></i>
-                                                    </label>
-                                                </div>
-                                            </div>
+                                            <ul class="nav nav-price justify-content-center mt-2">
+                                                <li>
+                                                    <a data-bs-toggle="tab" class="approval-tab active show text-success" data-value="true">
+                                                        <i class="fa fa-check me-1"></i>
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a data-bs-toggle="tab" class="approval-tab text-danger" data-value="false">
+                                                        <i class="fa fa-times me-1"></i>
+                                                    </a>
+                                                </li>
+                                            </ul>
+
+                                            <input type="hidden" name="approval-@item.RequestId" id="approvalValue-@item.RequestId" value="true" />
                                         </td>
+
                                     </tr>
                                 }
                             </tbody>
@@ -297,20 +305,20 @@
                                                 <div class="form-group col-md-12 mb-0">
                                                     <div class="form-row">
                                                         <div class="form-group col-md-6 mb-0">
-                                                            <label class="form-label">کد ملی <span class="text-red">*</span></label>
+                                                            <label class="form-label">کد ملی </label>
                                                             <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا کد ملی را وارد کنید">
                                                                 <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                                                                    <i class="fa fa-vcard-o" data-bs-toggle="tooltip" title="fa fa-vcard-o"></i>
+                                                                    <i class="iColor fa fa-vcard-o" data-bs-toggle="tooltip" title="fa fa-vcard-o"></i>
                                                                 </a>
                                                                 <input class="input100 border-start-0 ms-0 form-control" name="NationalCode" id="NationalCode" placeholder="کد ملی" required type="text">
                                                                 <span class="text-danger"></span>
                                                             </div>
                                                         </div>
                                                         <div class="form-group col-md-6 mb-0">
-                                                            <label class="form-label">شماره موبایل <span class="text-red">*</span></label>
+                                                            <label class="form-label">شماره موبایل</label>
                                                             <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا شماره موبایل را وارد کنید">
                                                                 <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                                                                    <i class="fa fa-mobile" data-bs-toggle="tooltip" title="fa fa-mobile"></i>
+                                                                    <i class="iColor fa fa-mobile" data-bs-toggle="tooltip" title="fa fa-mobile"></i>
                                                                 </a>
                                                                 <input class="input100 border-start-0 ms-0 form-control" name="MobileNumber" id="MobileNumber" placeholder="شماره موبایل" required type="text">
                                                                 <span class="text-danger"></span>
@@ -327,10 +335,10 @@
                                                 <div class="form-group col-md-12 mb-0">
                                                     <div class="form-row">
                                                         <div class="form-group col-md-6 mb-0">
-                                                            <label class="form-label">شناسه سند <span class="text-red">*</span></label>
+                                                            <label class="form-label">شناسه سند</label>
                                                             <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا شناسه سند را وارد کنید">
                                                                 <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                                                                    <i class="fa fa-wpforms" data-bs-toggle="tooltip" title="fa fa-wpforms"></i>
+                                                                    <i class="iColor fa fa-wpforms" data-bs-toggle="tooltip" title="fa fa-wpforms"></i>
                                                                 </a>
                                                                 <input class="input100 border-start-0 ms-0 form-control" name="DocumentNumber" id="DocumentNumber" placeholder="شناسه سند" required type="text">
                                                                 <span class="text-danger"></span>
@@ -338,10 +346,10 @@
                                                         </div>
 
                                                         <div class="form-group col-md-6 mb-0">
-                                                            <label class="form-label">رمز تصدیق <span class="text-red">*</span></label>
+                                                            <label class="form-label">رمز تصدیق </label>
                                                             <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا رمز تصدیق را وارد کنید">
                                                                 <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                                                                    <i class="fa fa-unlock-alt" data-bs-toggle="tooltip" title="fa fa-unlock-alt"></i>
+                                                                    <i class="iColor fa fa-unlock-alt" data-bs-toggle="tooltip" title="fa fa-unlock-alt"></i>
                                                                 </a>
                                                                 <input class="input100 border-start-0 ms-0 form-control" name="VerifyCode" id="VerifyCode" placeholder="رمز تصدیق" required type="text">
                                                                 <span class="text-danger"></span>

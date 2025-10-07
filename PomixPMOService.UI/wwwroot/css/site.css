@@ -4,3 +4,13 @@
     font-weight: normal;
     font-style: normal;
 }
+
+.toast-success {
+    background-color: #008000 !important; 
+    border-color: #006400 !important;
+}
+
+.toast-error {
+    background-color: #b30000 !important;
+    border-color: #8b0000 !important; 
+}

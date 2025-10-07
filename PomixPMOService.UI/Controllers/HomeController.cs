@@ -210,21 +210,18 @@ namespace PomixPMOService.UI.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.ErrorMessage = "لطفاً همه فیلدها را به درستی پر کنید.";
-                return View("EditProfile", new UserInfo());
+                return Json(new { success = false, message = "لطفاً همه فیلدها را به درستی پر کنید." });
             }
 
             if (model.NewPassword != model.ConfirmNewPassword)
             {
-                ViewBag.ErrorMessage = "رمز عبور جدید و تأیید رمز عبور یکسان نیستند.";
-                return View("EditProfile", new UserInfo());
+                return Json(new { success = false, message = "رمز عبور جدید و تأیید رمز عبور یکسان نیستند." });
             }
 
             var token = HttpContext.Session.GetString("JwtToken");
             if (string.IsNullOrEmpty(token))
             {
-                ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
-                return RedirectToAction("LoginPage");
+                return Json(new { success = false, message = "لطفاً ابتدا وارد سیستم شوید." });
             }
 
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -232,13 +229,12 @@ namespace PomixPMOService.UI.Controllers
             var response = await _client.PostAsJsonAsync("Auth/ChangePassword", model);
             if (response.IsSuccessStatusCode)
             {
-                ViewBag.SuccessMessage = "رمز عبور با موفقیت تغییر کرد.";
-                return View("EditProfile", new UserInfo());
+                return Json(new { success = true, message = "رمز عبور با موفقیت تغییر کرد." });
             }
 
             var error = await response.Content.ReadAsStringAsync();
-            ViewBag.ErrorMessage = $"خطا در تغییر رمز عبور: {error}";
-            return View("EditProfile", new UserInfo());
+            var errorObj = JsonConvert.DeserializeObject<dynamic>(error);
+            return Json(new { success = false, message = errorObj.message ?? $"خطا در تغییر رمز عبور: {error}" });
         }
 
         #endregion

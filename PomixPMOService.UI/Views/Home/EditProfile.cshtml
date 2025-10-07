@@ -12,15 +12,15 @@
     <div class="card-body">
         @if (ViewBag.ErrorMessage != null)
         {
-            <div class="alert alert-danger" role="alert">
-                @ViewBag.ErrorMessage
-            </div>
+            <script>
+                toastr.error('@ViewBag.ErrorMessage');
+            </script>
         }
         @if (ViewBag.SuccessMessage != null)
         {
-            <div class="alert alert-success" role="alert">
-                @ViewBag.SuccessMessage
-            </div>
+            <script>
+                toastr.success('@ViewBag.SuccessMessage');
+            </script>
         }
         <div class="text-center chat-image mb-5">
             <div class="avatar avatar-xxl chat-profile mb-3 brround">
@@ -33,7 +33,7 @@
                 <p class="text-muted mt-0 mb-0 pt-0 fs-13">@(Model?.Role ?? "بدون نقش")</p>
             </div>
         </div>
-        <form asp-action="ChangePassword" method="post">
+        <form id="changePasswordForm" asp-action="ChangePassword" method="post">
             <div class="form-group">
                 <label class="form-label">رمز عبور فعلی</label>
                 <div class="wrap-input100 validate-input input-group" id="Password-toggle">
@@ -68,3 +68,35 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#changePasswordForm").submit(function (e) {
+                e.preventDefault();
+                var formData = $(this).serialize();
+
+                $.ajax({
+                    url: '@Url.Action("ChangePassword", "Home")',
+                    type: 'POST',
+                    data: formData,
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            $("#changePasswordForm")[0].reset();
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        var errorMessage = xhr.responseJSON?.message || 'خطایی رخ داد.';
+                        toastr.error(errorMessage);
+                    }
+                });
+            });
+        });
+    </script>
+}

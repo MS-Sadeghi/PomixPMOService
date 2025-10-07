@@ -14,33 +14,28 @@
         padding: 20px;
     }
 
-    .login-left {
-        flex: 1;
-        background-image: url('/assets/images/download.jfif');
-        background-size: cover; 
-        background-position: center; 
-        background-repeat: no-repeat;
-        color: #fff;
-        border-radius: 20px 0 0 20px;
-        padding: 40px;
+    .row.w-100 {
         display: flex;
-        flex-direction: column;
         justify-content: center;
-        min-height: 500px;
-        position: relative; 
+        align-items: center;
+        margin: 0 auto;
     }
 
     .login-right {
-        flex: 1;
-        background: rgba(255, 255, 255, 0.2); 
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-radius: 0 20px 20px 0;
+        flex: 0 0 450px;
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 20px;
         padding: 40px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
         border: 1px solid rgba(255, 255, 255, 0.3);
-        min-height: 500px;
+        transition: transform 0.3s ease;
     }
+
+        .login-right:hover {
+            transform: translateY(-5px);
+        }
 
     .btn-primary {
         border: none;
@@ -49,22 +44,20 @@
         border-radius: 5px;
         font-weight: 500;
         color: #fff;
+        transition: background 0.3s ease;
     }
-
-        .btn-primary:hover {
-            background: #357abd;
-        }
 
     .form-group {
         margin-bottom: 20px;
     }
 
     .form-control {
-        border: 1px solid #ddd;
-        border-radius: 5px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
         height: 45px;
         padding: 10px;
     }
+
     .text-muted {
         color: #666;
         font-size: 0.9rem;
@@ -73,14 +66,14 @@
     #securitySection {
         display: flex;
         flex-direction: column;
-        align-items: flex-start; 
+        align-items: flex-start;
     }
 
 </style>
 
 <div class="login-container">
-    <div class="row w-100" style="max-width: 850px;">
-		<div class="col-md-6 login-right">
+    <div class="row w-100" style="max-width: 400px;">
+		<div class="login-right">
             <h3 class="text-center pb-3">سامانه استعلام سند</h3>
             <form id="loginForm" asp-action="LoginPage" method="post" class="login100-form validate-form" autocomplete="off">
                 <!-- Username Input -->
@@ -149,8 +142,6 @@
                     <div class="text-danger text-center mt-2">@ViewBag.ErrorMessage</div>
                 }
             </form>
-        </div>
-        <div class="col-md-6 login-left">
         </div>
     </div>
 </div>

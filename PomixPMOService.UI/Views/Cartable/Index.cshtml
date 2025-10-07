@@ -86,7 +86,10 @@
 
                                     <tr>
                                         <td>@item.RequestId</td>
-                                        <td>@item.CreatedAt.ToPersianDate()</td>
+                                        <td>
+                                            <span class="d-block">@item.CreatedAt.ToPersianTime()</span>
+                                            <span class="d-block">@item.CreatedAt.ToPersianDate()</span>
+                                        </td>
                                         <td>@item.NationalId</td>
                                         <td>@item.MobileNumber</td>
                                         <td>@item.DocumentNumber</td>

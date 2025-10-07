@@ -260,15 +260,36 @@ namespace PomixPMOService.UI.Controllers
             return new PaginatedCartableViewModel { CurrentPage = page, PageSize = pageSize, SearchQuery = search };
         }
     }
+
     public static class PersianDateHelper
     {
         public static string ToPersianDate(this DateTime date)
         {
-            var iranTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time");
-            var iranDateTime = TimeZoneInfo.ConvertTimeFromUtc(date, iranTimeZone);
+            try
+            {
+                var iranTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time");
+                var iranDateTime = TimeZoneInfo.ConvertTimeFromUtc(date, iranTimeZone);
+                var persianCalendar = new PersianCalendar();
+                return $"{persianCalendar.GetYear(iranDateTime)}/{persianCalendar.GetMonth(iranDateTime):D2}/{persianCalendar.GetDayOfMonth(iranDateTime):D2}";
+            }
+            catch
+            {
+                return "نامعتبر";
+            }
+        }
 
-            var persianCalendar = new PersianCalendar();
-            return $"{persianCalendar.GetYear(iranDateTime)}/{persianCalendar.GetMonth(iranDateTime):D2}/{persianCalendar.GetDayOfMonth(iranDateTime):D2} {iranDateTime:HH:mm:ss}";
+        public static string ToPersianTime(this DateTime date)
+        {
+            try
+            {
+                var iranTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time");
+                var iranDateTime = TimeZoneInfo.ConvertTimeFromUtc(date, iranTimeZone);
+                return $"{iranDateTime:HH:mm:ss}";
+            }
+            catch
+            {
+                return "نامعتبر";
+            }
         }
     }
     // مدل پاسخ API

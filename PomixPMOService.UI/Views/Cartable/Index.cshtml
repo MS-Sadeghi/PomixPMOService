@@ -170,9 +170,30 @@
                                         <td>
                                             @if (!string.IsNullOrEmpty(explanation) && explanation != "بدون مشکل")
                                             {
-                                                <button class="btn btn-sm btn-icon btn-light" data-bs-toggle="modal" data-bs-target="#explanationModal-@item.RequestId" title="مشاهده توضیحات">
+                                                <button class="btn btn-sm btn-icon btn-light" title="مشاهده توضیحات"
+                                                        data-bs-toggle="modal" data-bs-target="#documentTextModal-@item.RequestId"
+                                                        data-text="@Html.Raw(item.ImpotrtantAnnexText)">
                                                     <i class="fa fa-exclamation-circle text-danger"></i>
                                                 </button>
+                                                <!-- Modal per Request -->
+                                                <div class="modal fade text-start" id="documentTextModal-@item.RequestId" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header border-0 pb-0">
+                                                                <h5 class="modal-title text-primary fw-bold">متن سند درخواست @item.RequestId</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+                                                            </div>
+                                                            <div class="modal-body" id="documentTextContent-@item.RequestId" style="max-height: 60vh; overflow-y: auto;">
+                                                                <div class="border rounded p-3 bg-light text-dark">
+                                                                    @Html.Raw(item.ImpotrtantAnnexText ?? "<p class='text-muted'>متنی برای این سند ثبت نشده است.</p>")
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer border-0">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
                                                 <!-- Modal for Explanation -->
                                                 <div class="modal fade text-start" id="explanationModal-@item.RequestId" tabindex="-1" aria-hidden="true">
@@ -382,6 +403,41 @@
                                                 <p><strong>نوع سند:</strong> @verifyDocData.DocType</p>
                                                 <p><strong>موضوع سند:</strong> @verifyDocData.SignSubject</p>
                                                 <p><strong>تاریخ سند:</strong> @verifyDocData.DocDate</p>
+                                                <p><strong>متن سند:</strong></p>
+
+                                                @if (!string.IsNullOrEmpty(verifyDocData.ImpotrtantAnnexText))
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnShowDocText">
+                                                        <i class="bi bi-file-earmark-text"></i> مشاهده متن سند
+                                                    </button>
+
+                                                    <!-- Modal: نمایش متن سند -->
+                                                    <div class="modal fade" id="documentTextModal" tabindex="-1" aria-labelledby="documentTextModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header border-0 pb-0">
+                                                                    <h5 class="modal-title text-primary fw-bold" id="documentTextModalLabel">متن سند درخواست</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+                                                                </div>
+                                                                <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                                                                    <div class="border rounded p-3 bg-light text-dark">
+                                                                        @Html.Raw(verifyDocData.ImpotrtantAnnexText)
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer border-0">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <p class="text-muted">متنی برای این سند ثبت نشده است.</p>
+                                                }
+
+
+
                                                 <p><strong>توضیحات:</strong> @verifyDocData.Desc</p>
                                                 @if (!string.IsNullOrEmpty(verifyDocData.DocImage_Base64))
                                                 {
@@ -437,5 +493,35 @@
             </text>
         }
         });
+
+                $(document).on('click', '.btn-view-doc', function () {
+            var requestId = $(this).data('request-id');
+            $('#documentModalLabel').text('متن سند درخواست ' + requestId);
+            $('#documentModalBody').html('<p class="text-center text-muted">در حال بارگذاری...</p>');
+            $('#documentModal').modal('show');
+
+            $.ajax({
+                url: '/Cartable/GetDocumentText',
+                type: 'GET',
+                data: { requestId: requestId },
+                success: function (res) {
+                    if (res.success) {
+                        $('#documentModalBody').html('<p style="white-space: pre-wrap;">' + res.documentText + '</p>');
+                    } else {
+                        $('#documentModalBody').html('<p class="text-danger">' + res.message + '</p>');
+                    }
+                },
+                error: function () {
+                    $('#documentModalBody').html('<p class="text-danger">خطا در دریافت اطلاعات سند.</p>');
+                }
+            });
+        });
+
+                $('#btnShowDocText').on('click', function () {
+            $('#documentTextModal').modal('show');
+        });
+
+
+      
     </script>
 }

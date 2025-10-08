@@ -188,6 +188,7 @@ namespace PomixPMOService.UI.Controllers
                         verifyDocData.Desc = dataElement.TryGetProperty("Desc", out var desc) ? desc.GetString() : null;
                         verifyDocData.DocImage = dataElement.TryGetProperty("DocImage", out var docImage) ? docImage.GetString() : null;
                         verifyDocData.DocImage_Base64 = dataElement.TryGetProperty("DocImage_Base64", out var docImageBase64) ? docImageBase64.GetString() : null;
+                        verifyDocData.ImpotrtantAnnexText = dataElement.TryGetProperty("ImpotrtantAnnexText", out var importantAnnexText) ? importantAnnexText.GetString() : null;
 
                         var lstPersons = dataElement.TryGetProperty("LstFindPersonInQuery", out var personsElement) && personsElement.ValueKind == JsonValueKind.Array
                             ? JsonSerializer.Deserialize<List<dynamic>>(personsElement.GetRawText())
@@ -259,7 +260,39 @@ namespace PomixPMOService.UI.Controllers
             }
             return new PaginatedCartableViewModel { CurrentPage = page, PageSize = pageSize, SearchQuery = search };
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetDocumentText(long requestId)
+        {
+            try
+            {
+                var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var response = await _client.GetAsync($"Request/{requestId}");
+                if (!response.IsSuccessStatusCode)
+                    return Json(new { success = false, message = "در دریافت متن سند خطایی رخ داد." });
+
+                var item = await response.Content.ReadFromJsonAsync<CartableItemViewModel>();
+                return Json(new
+                {
+                    success = true,
+                    documentText = item?.ImpotrtantAnnexText ?? "(متن سندی موجود نیست)"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"خطا: {ex.Message}" });
+            }
+        }
+
     }
+
+
 
     public static class PersianDateHelper
     {
@@ -335,6 +368,7 @@ namespace PomixPMOService.UI.Controllers
         public string MobileNumber { get; set; } = string.Empty;
         public string DocumentNumber { get; set; } = string.Empty;
         public string VerificationCode { get; set; } = string.Empty;
+        public string ImpotrtantAnnexText { get; set; } = string.Empty;
         public bool? IsMatch { get; set; }
         public bool? IsExist { get; set; }
         public bool? IsNationalIdInResponse { get; set; }

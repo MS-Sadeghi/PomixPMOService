@@ -20,7 +20,7 @@ namespace PomixPMOService.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize]           
     public class ServiceController : ControllerBase
     {
         private readonly HttpClient _httpClient;

@@ -370,7 +370,7 @@ namespace PomixPMOService.API.Controllers
                 PersonsInQuery = new List<PersonInQuery>(),
                 ExistDoc = false,
                 IsNationalIdInLawyers = false,
-                IsNationalIdInResponse = false // مقدار پیش‌فرض
+                IsNationalIdInResponse = false 
             };
 
             bool isExist = false;

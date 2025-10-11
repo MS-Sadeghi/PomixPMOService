@@ -1,6 +1,8 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PomixPMOService.API.Controllers;
+using ServicePomixPMO.API.Data;
 using System.Dynamic;
 using System.Globalization;
 using System.Text.Json;
@@ -11,13 +13,17 @@ namespace PomixPMOService.UI.Controllers
     {
         private readonly HttpClient _client;
         private readonly IDNTCaptchaValidatorService _captchaValidatorService;
+        private readonly PomixServiceContext _context;
+        private readonly ILogger<CartableController> _logger;
 
         public CartableController(
             IHttpClientFactory httpClientFactory,
             IDNTCaptchaValidatorService captchaValidatorService)
+
         {
             _client = httpClientFactory.CreateClient("PomixApi");
             _captchaValidatorService = captchaValidatorService ?? throw new ArgumentNullException(nameof(captchaValidatorService));
+      
         }
 
         [HttpGet]
@@ -195,6 +201,8 @@ namespace PomixPMOService.UI.Controllers
                             : new List<dynamic>();
 
                         verifyDocData.LstFindPersonInQuery = lstPersons;
+
+                        ViewBag.RequestId = combinedResult.RequestId != null ? combinedResult.RequestId : (dataElement.TryGetProperty("RequestId", out var requestId) ? requestId.GetInt64() : 0);
                     }
                     catch (Exception)
                     {
@@ -222,7 +230,6 @@ namespace PomixPMOService.UI.Controllers
                 return View("Index", await GetCartableData(1, ""));
             }
         }
-
         private async Task<PaginatedCartableViewModel> GetCartableData(int page, string search)
         {
             var pageSize = 10;
@@ -263,32 +270,49 @@ namespace PomixPMOService.UI.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> GetDocumentText(long requestId)
+      
+        public async Task<IActionResult> GetDocumentText(int requestId)
         {
             try
             {
-                var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
-                if (!string.IsNullOrEmpty(token))
+                _logger.LogInformation("ارسال درخواست به API برای RequestId: {RequestId}", requestId);
+                var response = await _client.GetAsync($"api/Service/GetTextByRequestId/{requestId}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("پاسخ API برای RequestId {RequestId}: StatusCode={StatusCode}, Content={Content}",
+                    requestId, response.StatusCode, responseContent);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    _logger.LogError("خطای API برای RequestId {RequestId}: StatusCode={StatusCode}, Content={Content}",
+                        requestId, response.StatusCode, responseContent);
+                    return Json(new { success = false, message = $"خطا در دریافت متن سند از API: {response.StatusCode} - {responseContent}" });
                 }
 
-                var response = await _client.GetAsync($"Request/{requestId}");
-                if (!response.IsSuccessStatusCode)
-                    return Json(new { success = false, message = "در دریافت متن سند خطایی رخ داد." });
+                var documentData = JsonSerializer.Deserialize<JsonElement>(responseContent,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                var item = await response.Content.ReadFromJsonAsync<CartableItemViewModel>();
-                return Json(new
-                {
-                    success = true,
-                    documentText = item?.ImpotrtantAnnexText ?? "(متن سندی موجود نیست)"
-                });
+                string documentText = documentData.TryGetProperty("documentText", out var textElement)
+                    ? textElement.GetString() ?? "متنی برای این سند وجود ندارد."
+                    : documentData.TryGetProperty("message", out var messageElement)
+                        ? messageElement.GetString() ?? "متنی برای این سند وجود ندارد."
+                        : "متنی برای این سند وجود ندارد.";
+
+                _logger.LogInformation("متن سند استخراج‌شده برای RequestId {RequestId}: {DocumentText}", requestId, documentText);
+                return Json(new { success = !documentText.Contains("خطا") && !documentText.Contains("وجود ندارد"), documentText });
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "خطای HttpRequestException برای RequestId: {RequestId}", requestId);
+                return Json(new { success = false, message = $"خطا در ارتباط با API: {ex.Message}" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"خطا: {ex.Message}" });
+                _logger.LogError(ex, "خطای غیرمنتظره برای RequestId: {RequestId}", requestId);
+                return Json(new { success = false, message = $"خطا در پردازش اطلاعات سند: {ex.Message}" });
             }
         }
+
+
 
     }
 

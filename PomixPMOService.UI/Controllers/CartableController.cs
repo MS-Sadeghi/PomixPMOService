@@ -5,6 +5,7 @@ using PomixPMOService.API.Controllers;
 using ServicePomixPMO.API.Data;
 using System.Dynamic;
 using System.Globalization;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace PomixPMOService.UI.Controllers
@@ -268,55 +269,40 @@ namespace PomixPMOService.UI.Controllers
             return new PaginatedCartableViewModel { CurrentPage = page, PageSize = pageSize, SearchQuery = search };
         }
 
-
         [HttpGet]
-      
-        public async Task<IActionResult> GetDocumentText(int requestId)
+        public async Task<IActionResult> GetDocumentText(long requestId)
         {
             try
             {
-                _logger.LogInformation("ارسال درخواست به API برای RequestId: {RequestId}", requestId);
-                var response = await _client.GetAsync($"api/Service/GetTextByRequestId/{requestId}");
-                var responseContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("پاسخ API برای RequestId {RequestId}: StatusCode={StatusCode}, Content={Content}",
-                    requestId, response.StatusCode, responseContent);
-
-                if (!response.IsSuccessStatusCode)
+                var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
+                if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogError("خطای API برای RequestId {RequestId}: StatusCode={StatusCode}, Content={Content}",
-                        requestId, response.StatusCode, responseContent);
-                    return Json(new { success = false, message = $"خطا در دریافت متن سند از API: {response.StatusCode} - {responseContent}" });
+                    return Json(new { success = false, message = "توکن یافت نشد. لطفاً دوباره وارد سیستم شوید." });
                 }
 
-                var documentData = JsonSerializer.Deserialize<JsonElement>(responseContent,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                string documentText = documentData.TryGetProperty("documentText", out var textElement)
-                    ? textElement.GetString() ?? "متنی برای این سند وجود ندارد."
-                    : documentData.TryGetProperty("message", out var messageElement)
-                        ? messageElement.GetString() ?? "متنی برای این سند وجود ندارد."
-                        : "متنی برای این سند وجود ندارد.";
+                var response = await _client.GetAsync($"Service/GetTextByRequestId/{requestId}");
 
-                _logger.LogInformation("متن سند استخراج‌شده برای RequestId {RequestId}: {DocumentText}", requestId, documentText);
-                return Json(new { success = !documentText.Contains("خطا") && !documentText.Contains("وجود ندارد"), documentText });
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "خطای HttpRequestException برای RequestId: {RequestId}", requestId);
-                return Json(new { success = false, message = $"خطا در ارتباط با API: {ex.Message}" });
+                if (response.IsSuccessStatusCode)
+                {
+                    var apiResponse = await response.Content.ReadAsStringAsync();
+                    return Content(apiResponse, "application/json");
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, message = $"خطا در دریافت متن سند: {error}" });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "خطای غیرمنتظره برای RequestId: {RequestId}", requestId);
-                return Json(new { success = false, message = $"خطا در پردازش اطلاعات سند: {ex.Message}" });
+                return Json(new { success = false, message = $"خطا در دریافت متن سند: {ex.Message}" });
             }
         }
 
 
-
     }
-
-
 
     public static class PersianDateHelper
     {

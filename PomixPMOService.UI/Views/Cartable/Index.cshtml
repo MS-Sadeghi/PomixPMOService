@@ -167,86 +167,14 @@
                                             }
                                         </td>
                                         <!-- توضیحات -->
-                                        <td>
-                                            @if (!string.IsNullOrEmpty(explanation) && explanation != "بدون مشکل")
-                                            {
-                                                <button class="btn btn-sm btn-icon btn-light" title="مشاهده توضیحات"
-                                                        data-bs-toggle="modal" data-bs-target="#documentTextModal-@item.RequestId"
-                                                        data-text="@Html.Raw(item.ImpotrtantAnnexText)">
-                                                    <i class="fa fa-exclamation-circle text-danger"></i>
-                                                </button>
-                                                <!-- Modal per Request -->
-                                                <div class="modal fade text-start" id="documentTextModal-@item.RequestId" tabindex="-1" aria-hidden="true">
-                                                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header border-0 pb-0">
-                                                                <h5 class="modal-title text-primary fw-bold">متن سند درخواست @item.RequestId</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
-                                                            </div>
-                                                            <div class="modal-body" id="documentTextContent-@item.RequestId" style="max-height: 60vh; overflow-y: auto;">
-                                                                <div class="border rounded p-3 bg-light text-dark">
-                                                                    @Html.Raw(item.ImpotrtantAnnexText ?? "<p class='text-muted'>متنی برای این سند ثبت نشده است.</p>")
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer border-0">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Modal for Explanation -->
-                                                <div class="modal fade text-start" id="explanationModal-@item.RequestId" tabindex="-1" aria-hidden="true">
-                                                    <div class="modal-dialog modal-dialog-centered modal-md">
-                                                        <div class="modal-content border-0 shadow">
-                                                            <div class="modal-header border-0 pb-0">
-                                                                <h5 class="modal-title fw-bold text-primary text-center">توضیحات درخواست @item.RequestId</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <hr class="mt-4 mb-0 opacity-50">
-                                                            <div class="modal-body p-0">
-                                                                <div class="card p-3 pricing-card border-0">
-                                                                    <div class="card-body pt-4 pb-1">
-                                                                        <ul class="ps-0 list-unstyled mb-0">
-                                                                            @{
-                                                                                var problems = explanation.Split(new[] { ". " }, StringSplitOptions.RemoveEmptyEntries);
-                                                                                foreach (var problem in problems)
-                                                                                {
-                                                                                    var cleanProblem = problem.Trim().TrimEnd('.');
-                                                                                    if (!string.IsNullOrEmpty(cleanProblem))
-                                                                                    {
-                                                                                        <li class="mb-1 d-flex align-items-start">
-                                                                                            <i class="mdi mdi-close-circle-outline text-gray p-2 fs-16"></i>
-                                                                                            <span>@cleanProblem</span>
-                                                                                        </li>
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                        </ul>
-                                                                    </div>
-                                                                    <div class="card-footer border-top-0 pt-1">
-                                                                        <label for="description-@item.RequestId" class="form-label fw-semibold mb-1">توضیحات </label>
-                                                                        <textarea class="form-control" id="description-@item.RequestId" rows="3" placeholder="توضیحات خود را وارد کنید..."></textarea>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer border-0 pb-2">
-                                                                <button type="button" class="btn btn-primary px-3" onclick="saveDescription('@item.RequestId')">
-                                                                    ثبت
-                                                                </button>
-                                                                <button type="button" class="btn btn-outline-default px-3" data-bs-dismiss="modal">
-                                                                    بستن
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <i class="fa fa-check text-success" data-bs-toggle="tooltip" title="بدون مشکل"></i>
-                                            }
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-icon btn-light btn-view-doc"
+                                                    data-request-id="@item.RequestId"
+                                                    title="مشاهده متن سند">
+                                                <i class="fa fa-exclamation-circle text-warning"></i>
+                                            </button>
                                         </td>
+
 
                                         <td class="text-center">
                                             <ul class="nav nav-price justify-content-center mt-2">
@@ -297,6 +225,31 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="documentModal" tabindex="-1" aria-labelledby="documentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-primary" id="documentModalLabel">متن سند</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+
+            <div class="modal-body" id="documentModalBody">
+                <p class="text-center text-muted">در حال بارگذاری...</p>
+            </div>
+
+            <div class="modal-footer justify-content-between">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="documentChecked">
+                    <label class="form-check-label" for="documentChecked">متن سند بررسی شد</label>
+                </div>
+
+                <div>
+                    <button type="button" class="btn btn-success" id="confirmDocument">تایید</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Modal for Adding New Document -->
 <div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
@@ -313,7 +266,6 @@
                                 <div class="tabs-menu1">
                                     <ul class="nav panel-tabs">
                                         <li><a href="#tab1" data-bs-toggle="tab" class="active">ایجاد سند جدید</a></li>
-                                        <li><a href="#tab2" data-bs-toggle="tab">نمایش سند</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -409,44 +361,54 @@
                 $('.form-text').text('');
                 $('.nav-tabs a[href="#tab1"]').tab('show');
             });
-
-        @if (showDocumentTab)
-        {
-            <text>
-                    $('#scrollingmodal').modal('show');
-                    $('.nav-tabs a[href="#tab2"]').tab('show');
-            </text>
-        }
         });
 
-                $(document).on('click', '.btn-view-doc', function () {
+        $(document).on('click', '.btn-view-doc', function () {
             var requestId = $(this).data('request-id');
             $('#documentModalLabel').text('متن سند درخواست ' + requestId);
-            $('#documentModalBody').html('<p class="text-center text-muted">در حال بارگذاری...</p>');
+            $('#documentModalBody').html('<div class="d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
+            $('#documentChecked').prop('checked', false);
             $('#documentModal').modal('show');
 
             $.ajax({
                 url: '/Cartable/GetDocumentText',
                 type: 'GET',
                 data: { requestId: requestId },
+                dataType: 'json',
                 success: function (res) {
-                    if (res.success) {
-                        $('#documentModalBody').html('<p style="white-space: pre-wrap;">' + res.documentText + '</p>');
-                    } else {
-                        $('#documentModalBody').html('<p class="text-danger">' + res.message + '</p>');
+                    if (res && res.success && res.documentText && res.documentText.trim() !== "") {
+                        var safe = $('<div/>').text(res.documentText).html();
+                        $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.6;">' + safe + '</pre>');
+                    }
+                    else {
+                        $('#documentModalBody').html('<p class="text-danger fw-bold text-center">رمز تصدیق یا شماره سند درست وارد نشده است.</p>');
                     }
                 },
                 error: function () {
-                    $('#documentModalBody').html('<p class="text-danger">خطا در دریافت اطلاعات سند.</p>');
+                    $('#documentModalBody').html('<p class="text-danger text-center">خطا در دریافت اطلاعات سند.</p>');
                 }
             });
         });
 
-                $('#btnShowDocText').on('click', function () {
-            $('#documentTextModal').modal('show');
+        $(document).on('click', '#confirmDocument', function () {
+            if ($('#documentChecked').is(':checked')) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تأیید شد ✅',
+                    text: 'متن سند بررسی و تأیید گردید.',
+                    confirmButtonText: 'باشه',
+                    confirmButtonColor: '#198754'
+                });
+                $('#documentModal').modal('hide');
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'توجه ⚠️',
+                    text: 'لطفاً ابتدا گزینه "متن سند بررسی شد" را تیک بزنید.',
+                    confirmButtonText: 'باشه'
+                });
+            }
         });
 
-
-      
     </script>
 }

@@ -54,37 +54,30 @@ namespace PomixPMOService.UI.Controllers
 
                     if (loginResponse?.Tokens?.AccessToken != null)
                     {
-                        // ذخیره توکن و redirect
                         HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
                         return RedirectToAction("Index", "Cartable");
                     }
                     else
                     {
                         ViewBag.ErrorMessage = "خطا: توکن دریافت نشد.";
-                        return View(model); // ← مسیر جایگزین برای وقتی توکن null است
+                        return View(model); 
                     }
                 }
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
                     ViewBag.ErrorMessage = "خطا در ورود: " + error;
-                    return View(model); // ← مسیر جایگزین برای وضعیت ناموفق HTTP
+                    return View(model); 
                 }
             }
             catch (Exception ex)
             {
                 ViewBag.ErrorMessage = "خطا در ارتباط با سرور: " + ex.Message;
-                return View(model); // ← مسیر جایگزین برای استثنا
+                return View(model); 
             }
         }
 
         #endregion
-
-
-        //public IActionResult Cartable()
-        //{
-        //    return View("~/Views/Cartable/Index.cshtml", new List<object>());
-        //}
 
         #region Users
         public async Task<IActionResult> Users()
@@ -134,53 +127,6 @@ namespace PomixPMOService.UI.Controllers
             var userInfo = await response.Content.ReadFromJsonAsync<object>();
             return Json(userInfo);
         }
-
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> CreateUser(UserViewModel model)
-        //{
-        //    try
-        //    {
-        //        Console.WriteLine("متد CreateUser فراخوانی شد!");
-        //        if (!ModelState.IsValid)
-        //        {
-        //            Console.WriteLine("ModelState نامعتبر است!");
-        //            ViewBag.ErrorMessage = "لطفاً همه فیلدها را به درستی پر کنید.";
-        //            return View("Users", new List<UserViewModel>());
-        //        }
-
-        //        // بررسی تطابق رمز عبور و تأیید رمز عبور
-        //        if (model.Password != model.ConfirmPassword)
-        //        {
-        //            Console.WriteLine("رمز عبور و تأیید رمز عبور یکسان نیستند!");
-        //            ViewBag.ErrorMessage = "رمز عبور و تأیید رمز عبور باید یکسان باشند.";
-        //            return View("Users", new List<UserViewModel>());
-        //        }
-
-        //        Console.WriteLine("در حال ارسال درخواست به http://localhost:5066/api/Auth/CreateUser...");
-        //        var response = await _client.PostAsJsonAsync("Auth/CreateUser", model);
-        //        Console.WriteLine($"وضعیت پاسخ: {response.StatusCode}");
-        //        if (response.IsSuccessStatusCode)
-        //        {
-        //            Console.WriteLine("کاربر با موفقیت اضافه شد!");
-        //            return RedirectToAction("Users");
-        //        }
-        //        else
-        //        {
-        //            var error = await response.Content.ReadAsStringAsync();
-        //            Console.WriteLine($"خطای API: {error}");
-        //            ViewBag.ErrorMessage = $"خطا در افزودن کاربر: {error}";
-        //            return View("Users", new List<UserViewModel>());
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"خطا: {ex.Message}");
-        //        Console.WriteLine($"جزئیات خطا: {ex.StackTrace}");
-        //        ViewBag.ErrorMessage = $"خطا در ارتباط با سرور: {ex.Message}";
-        //        return View("Users", new List<UserViewModel>());
-        //    }
-        //}
 
         public async Task<IActionResult> EditProfile()
         {
@@ -243,7 +189,12 @@ namespace PomixPMOService.UI.Controllers
         {
             return View();
         }
-        
+
+        public IActionResult VerifyDocument()
+        {
+            return View();
+        }
+
     }
     public class ChangePasswordViewModel
     {

@@ -57,6 +57,19 @@
         opacity: 1 !important;
     }
 
+        .btn-close::before,
+        .btn-close::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 1.2rem;
+            height: 2px;
+            background-color: #6f42c1; /* رنگ بنفش شیک */
+            transform-origin: center;
+            transition: all 0.2s ease-in-out;
+        }
+
         .btn-close:hover::before,
         .btn-close:hover::after {
             background-color: #9c27b0; /* رنگ بنفش روشن‌تر هنگام hover */
@@ -309,7 +322,6 @@
                 <h5 class="modal-title fw-semibold text-secondary">ایجاد سند جدید</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <hr />
             <!-- Body -->
             <div class="modal-body py-4 px-5">
                 <form asp-action="ValidateSteps" method="post" id="needs-validation-form">
@@ -354,12 +366,10 @@
                     <span class="small d-block mb-3 text-@(string.IsNullOrEmpty(formModel?.Step2Message) || formModel.Step2Message.Contains("معتبر") ? "success" : "danger")">
                         @formModel?.Step2Message
                     </span>
-
-                    <!-- Buttons -->
-                    <div class="text-end mt-4">
-                        <button type="submit" class="btn btn-primary px-4 py-2">بررسی</button>
-                    </div>
                 </form>
+                <div class="text-end mt-3">
+                    <button type="submit" class="btn btn-primary px-4 py-2">بررسی</button>
+                </div>
             </div>
         </div>
     </div>

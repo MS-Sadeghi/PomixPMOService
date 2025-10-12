@@ -300,8 +300,6 @@ namespace PomixPMOService.UI.Controllers
                 return Json(new { success = false, message = $"خطا در دریافت متن سند: {ex.Message}" });
             }
         }
-
-
     }
 
     public static class PersianDateHelper

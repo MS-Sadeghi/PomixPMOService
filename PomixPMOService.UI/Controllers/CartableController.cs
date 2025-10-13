@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using PomixPMOService.UI.Controllers;
 using System.Dynamic;
+using PomixPMOService.API.Controllers;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -269,7 +270,7 @@ namespace PomixPMOService.UI.Controllers
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _client.PostAsync($"api/Service/MarkDocumentAsRead/{requestId}", null);
+                var response = await _client.PostAsync($"/Service/MarkDocumentAsRead/{requestId}", null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -317,6 +318,44 @@ namespace PomixPMOService.UI.Controllers
             {
                 return Json(new { success = false, message = $"خطا در دریافت متن سند: {ex.Message}" });
             }
+        }
+
+        private async Task<PaginatedCartableViewModel> GetCartableData(int page, string search)
+        {
+            var pageSize = 10;
+            var url = $"Request?page={page}&pageSize={pageSize}";
+            if (!string.IsNullOrEmpty(search))
+            {
+                url += $"&search={System.Web.HttpUtility.UrlEncode(search)}";
+            }
+
+            try
+            {
+                var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var response = await _client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<PaginatedResponse<CartableItemViewModel>>();
+                    return new PaginatedCartableViewModel
+                    {
+                        Items = data?.Items ?? new List<CartableItemViewModel>(),
+                        TotalCount = data?.TotalCount ?? 0,
+                        CurrentPage = page,
+                        PageSize = pageSize,
+                        SearchQuery = search
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching cartable data for page {Page} with search {Search}", page, search);
+            }
+            return new PaginatedCartableViewModel { CurrentPage = page, PageSize = pageSize, SearchQuery = search };
         }
 
         [HttpPost]

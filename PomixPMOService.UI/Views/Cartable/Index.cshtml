@@ -1,4 +1,4 @@
-﻿@using PomixPMOService.UI.Controllers;
+﻿@using PomixPMOService.UI.Controllers
 @model PomixPMOService.UI.Controllers.PaginatedCartableViewModel
 @{
     ViewData["Title"] = "کارتابل";
@@ -10,9 +10,9 @@
 }
 <style>
     .iColor {
-        color: #6c757d !important; 
+        color: #6c757d !important;
     }
-    
+
     .modern-input .form-control {
         border: none;
         border-bottom: 2px solid #ccc;
@@ -22,8 +22,9 @@
         transition: all 0.3s ease;
         font-size: 0.95rem;
     }
+
         .modern-input .form-control:focus {
-            border-bottom: 2px solid #6f42c1; 
+            border-bottom: 2px solid #6f42c1;
             box-shadow: none;
         }
 
@@ -82,7 +83,6 @@
         .btn-close:hover::after {
             background-color: #9f67fa;
         }
-
 </style>
 <div class="input-group mb-5">
     <form asp-action="Index" method="get" class="w-100">
@@ -154,7 +154,7 @@
                                         explanation = "بدون مشکل";
                                     }
 
-                                    <tr>
+                                    <tr data-request-id="@item.RequestId">
                                         <td>@item.RequestId</td>
                                         <td class="px-4 py-3">
                                             <span class="block">@item.CreatedAt.ToPersianTime()</span>
@@ -248,20 +248,19 @@
                                         <td class="text-center">
                                             <ul class="nav nav-price justify-content-center mt-2">
                                                 <li>
-                                                    <a data-bs-toggle="tab" class="approval-tab active show text-success" data-value="true">
+                                                    <a data-bs-toggle="tab" class="approval-tab active show text-success" data-value="true" data-request-id="@item.RequestId">
                                                         <i class="fa fa-check me-1"></i>
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <a data-bs-toggle="tab" class="approval-tab text-danger" data-value="false">
+                                                    <a data-bs-toggle="tab" class="approval-tab text-danger" data-value="false" data-request-id="@item.RequestId">
                                                         <i class="fa fa-times me-1"></i>
                                                     </a>
                                                 </li>
                                             </ul>
-
                                             <input type="hidden" name="approval-@item.RequestId" id="approvalValue-@item.RequestId" value="true" />
                                         </td>
-                                    </tr> 
+                                    </tr>
                                 }
                             </tbody>
                         </table>
@@ -300,17 +299,14 @@
                 <h5 class="modal-title text-primary" id="documentModalLabel">متن سند</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
             </div>
-
             <div class="modal-body" id="documentModalBody">
                 <p class="text-center text-muted">در حال بارگذاری...</p>
             </div>
-
             <div class="modal-footer justify-content-between">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="documentChecked">
                     <label class="form-check-label" for="documentChecked">متن سند بررسی شد</label>
                 </div>
-
                 <div>
                     <button type="button" class="btn btn-success" id="confirmDocument">تایید</button>
                 </div>
@@ -318,7 +314,6 @@
         </div>
     </div>
 </div>
-
 <!-- Modal for Adding New Document -->
 <div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable custom-modal">
@@ -330,7 +325,6 @@
             <div class="modal-body py-4 px-5">
                 <form asp-action="ValidateSteps" method="post" id="needs-validation-form">
                     @Html.AntiForgeryToken()
-
                     <!-- Step 1 -->
                     <div class="row g-4 mb-4">
                         <div class="col-md-6">
@@ -346,11 +340,9 @@
                             </div>
                         </div>
                     </div>
-
                     <span class="small d-block mb-3 text-@(string.IsNullOrEmpty(formModel?.Step1Message) || formModel.Step1Message.Contains("معتبر") ? "success" : "danger")">
                         @formModel?.Step1Message
                     </span>
-
                     <!-- Step 2 -->
                     <div class="row g-4 mb-4">
                         <div class="col-md-6">
@@ -366,7 +358,6 @@
                             </div>
                         </div>
                     </div>
-
                     <span class="small d-block mb-3 text-@(string.IsNullOrEmpty(formModel?.Step2Message) || formModel.Step2Message.Contains("معتبر") ? "success" : "danger")">
                         @formModel?.Step2Message
                     </span>
@@ -378,63 +369,160 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+
+            // Reset modal form on close
             $('#scrollingmodal').on('hidden.bs.modal', function() {
                 $('#needs-validation-form')[0].reset();
                 $('.form-text').text('');
-                $('.nav-tabs a[href="#tab1"]').tab('show');
             });
-        });
 
-        $(document).on('click', '.btn-view-doc', function () {
-            var requestId = $(this).data('request-id');
-            $('#documentModalLabel').text('متن سند درخواست ' + requestId);
-            $('#documentModalBody').html('<div class="d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
-            $('#documentChecked').prop('checked', false);
-            $('#documentModal').modal('show');
+            // View document text
+            $('.btn-view-doc').click(function() {
+                var requestId = $(this).data('request-id');
+                $('#documentModalLabel').text('متن سند درخواست ' + requestId);
+                $('#documentModalBody').html('<div class="d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
+                $('#documentChecked').prop('checked', false);
+                $('#confirmDocument').data('request-id', requestId); // Store requestId for confirm button
+                $('#documentModal').modal('show');
 
-            $.ajax({
-                url: '/Cartable/GetDocumentText',
-                type: 'GET',
-                data: { requestId: requestId },
-                dataType: 'json',
-                success: function (res) {
-                    if (res && res.success && res.documentText && res.documentText.trim() !== "") {
-                        var safe = $('<div/>').text(res.documentText).html();
-                        $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.6;">' + safe + '</pre>');
+                $.ajax({
+                    url: '/Cartable/GetDocumentText',
+                    type: 'GET',
+                    data: { requestId: requestId },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res && res.success && res.documentText && res.documentText.trim() !== "") {
+                            var safe = $('<div/>').text(res.documentText).html();
+                            $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.6;">' + safe + '</pre>');
+                        } else {
+                            $('#documentModalBody').html('<p class="text-danger fw-bold text-center">رمز تصدیق یا شماره سند درست وارد نشده است.</p>');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        var errorMessage = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
+                        $('#documentModalBody').html('<p class="text-danger text-center">' + errorMessage + '</p>');
                     }
-                    else {
-                        $('#documentModalBody').html('<p class="text-danger fw-bold text-center">رمز تصدیق یا شماره سند درست وارد نشده است.</p>');
+                });
+            });
+
+            // Confirm document in modal
+            $('#confirmDocument').click(function() {
+                if ($('#documentChecked').is(':checked')) {
+                    var requestId = $(this).data('request-id');
+                    $.ajax({
+                        url: '/Cartable/MarkDocumentAsRead',
+                        type: 'POST',
+                        data: { requestId: requestId },
+                        dataType: 'json',
+                        headers: {
+                            'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'تأیید شد ✅',
+                                    text: res.message || 'سند با موفقیت به عنوان خوانده شده علامت‌گذاری شد.',
+                                    confirmButtonText: 'باشه',
+                                    confirmButtonColor: '#198754'
+                                });
+                                $('#documentModal').modal('hide');
+                                // Update table row to show approval status
+                                var row = $('tr[data-request-id="' + requestId + '"]');
+                                row.find('.approval-tab[data-value="true"]').addClass('active show');
+                                row.find('.approval-tab[data-value="false"]').removeClass('active show');
+                                row.find('#approvalValue-' + requestId).val('true');
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'خطا',
+                                    text: res.message || 'خطا در علامت‌گذاری سند.',
+                                    confirmButtonText: 'باشه'
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            var errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'خطا',
+                                text: errorMessage,
+                                confirmButtonText: 'باشه'
+                            });
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'توجه ⚠️',
+                        text: 'لطفاً ابتدا گزینه "متن سند بررسی شد" را تیک بزنید.',
+                        confirmButtonText: 'باشه'
+                    });
+                }
+            });
+
+            // Handle approval tabs in table
+            $('.approval-tab').click(function() {
+                var requestId = $(this).data('request-id');
+                var isApproved = $(this).data('value') === true;
+                var $this = $(this);
+
+                $.ajax({
+                    url: '/Cartable/MarkDocumentAsRead',
+                    type: 'POST',
+                    data: { requestId: requestId },
+                    dataType: 'json',
+                    headers: {
+                        'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: isApproved ? 'تأیید شد ✅' : 'رد شد ❌',
+                                text: res.message || (isApproved ? 'سند تأیید شد.' : 'سند رد شد.'),
+                                confirmButtonText: 'باشه',
+                                confirmButtonColor: '#198754'
+                            });
+                            // Update table row
+                            var row = $('tr[data-request-id="' + requestId + '"]');
+                            row.find('.approval-tab').removeClass('active show');
+                            $this.addClass('active show');
+                            row.find('#approvalValue-' + requestId).val(isApproved ? 'true' : 'false');
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'خطا',
+                                text: res.message || 'خطا در علامت‌گذاری سند.',
+                                confirmButtonText: 'باشه'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        var errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'خطا',
+                            text: errorMessage,
+                            confirmButtonText: 'باشه'
+                        });
                     }
-                },
-                error: function () {
-                    $('#documentModalBody').html('<p class="text-danger text-center">خطا در دریافت اطلاعات سند.</p>');
+                });
+            });
+
+            // Form validation
+            $('#needs-validation-form').on('submit', function(e) {
+                if (!this.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $(this).addClass('was-validated');
                 }
             });
         });
-
-        $(document).on('click', '#confirmDocument', function () {
-            if ($('#documentChecked').is(':checked')) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'تأیید شد ✅',
-                    text: 'متن سند بررسی و تأیید گردید.',
-                    confirmButtonText: 'باشه',
-                    confirmButtonColor: '#198754'
-                });
-                $('#documentModal').modal('hide');
-            } else {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'توجه ⚠️',
-                    text: 'لطفاً ابتدا گزینه "متن سند بررسی شد" را تیک بزنید.',
-                    confirmButtonText: 'باشه'
-                });
-            }
-        });
-
     </script>
 }

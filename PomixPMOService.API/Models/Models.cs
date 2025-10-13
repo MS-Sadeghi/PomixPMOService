@@ -227,6 +227,9 @@ namespace ServicePomixPMO.API.Models
         [Required]
         public string CreatedBy { get; set; } = null!;
         public bool? IsExist { get;  set; }
+        public bool? IsRead { get; set; } = false; 
+        public string? ReadBy { get; set; } 
+        public DateTime? ReadDate { get; set; }
     }
 
     [Table("RefreshTokens", Schema = "Sec")]

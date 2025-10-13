@@ -20,28 +20,31 @@ namespace PomixPMOService.UI.ViewModels
         public string? MobileNumber { get; set; }      // اختیاری، می‌تونه null باشه
     }
 
+    // در فایل ViewModels
     public class CreateUserViewModel
     {
-        [Required]
-        [StringLength(10)]
-        public string? NationalId { get; set; }
-        [Required]
-        [StringLength(75)]
-        public string? Name { get; set; }
-        [Required]
-        [StringLength(85)]
-        public string? LastName { get; set; }
-        [Required]
-        [StringLength(255)]
-        public string? Password { get; set; }
+        [Required(ErrorMessage = "نام الزامی است")]
+        public string Name { get; set; }
 
-        [Required]
-        [StringLength(50)]
-        public string? Username { get; set; }
+        [Required(ErrorMessage = "نام خانوادگی الزامی است")]
+        public string LastName { get; set; }
 
-        [Required]
-        [StringLength(50)]
-        public string? Role { get; set; }
+        [Required(ErrorMessage = "نام کاربری الزامی است")]
+        public string Username { get; set; }
+
+        [Required(ErrorMessage = "رمز عبور الزامی است")]
+        [MinLength(6, ErrorMessage = "رمز عبور باید حداقل 6 کاراکتر باشد")]
+        public string Password { get; set; }
+
+        [Required(ErrorMessage = "تأیید رمز عبور الزامی است")]
+        [Compare("Password", ErrorMessage = "رمز عبور و تأیید رمز عبور یکسان نیستند")]
+        public string ConfirmPassword { get; set; }
+
+        [Required(ErrorMessage = "کد ملی الزامی است")]
+        public string NationalId { get; set; }
+
+        [Required(ErrorMessage = "نقش کاربر الزامی است")]
+        public int RoleId { get; set; }
     }
 
     public class LoginViewModel

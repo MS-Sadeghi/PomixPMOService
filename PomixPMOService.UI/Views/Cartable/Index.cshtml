@@ -261,7 +261,6 @@
 
                                             <input type="hidden" name="approval-@item.RequestId" id="approvalValue-@item.RequestId" value="true" />
                                         </td>
-
                                     </tr> 
                                 }
                             </tbody>
@@ -324,12 +323,10 @@
 <div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable custom-modal">
         <div class="modal-content rounded-4 shadow-lg border-0">
-            <!-- Header -->
             <div class="modal-header border-0">
                 <h5 class="modal-title fw-semibold text-secondary">ایجاد سند جدید</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <!-- Body -->
             <div class="modal-body py-4 px-5">
                 <form asp-action="ValidateSteps" method="post" id="needs-validation-form">
                     @Html.AntiForgeryToken()
@@ -381,7 +378,6 @@
         </div>
     </div>
 </div>
-
 
 @section Scripts {
     <script>

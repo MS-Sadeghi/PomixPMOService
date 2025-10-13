@@ -300,6 +300,89 @@ namespace PomixPMOService.UI.Controllers
                 return Json(new { success = false, message = $"خطا در دریافت متن سند: {ex.Message}" });
             }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ValidateShahkar(CartableFormViewModel model)
+        {
+            try
+            {
+                // اعتبارسنجی ورودی‌ها
+                if (string.IsNullOrEmpty(model.NationalCode) || model.NationalCode.Length != 10 || !System.Text.RegularExpressions.Regex.IsMatch(model.NationalCode, @"^\d{10}$"))
+                {
+                    return Json(new { success = false, message = "کد ملی نامعتبر است." });
+                }
+                if (string.IsNullOrEmpty(model.MobileNumber) || model.MobileNumber.Length != 11 || !System.Text.RegularExpressions.Regex.IsMatch(model.MobileNumber, @"^09\d{9}$"))
+                {
+                    return Json(new { success = false, message = "شماره موبایل نامعتبر است." });
+                }
+
+                // دریافت توکن JWT
+                var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "لطفاً ابتدا وارد سیستم شوید." });
+                }
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                // ارسال درخواست به سرویس شاهکار
+                var response = await _client.PostAsJsonAsync("Service/CheckMobileNationalCode", new
+                {
+                    NationalId = model.NationalCode,
+                    MobileNumber = model.MobileNumber
+                });
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<ShahkarResponse>();
+                    bool isMatch = false;
+                    try
+                    {
+                        var internalResponse = JsonSerializer.Deserialize<InternalShahkarResponse>(result.ResponseText, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                        isMatch = internalResponse?.Result?.Data?.Response == 200;
+                    }
+                    catch (System.Text.Json.JsonException)
+                    {
+                        return Json(new { success = false, message = "خطا در پردازش پاسخ سرویس شاهکار." });
+                    }
+
+                    if (isMatch)
+                    {
+                        return Json(new { success = true, message = "احراز هویت با موفقیت انجام شد." });
+                    }
+                    else
+                    {
+                        return Json(new { success = false, message = "کد ملی و شماره موبایل تطابق ندارند." });
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, message = $"خطا در ارتباط با سرویس شاهکار: {error}" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "خطا در احراز هویت با سرویس شاهکار برای کد ملی {NationalCode}", model.NationalCode);
+                return Json(new { success = false, message = $"خطا در سرور: {ex.Message}" });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult Shahkar()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult VerifyDocument()
+        {
+            return View();
+        }
+
     }
 
     public static class PersianDateHelper

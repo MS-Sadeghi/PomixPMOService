@@ -183,17 +183,92 @@ namespace PomixPMOService.UI.Controllers
             return Json(new { success = false, message = errorObj.message ?? $"خطا در تغییر رمز عبور: {error}" });
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateUser(CreateUserViewModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                    TempData["ErrorMessage"] = string.Join(" | ", errors);
+                    return RedirectToAction("Users");
+                }
+
+                if (model.Password != model.ConfirmPassword)
+                {
+                    TempData["ErrorMessage"] = "رمز عبور و تأیید رمز عبور یکسان نیستند";
+                    return RedirectToAction("Users");
+                }
+
+                // تنظیم توکن برای احراز هویت
+                var token = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["ErrorMessage"] = "لطفاً ابتدا وارد سیستم شوید";
+                    return RedirectToAction("Users");
+                }
+
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                // ارسال درخواست به API
+                var response = await _client.PostAsJsonAsync("Auth/register", new
+                {
+                    model.Name,
+                    model.LastName,
+                    model.Username,
+                    model.Password,
+                    model.NationalId,
+                    model.RoleId
+                });
+
+                if (response.IsSuccessStatusCode)
+                {
+                    TempData["SuccessMessage"] = "کاربر با موفقیت ایجاد شد";
+                    return RedirectToAction("Users");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    TempData["ErrorMessage"] = $"خطا در ایجاد کاربر: {errorContent}";
+                    return RedirectToAction("Users");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"خطا در ارتباط با سرور: {ex.Message}";
+                return RedirectToAction("Users");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRoles()
+        {
+            try
+            {
+                var token = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(token))
+                    return Json(new { success = false, message = "توکن یافت نشد." });
+
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _client.GetAsync("Auth/GetRoles");
+                if (response.IsSuccessStatusCode)
+                {
+                    var roles = await response.Content.ReadFromJsonAsync<List<RoleViewModel>>();
+                    return Json(new { success = true, roles });
+                }
+
+                return Json(new { success = false, message = "خطا در دریافت نقش‌ها" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         #endregion
-
-        public IActionResult Shahkar()
-        {
-            return View();
-        }
-
-        public IActionResult VerifyDocument()
-        {
-            return View();
-        }
 
     }
     public class ChangePasswordViewModel
@@ -224,6 +299,11 @@ namespace PomixPMOService.UI.Controllers
         public string Name { get; set; }
         public string LastName { get; set; }
         public string Role { get; set; }
+    }
+    public class RoleViewModel
+    {
+        public int RoleId { get; set; }
+        public string RoleName { get; set; }
     }
 
     public class TokenInfo

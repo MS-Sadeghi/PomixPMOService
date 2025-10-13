@@ -562,6 +562,55 @@ namespace PomixPMOService.API.Controllers
                 _logger.LogError(ex, "خطای غیرمنتظره در GetTextByRequestId برای RequestId: {RequestId}", requestId);
                 return new JsonResult(new { success = false, message = $"خطای سرور: {ex.Message}" }) { StatusCode = 500 };
             }
+   
+        
+        
+        
+        
+        
+        }
+
+        [HttpPost("MarkDocumentAsRead/{requestId}")]
+        [Authorize(Policy = "CanAccessShahkar")]
+        public async Task<IActionResult> MarkDocumentAsRead(long requestId)
+        {
+            try
+            {
+                _logger.LogInformation("Processing MarkDocumentAsRead for RequestId: {RequestId}", requestId);
+
+                var verifyDocLog = await _context.VerifyDocLog
+                    .Where(v => v.RequestId == requestId)
+                    .OrderByDescending(v => v.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (verifyDocLog == null)
+                {
+                    _logger.LogWarning("No VerifyDocLog found for RequestId: {RequestId}", requestId);
+                    return new JsonResult(new { success = false, message = "سندی با این شناسه یافت نشد." }) { StatusCode = 404 };
+                }
+
+                var userIdClaim = User.FindFirst("UserId")?.Value;
+                if (!long.TryParse(userIdClaim, out long userId))
+                {
+                    _logger.LogWarning("Could not extract UserId from JWT token.");
+                    return new JsonResult(new { success = false, message = "کاربر شناسایی نشد." }) { StatusCode = 401 };
+                }
+
+                verifyDocLog.IsRead = true;
+                verifyDocLog.ReadBy = User.Identity?.Name ?? userId.ToString();
+                verifyDocLog.ReadDate = DateTime.UtcNow;
+
+                _context.VerifyDocLog.Update(verifyDocLog);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Document marked as read for RequestId: {RequestId} by User: {User}", requestId, verifyDocLog.ReadBy);
+                return new JsonResult(new { success = true, message = "سند با موفقیت به عنوان خوانده شده علامت‌گذاری شد." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking document as read for RequestId: {RequestId}. InnerException: {InnerException}", requestId, ex.InnerException?.Message);
+                return new JsonResult(new { success = false, message = $"خطا در علامت‌گذاری سند: {ex.Message}{(ex.InnerException != null ? " - " + ex.InnerException.Message : "")}" }) { StatusCode = 500 };
+            }
         }
 
 

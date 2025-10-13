@@ -1,12 +1,9 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using PomixPMOService.API.Controllers;
-using ServicePomixPMO.API.Data;
-using System.Dynamic;
-using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using PomixPMOService.UI.Controllers;
+using System.Dynamic;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -14,23 +11,51 @@ namespace PomixPMOService.UI.Controllers
     {
         private readonly HttpClient _client;
         private readonly IDNTCaptchaValidatorService _captchaValidatorService;
-        private readonly PomixServiceContext _context;
         private readonly ILogger<CartableController> _logger;
 
         public CartableController(
             IHttpClientFactory httpClientFactory,
-            IDNTCaptchaValidatorService captchaValidatorService)
-
+            IDNTCaptchaValidatorService captchaValidatorService,
+            ILogger<CartableController> logger)
         {
             _client = httpClientFactory.CreateClient("PomixApi");
             _captchaValidatorService = captchaValidatorService ?? throw new ArgumentNullException(nameof(captchaValidatorService));
-      
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [HttpGet]
         public async Task<IActionResult> Index(int page = 1, string search = "")
         {
             var model = await GetCartableData(page, search);
+            // دریافت وضعیت IsRead از API برای هر آیتم
+            foreach (var item in model.Items)
+            {
+                try
+                {
+                    var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    }
+
+                    var response = await _client.GetAsync($"Service/GetTextByRequestId/{item.RequestId}");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var apiResponse = await response.Content.ReadFromJsonAsync<DocTextResponse>();
+                        item.IsRead = apiResponse?.IsRead ?? false;
+                    }
+                    else
+                    {
+                        item.IsRead = false;
+                        _logger.LogWarning("Failed to fetch IsRead for RequestId: {RequestId}", item.RequestId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    item.IsRead = false;
+                    _logger.LogError(ex, "Error fetching IsRead for RequestId: {RequestId}", item.RequestId);
+                }
+            }
             ViewBag.FormModel = new CartableFormViewModel();
             return View(model);
         }
@@ -64,7 +89,7 @@ namespace PomixPMOService.UI.Controllers
                         ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
                         return RedirectToAction("LoginPage", "Home");
                     }
-                    _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
                     var response = await _client.PostAsJsonAsync("Service/ProcessCombinedRequest", new CombinedRequestViewModel
                     {
@@ -77,7 +102,7 @@ namespace PomixPMOService.UI.Controllers
                     if (response.IsSuccessStatusCode)
                     {
                         var result = await response.Content.ReadFromJsonAsync<dynamic>();
-                        bool isMatch = result?.isMatch ?? false;
+                        bool isMatch = result?.data?.Shahkar?.IsSuccessful ?? false;
                         if (isMatch)
                         {
                             model.Step1Message = "احراز هویت معتبر است.";
@@ -128,7 +153,6 @@ namespace PomixPMOService.UI.Controllers
                 model.Step3Message = "تطابق کد ملی معتبر است.";
             }
 
-
             if (isValid)
             {
                 ViewBag.SuccessMessage = "همه گام‌ها معتبر هستند.";
@@ -164,7 +188,7 @@ namespace PomixPMOService.UI.Controllers
                     ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
                     return RedirectToAction("LoginPage", "Home");
                 }
-                _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
                 var requestData = new
                 {
@@ -178,7 +202,7 @@ namespace PomixPMOService.UI.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var combinedResult = await response.Content.ReadFromJsonAsync<dynamic>();
-                    var verifyDoc = combinedResult.VerifyDoc;
+                    var verifyDoc = combinedResult.data.VerifyDoc;
                     var verifyDocResponseText = (string)verifyDoc.ResponseText;
 
                     dynamic verifyDocData = new ExpandoObject();
@@ -203,7 +227,7 @@ namespace PomixPMOService.UI.Controllers
 
                         verifyDocData.LstFindPersonInQuery = lstPersons;
 
-                        ViewBag.RequestId = combinedResult.RequestId != null ? combinedResult.RequestId : (dataElement.TryGetProperty("RequestId", out var requestId) ? requestId.GetInt64() : 0);
+                        ViewBag.RequestId = combinedResult.data.RequestId != null ? combinedResult.data.RequestId : 0;
                     }
                     catch (Exception)
                     {
@@ -231,42 +255,36 @@ namespace PomixPMOService.UI.Controllers
                 return View("Index", await GetCartableData(1, ""));
             }
         }
-        private async Task<PaginatedCartableViewModel> GetCartableData(int page, string search)
-        {
-            var pageSize = 10;
-            var url = $"Request?page={page}&pageSize={pageSize}";
-            if (!string.IsNullOrEmpty(search))
-            {
-                url += $"&search={System.Web.HttpUtility.UrlEncode(search)}";
-            }
 
+        [HttpPost]
+        public async Task<IActionResult> MarkDocumentAsRead(long requestId)
+        {
             try
             {
                 var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
-                if (!string.IsNullOrEmpty(token))
+                if (string.IsNullOrEmpty(token))
                 {
-                    _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    return Json(new { success = false, message = "توکن یافت نشد. لطفاً دوباره وارد سیستم شوید." });
                 }
 
-                var response = await _client.GetAsync(url);
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _client.PostAsync($"api/Service/MarkDocumentAsRead/{requestId}", null);
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var data = await response.Content.ReadFromJsonAsync<PaginatedResponse<CartableItemViewModel>>();
-                    return new PaginatedCartableViewModel
-                    {
-                        Items = data?.Items ?? new List<CartableItemViewModel>(),
-                        TotalCount = data?.TotalCount ?? 0,
-                        CurrentPage = page,
-                        PageSize = pageSize,
-                        SearchQuery = search
-                    };
+                    return Json(new { success = true, message = "سند با موفقیت به عنوان خوانده شده علامت‌گذاری شد." });
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = false, message = $"خطا در علامت‌گذاری سند: {error}" });
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // خطا نادیده گرفته می‌شه و مدل خالی برمی‌گرده
+                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
             }
-            return new PaginatedCartableViewModel { CurrentPage = page, PageSize = pageSize, SearchQuery = search };
         }
 
         [HttpGet]
@@ -280,7 +298,7 @@ namespace PomixPMOService.UI.Controllers
                     return Json(new { success = false, message = "توکن یافت نشد. لطفاً دوباره وارد سیستم شوید." });
                 }
 
-                _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
                 var response = await _client.GetAsync($"Service/GetTextByRequestId/{requestId}");
 
@@ -300,6 +318,44 @@ namespace PomixPMOService.UI.Controllers
                 return Json(new { success = false, message = $"خطا در دریافت متن سند: {ex.Message}" });
             }
         }
+
+        private async Task<PaginatedCartableViewModel> GetCartableData(int page, string search)
+        {
+            var pageSize = 10;
+            var url = $"Request?page={page}&pageSize={pageSize}";
+            if (!string.IsNullOrEmpty(search))
+            {
+                url += $"&search={System.Web.HttpUtility.UrlEncode(search)}";
+            }
+
+            try
+            {
+                var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var response = await _client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<PaginatedResponse<CartableItemViewModel>>();
+                    return new PaginatedCartableViewModel
+                    {
+                        Items = data?.Items ?? new List<CartableItemViewModel>(),
+                        TotalCount = data?.TotalCount ?? 0,
+                        CurrentPage = page,
+                        PageSize = pageSize,
+                        SearchQuery = search
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching cartable data for page {Page} with search {Search}", page, search);
+            }
+            return new PaginatedCartableViewModel { CurrentPage = page, PageSize = pageSize, SearchQuery = search };
+        }
     }
 
     public static class PersianDateHelper
@@ -308,10 +364,8 @@ namespace PomixPMOService.UI.Controllers
         {
             try
             {
-                var iranTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time");
-                var iranDateTime = TimeZoneInfo.ConvertTimeFromUtc(date, iranTimeZone);
-                var persianCalendar = new PersianCalendar();
-                return $"{persianCalendar.GetYear(iranDateTime)}/{persianCalendar.GetMonth(iranDateTime):D2}/{persianCalendar.GetDayOfMonth(iranDateTime):D2}";
+                var persianCalendar = new System.Globalization.PersianCalendar();
+                return $"{persianCalendar.GetYear(date)}/{persianCalendar.GetMonth(date):D2}/{persianCalendar.GetDayOfMonth(date):D2}";
             }
             catch
             {
@@ -323,9 +377,7 @@ namespace PomixPMOService.UI.Controllers
         {
             try
             {
-                var iranTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time");
-                var iranDateTime = TimeZoneInfo.ConvertTimeFromUtc(date, iranTimeZone);
-                return $"{iranDateTime:HH:mm:ss}";
+                return $"{date:HH:mm:ss}";
             }
             catch
             {
@@ -333,7 +385,7 @@ namespace PomixPMOService.UI.Controllers
             }
         }
     }
-    // مدل پاسخ API
+
     public class PaginatedResponse<T>
     {
         public List<T> Items { get; set; } = new List<T>();
@@ -343,7 +395,6 @@ namespace PomixPMOService.UI.Controllers
         public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
     }
 
-    // مدل برای صفحه‌بندی جدول
     public class PaginatedCartableViewModel
     {
         public List<CartableItemViewModel> Items { get; set; } = new List<CartableItemViewModel>();
@@ -354,7 +405,6 @@ namespace PomixPMOService.UI.Controllers
         public string SearchQuery { get; set; } = string.Empty;
     }
 
-    // مدل برای فرم مودال
     public class CartableFormViewModel
     {
         public string NationalCode { get; set; } = string.Empty;
@@ -385,5 +435,22 @@ namespace PomixPMOService.UI.Controllers
         public string Description { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public string CreatedBy { get; set; } = string.Empty;
+        public bool IsRead { get; set; } // اضافه شده برای وضعیت خوانده شدن سند
+    }
+
+    public class CombinedRequestViewModel
+    {
+        public string NationalId { get; set; } = string.Empty;
+        public string MobileNumber { get; set; } = string.Empty;
+        public string DocumentNumber { get; set; } = string.Empty;
+        public string VerificationCode { get; set; } = string.Empty;
+    }
+
+    public class DocTextResponse
+    {
+        public bool Success { get; set; }
+        public string? DocumentText { get; set; }
+        public bool IsRead { get; set; }
+        public string? Message { get; set; }
     }
 }

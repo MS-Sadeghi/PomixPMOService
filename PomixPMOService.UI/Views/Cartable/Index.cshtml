@@ -48,13 +48,13 @@
         width: 670px;
         border-radius: 2px;
     }
-    
+
     .btn-close {
-        background: none !important; 
+        background: none;
+        width: 1.5rem;
+        height: 1.5rem;
         position: relative;
-        width: 1.25rem;
-        height: 1.25rem;
-        opacity: 1 !important;
+        opacity: 1;
     }
 
         .btn-close::before,
@@ -65,15 +65,22 @@
             left: 50%;
             width: 1.2rem;
             height: 2px;
-            background-color: #6f42c1; /* رنگ بنفش شیک */
+            background-color: #7c3aed;
             transform-origin: center;
-            transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease;
+        }
+
+        .btn-close::before {
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+        .btn-close::after {
+            transform: translate(-50%, -50%) rotate(-45deg);
         }
 
         .btn-close:hover::before,
         .btn-close:hover::after {
-            background-color: #9c27b0; /* رنگ بنفش روشن‌تر هنگام hover */
-            transform: translate(-50%, -50%) rotate(135deg);
+            background-color: #9f67fa;
         }
 
 </style>
@@ -149,9 +156,9 @@
 
                                     <tr>
                                         <td>@item.RequestId</td>
-                                        <td>
-                                            <span class="d-block">@item.CreatedAt.ToPersianTime()</span>
-                                            <span class="d-block">@item.CreatedAt.ToPersianDate()</span>
+                                        <td class="px-4 py-3">
+                                            <span class="block">@item.CreatedAt.ToPersianTime()</span>
+                                            <span class="block text-sm text-gray-500">@item.CreatedAt.ToPersianDate()</span>
                                         </td>
                                         <td>@item.NationalId</td>
                                         <td>@item.MobileNumber</td>
@@ -366,10 +373,10 @@
                     <span class="small d-block mb-3 text-@(string.IsNullOrEmpty(formModel?.Step2Message) || formModel.Step2Message.Contains("معتبر") ? "success" : "danger")">
                         @formModel?.Step2Message
                     </span>
+                    <div class="text-end mt-3">
+                        <button type="submit" class="btn btn-primary px-4 py-2">بررسی</button>
+                    </div>
                 </form>
-                <div class="text-end mt-3">
-                    <button type="submit" class="btn btn-primary px-4 py-2">بررسی</button>
-                </div>
             </div>
         </div>
     </div>

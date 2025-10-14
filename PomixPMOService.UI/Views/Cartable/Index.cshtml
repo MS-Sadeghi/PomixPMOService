@@ -86,12 +86,25 @@
 </style>
 <div class="input-group mb-5">
     <form asp-action="Index" method="get" class="w-100">
-        <div class="input-group">
-            <input type="text" class="form-control" name="search" value="@Model.SearchQuery" placeholder="جستجو">
-            <button type="submit" class="input-group-text btn btn-primary">
-                <i class="fa fa-search" aria-hidden="true" style="color: whitesmoke;"></i>
-            </button>
+        @{
+            var currentSearch = Context.Request.Query["search"].ToString();
+            var currentFilter = ViewBag.FilterStatus as string ?? "";
+        }
+        <div class="input-group mb-3">
+            <form asp-action="Index" method="get" class="w-100 d-flex align-items-center">
+                <input type="text" class="form-control" name="search" value="@currentSearch" placeholder="جستجو..." />
+
+                <select name="filterStatus" class="form-select mx-2" style="max-width: 200px;">
+                    <option value="" selected="@string.IsNullOrEmpty(currentFilter)">همه درخواست‌ها</option>
+                    <option value="approved" selected="@(currentFilter == "approved")">تایید شده</option>
+                    <option value="rejected" selected="@(currentFilter == "rejected")">رد شده</option>
+                    <option value="pending" selected="@(currentFilter == "pending")">در انتظار بررسی</option>
+                </select>
+
+                <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+            </form>
         </div>
+
     </form>
 </div>
 <div class="card">

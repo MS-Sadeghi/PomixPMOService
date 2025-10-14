@@ -252,7 +252,6 @@
                                             }
                                         </td>
                                         <!-- متن سند -->
-
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-icon btn-light btn-view-doc"
                                                     data-request-id="@item.RequestId"
@@ -264,9 +263,6 @@
                                                 </i>
                                             </button>
                                         </td>
-
-
-
                                         <!-- تایید -->
                                         <td class="text-center" style="width:120px;">
                                             <div class="form-check form-switch d-flex justify-content-center align-items-center">
@@ -275,9 +271,6 @@
                                                        id="approval-@item.RequestId"
                                                        data-request-id="@item.RequestId"
                                                 @(item.ValidateByExpert.HasValue && item.ValidateByExpert.Value ? "checked" : "")>
-                                                <label class="form-check-label ms-2" for="approval-@item.RequestId">
-                                                    @(item.ValidateByExpert.HasValue && item.ValidateByExpert.Value ? "تایید" : "عدم تایید")
-                                                </label>
                                             </div>
                                         </td>
                                     </tr>
@@ -552,6 +545,38 @@
                     }
                 });
             });
+
+            $(document).ready(function () {
+            $('.approval-toggle').change(function () {
+                var checkbox = $(this);
+                var requestId = checkbox.data('request-id');
+                var isChecked = checkbox.is(':checked');
+                var token = $('input[name="__RequestVerificationToken"]').val();
+
+                fetch('/Cartable/UpdateValidationStatus', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ RequestId: requestId, ValidateByExpert: isChecked })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        checkbox.next('label').text(isChecked ? "تایید" : "عدم تایید");
+                    } else {
+                        alert(data.message);
+                        checkbox.prop('checked', !isChecked);
+                    }
+                })
+                .catch(err => {
+                    alert("خطا در ارتباط با سرور");
+                    checkbox.prop('checked', !isChecked);
+                });
+            });
+        });
 
             // Form validation
             $('#needs-validation-form').on('submit', function(e) {

@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PomixPMOService.API.Models.ViewModels;
 using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models;
+using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace ServicePomixPMO.API.Controllers
 {
@@ -13,10 +16,13 @@ namespace ServicePomixPMO.API.Controllers
     public class RequestController : ControllerBase
     {
         private readonly PomixServiceContext _context;
+        private readonly ILogger<RequestController> _logger;
+        private readonly HttpClient _client;
 
-        public RequestController(PomixServiceContext context)
+        public RequestController(PomixServiceContext context, ILogger<RequestController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -208,14 +214,77 @@ namespace ServicePomixPMO.API.Controllers
             });
         }
 
-        public class NewRequestViewModel
+
+        [HttpPost("UpdateValidationStatus")]
+        [Authorize(Policy = "CanValidateRequest")]
+        public async Task<IActionResult> UpdateValidationStatus([FromBody] UpdateValidationStatusViewModel model)
+        {
+            var requestId = model.RequestId;
+            var validateByExpert = model.ValidateByExpert;
+
+            try
+            {
+                _logger.LogInformation("Processing UpdateValidationStatus for RequestId: {RequestId}, ValidateByExpert: {ValidateByExpert}", requestId, validateByExpert);
+
+                var userIdClaim = User.FindFirst("UserId")?.Value;
+                if (!long.TryParse(userIdClaim, out long userId))
+                {
+                    _logger.LogWarning("Could not extract UserId from JWT token.");
+                    return new JsonResult(new { success = false, message = "کاربر شناسایی نشد." }) { StatusCode = 401 };
+                }
+
+                _logger.LogInformation("Received requestId: {RequestId}, validateByExpert: {ValidateByExpert}", model.RequestId, model.ValidateByExpert);
+
+
+                var request = await _context.Request.FindAsync(requestId);
+                if (request == null)
+                {
+                    _logger.LogWarning("Request not found for RequestId: {RequestId}", requestId);
+                    return new JsonResult(new { success = false, message = "درخواست یافت نشد." }) { StatusCode = 404 };
+                }
+
+                request.ValidateByExpert = validateByExpert;
+                request.UpdatedAt = DateTime.UtcNow;
+                request.UpdatedBy = User.Identity?.Name ?? userId.ToString();
+
+                _context.Request.Update(request);
+                await _context.SaveChangesAsync();
+
+                _context.RequestLogs.Add(new RequestLog
+                {
+                    RequestId = request.RequestId,
+                    UserId = userId,
+                    Action = validateByExpert ? "ValidationStatus_Approved" : "ValidationStatus_Rejected",
+                    Details = validateByExpert ? "درخواست توسط کارشناس تأیید شد." : "درخواست توسط کارشناس رد شد.",
+                    ActionTime = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully updated ValidateByExpert and logged action for RequestId: {RequestId}", requestId);
+                return new JsonResult(new { success = true, message = validateByExpert ? "درخواست با موفقیت تأیید شد." : "درخواست با موفقیت رد شد." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating validation status for RequestId: {RequestId}", requestId);
+                return new JsonResult(new { success = false, message = $"خطا در به‌روزرسانی وضعیت درخواست: {ex.Message}" }) { StatusCode = 500 };
+            }
+        }
+
+    }
+
+    public class NewRequestViewModel
         {
             public string NationalId { get; set; } = string.Empty;  
             public string MobileNumber { get; set; } = string.Empty;   
             public string DocumentNumber { get; set; } = string.Empty;   
             public string VerificationCode { get; set; } = string.Empty; 
         }
+         public class UpdateValidationStatusViewModel
+        {
+            public long RequestId { get; set; }
+            public bool ValidateByExpert { get; set; }
+        }
 
 
     }
-}
+

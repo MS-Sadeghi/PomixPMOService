@@ -89,6 +89,9 @@ namespace ServicePomixPMO.API.Data
                 .IsUnique();
 
             base.OnModelCreating(modelBuilder);
+
+
         }
+
     }
 }

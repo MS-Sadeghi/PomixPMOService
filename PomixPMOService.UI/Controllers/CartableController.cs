@@ -5,6 +5,7 @@ using System.Text.Json;
 using PomixPMOService.UI.Controllers;
 using System.Dynamic;
 using PomixPMOService.API.Controllers;
+using static ServicePomixPMO.API.Controllers.RequestController;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -258,6 +259,57 @@ namespace PomixPMOService.UI.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateValidationStatus(long requestId, bool validateByExpert)
+        {
+            try
+            {
+                _logger.LogInformation("Received UpdateValidationStatus request for RequestId: {RequestId}, ValidateByExpert: {ValidateByExpert}", requestId, validateByExpert);
+
+                var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("JWT token not found for RequestId: {RequestId}", requestId);
+                    return Json(new { success = false, message = "توکن یافت نشد. لطفاً دوباره وارد سیستم شوید." });
+                }
+
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                _logger.LogInformation("Sending POST to Request/UpdateValidationStatus/{RequestId}/{ValidateByExpert}", requestId, validateByExpert);
+                var response = await _client.PostAsync($"Request/UpdateValidationStatus/{requestId}/{validateByExpert}", null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("API call successful for RequestId: {RequestId}, Response: {Response}", requestId, responseContent);
+                    return Json(new
+                    {
+                        success = true,
+                        message = validateByExpert ? "درخواست با موفقیت تأیید شد ✅" : "درخواست با موفقیت رد شد ❌"
+                    });
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("API call failed for RequestId: {RequestId}, StatusCode: {StatusCode}, Error: {Error}", requestId, response.StatusCode, error);
+                    return Json(new
+                    {
+                        success = false,
+                        message = string.IsNullOrEmpty(error) ? "خطا در به‌روزرسانی وضعیت درخواست: پاسخ سرور خالی است." : $"خطا در به‌روزرسانی وضعیت درخواست: {error}"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating validation status for RequestId: {RequestId}", requestId);
+                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
+            }
+        }
+    
+
+
+
+        [HttpPost]
         public async Task<IActionResult> MarkDocumentAsRead(long requestId)
         {
             try
@@ -270,7 +322,7 @@ namespace PomixPMOService.UI.Controllers
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _client.PostAsync($"/Service/MarkDocumentAsRead/{requestId}", null);
+                var response = await _client.PostAsync($"Service/MarkDocumentAsRead/{requestId}", null);
 
                 if (response.IsSuccessStatusCode)
                 {

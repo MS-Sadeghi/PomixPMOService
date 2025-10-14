@@ -46,6 +46,10 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("CanAccessShahkar", policy =>
         policy.RequireClaim("Permission", "CanAccessShahkar"));
+
+
+    options.AddPolicy("CanValidateRequest", policy =>
+        policy.RequireClaim("Permission", "CanValidateRequest"));
 });
 
 // --- Swagger ---

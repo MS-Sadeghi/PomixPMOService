@@ -387,7 +387,7 @@
                 $('#documentModalLabel').text('متن سند درخواست ' + requestId);
                 $('#documentModalBody').html('<div class="d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
                 $('#documentChecked').prop('checked', false);
-                $('#confirmDocument').data('request-id', requestId); // Store requestId for confirm button
+                $('#confirmDocument').data('request-id', requestId);
                 $('#documentModal').modal('show');
 
                 $.ajax({
@@ -432,7 +432,6 @@
                                     confirmButtonColor: '#198754'
                                 });
                                 $('#documentModal').modal('hide');
-                                // Update table row to show approval status
                                 var row = $('tr[data-request-id="' + requestId + '"]');
                                 row.find('.approval-tab[data-value="true"]').addClass('active show');
                                 row.find('.approval-tab[data-value="false"]').removeClass('active show');
@@ -466,19 +465,24 @@
                 }
             });
 
-            // Handle approval tabs in table
+                     $(document).ready(function() {
             $('.approval-tab').click(function() {
                 var requestId = $(this).data('request-id');
-                var isApproved = $(this).data('value') === true;
+                var val = $(this).data('value');
+                var isApproved = (val === true || val === "true"); // تبدیل رشته به boolean واقعی
                 var $this = $(this);
 
                 $.ajax({
-                    url: '/Cartable/MarkDocumentAsRead',
+                    url: '/Cartable/UpdateValidationStatus',
                     type: 'POST',
-                    data: { requestId: requestId },
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        requestId: requestId,
+                        validateByExpert: isApproved
+                    }),
                     dataType: 'json',
                     headers: {
-                        'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
                     },
                     success: function(res) {
                         if (res.success) {
@@ -489,7 +493,7 @@
                                 confirmButtonText: 'باشه',
                                 confirmButtonColor: '#198754'
                             });
-                            // Update table row
+
                             var row = $('tr[data-request-id="' + requestId + '"]');
                             row.find('.approval-tab').removeClass('active show');
                             $this.addClass('active show');
@@ -498,12 +502,12 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'خطا',
-                                text: res.message || 'خطا در علامت‌گذاری سند.',
+                                text: res.message || 'خطا در به‌روزرسانی وضعیت سند.',
                                 confirmButtonText: 'باشه'
                             });
                         }
                     },
-                    error: function(xhr, status, error) {
+                    error: function(xhr) {
                         var errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
                         Swal.fire({
                             icon: 'error',
@@ -514,6 +518,10 @@
                     }
                 });
             });
+        });
+
+
+
 
             // Form validation
             $('#needs-validation-form').on('submit', function(e) {

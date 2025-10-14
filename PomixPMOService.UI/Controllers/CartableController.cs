@@ -270,7 +270,7 @@ namespace PomixPMOService.UI.Controllers
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _client.PostAsync($"/Service/MarkDocumentAsRead/{requestId}", null);
+                var response = await _client.PostAsync($"Service/MarkDocumentAsRead/{requestId}", null);
 
                 if (response.IsSuccessStatusCode)
                 {

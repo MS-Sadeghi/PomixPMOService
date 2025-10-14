@@ -250,13 +250,21 @@
                                             }
                                         </td>
                                         <!-- متن سند -->
+
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-icon btn-light btn-view-doc"
                                                     data-request-id="@item.RequestId"
                                                     title="مشاهده متن سند">
-                                                <i class="typcn typcn-document-text text-info" data-bs-toggle="tooltip"></i>
+                                                <i class="typcn typcn-document-text"
+                                                   style="color:@(item.IsRead ? "green" : "blue");"
+                                                   data-bs-toggle="tooltip"
+                                                   title="@(item.IsRead ? "خوانده شده" : "خوانده نشده")">
+                                                </i>
                                             </button>
                                         </td>
+
+
+
                                         <!-- تایید -->
                                         <td class="text-center">
                                             <ul class="nav nav-price justify-content-center mt-2">
@@ -305,6 +313,7 @@
         </div>
     </div>
 </div>
+<!-- Modal نمایش سند -->
 <div class="modal fade" id="documentModal" tabindex="-1" aria-labelledby="documentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -327,6 +336,7 @@
         </div>
     </div>
 </div>
+
 <!-- Modal for Adding New Document -->
 <div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable custom-modal">
@@ -385,6 +395,7 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
+
             // Initialize tooltips
             $('[data-bs-toggle="tooltip"]').tooltip();
 
@@ -395,33 +406,37 @@
             });
 
             // View document text
-            $('.btn-view-doc').click(function() {
-                var requestId = $(this).data('request-id');
-                $('#documentModalLabel').text('متن سند درخواست ' + requestId);
-                $('#documentModalBody').html('<div class="d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
-                $('#documentChecked').prop('checked', false);
-                $('#confirmDocument').data('request-id', requestId);
-                $('#documentModal').modal('show');
+                   $('.btn-view-doc').click(function() {
+            var requestId = $(this).data('request-id');
+            $('#documentModalLabel').text('متن سند درخواست ' + requestId);
+            $('#documentModalBody').html('<div class="d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
+            $('#documentChecked').prop('checked', false); // به‌صورت پیش‌فرض false
+            $('#confirmDocument').data('request-id', requestId);
+            $('#documentModal').modal('show');
 
-                $.ajax({
-                    url: '/Cartable/GetDocumentText',
-                    type: 'GET',
-                    data: { requestId: requestId },
-                    dataType: 'json',
-                    success: function(res) {
-                        if (res && res.success && res.documentText && res.documentText.trim() !== "") {
-                            var safe = $('<div/>').text(res.documentText).html();
-                            $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.6;">' + safe + '</pre>');
-                        } else {
-                            $('#documentModalBody').html('<p class="text-danger fw-bold text-center">رمز تصدیق یا شماره سند درست وارد نشده است.</p>');
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        var errorMessage = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
-                        $('#documentModalBody').html('<p class="text-danger text-center">' + errorMessage + '</p>');
+            $.ajax({
+                url: '/Cartable/GetDocumentText',
+                type: 'GET',
+                data: { requestId: requestId },
+                dataType: 'json',
+                success: function(res) {
+                    if (res && res.success && res.documentText && res.documentText.trim() !== "") {
+                        var safe = $('<div/>').text(res.documentText).html();
+                        $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.6;">' + safe + '</pre>');
+                        // تنظیم وضعیت چک‌باکس بر اساس IsRead
+                        $('#documentChecked').prop('checked', res.isRead === true);
+                    } else {
+                        $('#documentModalBody').html('<p class="text-danger fw-bold text-center">رمز تصدیق یا شماره سند درست وارد نشده است.</p>');
+                        $('#documentChecked').prop('checked', false);
                     }
-                });
+                },
+                error: function(xhr) {
+                    var errorMessage = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
+                    $('#documentModalBody').html('<p class="text-danger text-center">' + errorMessage + '</p>');
+                    $('#documentChecked').prop('checked', false);
+                }
             });
+        });
 
             // Confirm document in modal
             $('#confirmDocument').click(function() {
@@ -444,11 +459,15 @@
                                     confirmButtonText: 'باشه',
                                     confirmButtonColor: '#198754'
                                 });
+
                                 $('#documentModal').modal('hide');
+
+                                // Update icon color and tooltip
                                 var row = $('tr[data-request-id="' + requestId + '"]');
-                                row.find('.approval-tab[data-value="true"]').addClass('active show');
-                                row.find('.approval-tab[data-value="false"]').removeClass('active show');
-                                row.find('#approvalValue-' + requestId).val('true');
+                                row.find('.btn-view-doc i.typcn-document-text')
+                                    .css('color', 'green')
+                                    .attr('title', 'خوانده شده');
+
                             } else {
                                 Swal.fire({
                                     icon: 'error',
@@ -458,7 +477,7 @@
                                 });
                             }
                         },
-                        error: function(xhr, status, error) {
+                        error: function(xhr) {
                             var errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
                             Swal.fire({
                                 icon: 'error',
@@ -478,61 +497,60 @@
                 }
             });
 
-            $(document).ready(function () {
-                $('.approval-tab').click(function () {
-                    var requestId = $(this).data('request-id');
-                    var val = $(this).data('value');
-                    var isApproved = (val === true || val === "true"); // تبدیل رشته به boolean واقعی
-                    var $this = $(this);
+            // Approval tabs
+            $('.approval-tab').click(function() {
+                var requestId = $(this).data('request-id');
+                var val = $(this).data('value');
+                var isApproved = (val === true || val === "true"); // Convert string to boolean
+                var $this = $(this);
 
-                    // لاگ برای دیباگ
-                    console.log('requestId:', requestId, 'val:', val, 'isApproved:', isApproved);
+                console.log('requestId:', requestId, 'val:', val, 'isApproved:', isApproved);
 
-                    $.ajax({
-                        url: '/Cartable/UpdateValidationStatus',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify({
-                            requestId: requestId,
-                            validateByExpert: isApproved
-                        }),
-                        dataType: 'json',
-                        headers: {
-                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                        },
-                        success: function (res) {
-                            if (res.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: isApproved ? 'تأیید شد ✅' : 'رد شد ❌',
-                                    text: res.message || (isApproved ? 'سند تأیید شد.' : 'سند رد شد.'),
-                                    confirmButtonText: 'باشه',
-                                    confirmButtonColor: '#198754'
-                                });
+                $.ajax({
+                    url: '/Cartable/UpdateValidationStatus',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        requestId: requestId,
+                        validateByExpert: isApproved
+                    }),
+                    dataType: 'json',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: isApproved ? 'تأیید شد ✅' : 'رد شد ❌',
+                                text: res.message || (isApproved ? 'سند تأیید شد.' : 'سند رد شد.'),
+                                confirmButtonText: 'باشه',
+                                confirmButtonColor: '#198754'
+                            });
 
-                                var row = $('tr[data-request-id="' + requestId + '"]');
-                                row.find('.approval-tab').removeClass('active show');
-                                $this.addClass('active show');
-                                row.find('#approvalValue-' + requestId).val(isApproved ? 'true' : 'false');
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'خطا',
-                                    text: res.message || 'خطا در به‌روزرسانی وضعیت سند.',
-                                    confirmButtonText: 'باشه'
-                                });
-                            }
-                        },
-                        error: function (xhr) {
-                            var errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
+                            var row = $('tr[data-request-id="' + requestId + '"]');
+                            row.find('.approval-tab').removeClass('active show');
+                            $this.addClass('active show');
+                            row.find('#approvalValue-' + requestId).val(isApproved ? 'true' : 'false');
+
+                        } else {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'خطا',
-                                text: errorMessage,
+                                text: res.message || 'خطا در به‌روزرسانی وضعیت سند.',
                                 confirmButtonText: 'باشه'
                             });
                         }
-                    });
+                    },
+                    error: function(xhr) {
+                        var errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'خطا',
+                            text: errorMessage,
+                            confirmButtonText: 'باشه'
+                        });
+                    }
                 });
             });
 
@@ -544,6 +562,7 @@
                     $(this).addClass('was-validated');
                 }
             });
+
         });
     </script>
 }

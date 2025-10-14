@@ -483,91 +483,57 @@ namespace PomixPMOService.API.Controllers
         }
 
         [HttpGet("GetTextByRequestId/{requestId}")]
-        public async Task<IActionResult> GetTextByRequestId(long requestId)
+        public async Task<DocTextResponse> GetTextByRequestId(long requestId)
         {
             try
             {
-                _logger.LogInformation("درخواست برای GetTextByRequestId با RequestId: {RequestId}", requestId);
-
-                var verifyDocLog = await _context.VerifyDocLog
-                    .Where(v => v.RequestId == requestId)
-                    .OrderByDescending(v => v.CreatedAt)
+                // جستجو در جدول VerifyDocLog برای یافتن رکورد مرتبط با RequestId
+                var document = await _context.VerifyDocLog
+                    .Where(x => x.RequestId == requestId)
+                    .Select(x => new DocTextResponse
+                    {
+                        Success = true,
+                        DocumentText = x.ResponseText ?? "", // استفاده از ResponseText از VerifyDocLog
+                        IsRead = x.IsRead ?? false, // استفاده از IsRead با پیش‌فرض false در صورت null
+                        ExistDoc = x.IsExist ?? false, // اضافه کردن ExistDoc از VerifyDocLog
+                        Message = null
+                    })
                     .FirstOrDefaultAsync();
 
-                if (verifyDocLog == null)
+                // اگر هیچ رکوردی یافت نشد
+                if (document == null)
                 {
-                    _logger.LogWarning("رکوردی در VerifyDocLog برای RequestId: {RequestId} یافت نشد", requestId);
-                    return new JsonResult(new { success = false, message = "سندی با این شناسه یافت نشد." }) { StatusCode = 404 };
+                    return new DocTextResponse
+                    {
+                        Success = false,
+                        DocumentText = null,
+                        IsRead = false,
+                        ExistDoc = false,
+                        Message = "سندی برای این درخواست یافت نشد."
+                    };
                 }
 
-                if (string.IsNullOrEmpty(verifyDocLog.ResponseText))
+                // اگر متن سند خالی است، پیام خطا تنظیم می‌شود اما IsRead و ExistDoc حفظ می‌شوند
+                if (string.IsNullOrEmpty(document.DocumentText))
                 {
-                    _logger.LogWarning("ResponseText برای RequestId: {RequestId} خالی است", requestId);
-                    return new JsonResult(new { success = false, message = "محتوای پاسخ سند خالی است." }) { StatusCode = 400 };
+                    document.Success = false;
+                    document.Message = "متن سند خالی است.";
                 }
 
-                _logger.LogInformation("ResponseText برای RequestId {RequestId}: {ResponseText}", requestId, verifyDocLog.ResponseText);
-
-                try
-                {
-                    // تلاش برای پیدا کردن responseText داخلی
-                    using var outerDoc = JsonDocument.Parse(verifyDocLog.ResponseText);
-                    var outerRoot = outerDoc.RootElement;
-
-                    string? innerResponseText = null;
-                    if (outerRoot.TryGetProperty("responseText", out var responseTextElement))
-                    {
-                        innerResponseText = responseTextElement.GetString();
-                        _logger.LogInformation("Inner responseText برای RequestId {RequestId}: {InnerResponseText}", requestId, innerResponseText);
-                    }
-
-                    if (string.IsNullOrEmpty(innerResponseText))
-                    {
-                        _logger.LogWarning("Inner responseText برای RequestId {RequestId} خالی است یا یافت نشد", requestId);
-                        return new JsonResult(new { success = false, message = "داده‌ای در پاسخ یافت نشد." }) { StatusCode = 400 };
-                    }
-
-                    // پارست کردن responseText داخلی
-                    using var jsonDoc = JsonDocument.Parse(innerResponseText);
-                    var root = jsonDoc.RootElement;
-
-                    if (!root.TryGetProperty("result", out var resultElement) ||
-                        !resultElement.TryGetProperty("data", out var dataElement))
-                    {
-                        _logger.LogWarning("کلید 'result' یا 'data' در inner responseText برای RequestId: {RequestId} یافت نشد", requestId);
-                        return new JsonResult(new { success = false, message = "داده‌ای در پاسخ یافت نشد." }) { StatusCode = 400 };
-                    }
-
-                    string? importantText = dataElement.TryGetProperty("ImpotrtantAnnexText", out var annexText)
-                        ? annexText.GetString()
-                        : null;
-
-                    if (string.IsNullOrEmpty(importantText))
-                    {
-                        _logger.LogWarning("کلید ImpotrtantAnnexText خالی است یا در inner responseText برای RequestId: {RequestId} یافت نشد", requestId);
-                        return new JsonResult(new { success = false, message = "متنی برای این سند وجود ندارد." }) { StatusCode = 400 };
-                    }
-
-                    _logger.LogInformation("ImpotrtantAnnexText استخراج‌شده برای RequestId {RequestId}: {Text}", requestId, importantText);
-                    return new JsonResult(new { success = true, documentText = importantText });
-                }
-                catch (JsonException ex)
-                {
-                    _logger.LogError(ex, "خطا در پردازش ResponseText برای RequestId: {RequestId}", requestId);
-                    return new JsonResult(new { success = false, message = $"خطا در پردازش JSON: {ex.Message}" }) { StatusCode = 400 };
-                }
+                return document;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "خطای غیرمنتظره در GetTextByRequestId برای RequestId: {RequestId}", requestId);
-                return new JsonResult(new { success = false, message = $"خطای سرور: {ex.Message}" }) { StatusCode = 500 };
+                // مدیریت خطاها
+                return new DocTextResponse
+                {
+                    Success = false,
+                    DocumentText = null,
+                    IsRead = false,
+                    ExistDoc = false,
+                    Message = $"خطا در دریافت اطلاعات سند: {ex.Message}"
+                };
             }
-   
-        
-        
-        
-        
-        
         }
 
         [HttpPost("MarkDocumentAsRead/{requestId}")]
@@ -654,6 +620,15 @@ namespace PomixPMOService.API.Controllers
     }
 
     #region ViewModels & DTOs
+
+    public class DocTextResponse
+    {
+        public bool Success { get; set; }
+        public string? DocumentText { get; set; }
+        public bool IsRead { get; set; }
+        public bool ExistDoc { get; set; } // اضافه شده برای هماهنگی با VerifyDocResponse
+        public string? Message { get; set; }
+    }
     public class CombinedRequestViewModel
     {
         public string NationalId { get; set; } = string.Empty;

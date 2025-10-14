@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using PomixPMOService.API.Models.ViewModels;
 using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models;
-using System.Net.Http.Headers;
-using System.Text.Json;
 
 namespace ServicePomixPMO.API.Controllers
 {
@@ -56,7 +53,7 @@ namespace ServicePomixPMO.API.Controllers
                     IsMatch = r.IsMatch ?? false,
                     IsExist = r.IsExist ?? false,
                     IsNationalIdInResponse = r.IsNationalIdInResponse ?? false,
-                    IsNationalIdInLawyers = r.IsNationalIdInLawyers ?? false, 
+                    IsNationalIdInLawyers = r.IsNationalIdInLawyers ?? false,
                     ValidateByExpert = r.ValidateByExpert,
                     Description = r.Description,
                     CreatedAt = r.CreatedAt,
@@ -151,7 +148,7 @@ namespace ServicePomixPMO.API.Controllers
                 {
                     DocumentNumber = model.DocumentNumber,
                     VerificationCode = model.VerificationCode,
-                    ResponseText = "", 
+                    ResponseText = "",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = userId.ToString(),
                     RequestId = newRequest.RequestId
@@ -250,15 +247,15 @@ namespace ServicePomixPMO.API.Controllers
                 _context.Request.Update(request);
                 await _context.SaveChangesAsync();
 
-                _context.RequestLogs.Add(new RequestLog
-                {
-                    RequestId = request.RequestId,
-                    UserId = userId,
-                    Action = validateByExpert ? "ValidationStatus_Approved" : "ValidationStatus_Rejected",
-                    Details = validateByExpert ? "درخواست توسط کارشناس تأیید شد." : "درخواست توسط کارشناس رد شد.",
-                    ActionTime = DateTime.UtcNow
-                });
-                await _context.SaveChangesAsync();
+                //_context.RequestLogs.Add(new RequestLog
+                //{
+                //    RequestId = request.RequestId,
+                //    UserId = userId,
+                //    Action = validateByExpert ? "ValidationStatus_Approved" : "ValidationStatus_Rejected",
+                //    Details = validateByExpert ? "درخواست توسط کارشناس تأیید شد." : "درخواست توسط کارشناس رد شد.",
+                //    ActionTime = DateTime.UtcNow
+                //});
+                //await _context.SaveChangesAsync();
 
                 _logger.LogInformation("Successfully updated ValidateByExpert and logged action for RequestId: {RequestId}", requestId);
                 return new JsonResult(new { success = true, message = validateByExpert ? "درخواست با موفقیت تأیید شد." : "درخواست با موفقیت رد شد." });
@@ -273,18 +270,18 @@ namespace ServicePomixPMO.API.Controllers
     }
 
     public class NewRequestViewModel
-        {
-            public string NationalId { get; set; } = string.Empty;  
-            public string MobileNumber { get; set; } = string.Empty;   
-            public string DocumentNumber { get; set; } = string.Empty;   
-            public string VerificationCode { get; set; } = string.Empty; 
-        }
-         public class UpdateValidationStatusViewModel
-        {
-            public long RequestId { get; set; }
-            public bool ValidateByExpert { get; set; }
-        }
-
-
+    {
+        public string NationalId { get; set; } = string.Empty;
+        public string MobileNumber { get; set; } = string.Empty;
+        public string DocumentNumber { get; set; } = string.Empty;
+        public string VerificationCode { get; set; } = string.Empty;
     }
+    public class UpdateValidationStatusViewModel
+    {
+        public long RequestId { get; set; }
+        public bool ValidateByExpert { get; set; }
+    }
+
+
+}
 

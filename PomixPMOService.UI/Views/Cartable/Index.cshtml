@@ -465,63 +465,63 @@
                 }
             });
 
-                     $(document).ready(function() {
-            $('.approval-tab').click(function() {
-                var requestId = $(this).data('request-id');
-                var val = $(this).data('value');
-                var isApproved = (val === true || val === "true"); // تبدیل رشته به boolean واقعی
-                var $this = $(this);
+            $(document).ready(function () {
+                $('.approval-tab').click(function () {
+                    var requestId = $(this).data('request-id');
+                    var val = $(this).data('value');
+                    var isApproved = (val === true || val === "true"); // تبدیل رشته به boolean واقعی
+                    var $this = $(this);
 
-                $.ajax({
-                    url: '/Cartable/UpdateValidationStatus',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        requestId: requestId,
-                        validateByExpert: isApproved
-                    }),
-                    dataType: 'json',
-                    headers: {
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    },
-                    success: function(res) {
-                        if (res.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: isApproved ? 'تأیید شد ✅' : 'رد شد ❌',
-                                text: res.message || (isApproved ? 'سند تأیید شد.' : 'سند رد شد.'),
-                                confirmButtonText: 'باشه',
-                                confirmButtonColor: '#198754'
-                            });
+                    // لاگ برای دیباگ
+                    console.log('requestId:', requestId, 'val:', val, 'isApproved:', isApproved);
 
-                            var row = $('tr[data-request-id="' + requestId + '"]');
-                            row.find('.approval-tab').removeClass('active show');
-                            $this.addClass('active show');
-                            row.find('#approvalValue-' + requestId).val(isApproved ? 'true' : 'false');
-                        } else {
+                    $.ajax({
+                        url: '/Cartable/UpdateValidationStatus',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            requestId: requestId,
+                            validateByExpert: isApproved
+                        }),
+                        dataType: 'json',
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: isApproved ? 'تأیید شد ✅' : 'رد شد ❌',
+                                    text: res.message || (isApproved ? 'سند تأیید شد.' : 'سند رد شد.'),
+                                    confirmButtonText: 'باشه',
+                                    confirmButtonColor: '#198754'
+                                });
+
+                                var row = $('tr[data-request-id="' + requestId + '"]');
+                                row.find('.approval-tab').removeClass('active show');
+                                $this.addClass('active show');
+                                row.find('#approvalValue-' + requestId).val(isApproved ? 'true' : 'false');
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'خطا',
+                                    text: res.message || 'خطا در به‌روزرسانی وضعیت سند.',
+                                    confirmButtonText: 'باشه'
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            var errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
                             Swal.fire({
                                 icon: 'error',
                                 title: 'خطا',
-                                text: res.message || 'خطا در به‌روزرسانی وضعیت سند.',
+                                text: errorMessage,
                                 confirmButtonText: 'باشه'
                             });
                         }
-                    },
-                    error: function(xhr) {
-                        var errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'خطا',
-                            text: errorMessage,
-                            confirmButtonText: 'باشه'
-                        });
-                    }
+                    });
                 });
             });
-        });
-
-
-
 
             // Form validation
             $('#needs-validation-form').on('submit', function(e) {

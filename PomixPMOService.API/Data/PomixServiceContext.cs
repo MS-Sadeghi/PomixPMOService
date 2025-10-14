@@ -27,7 +27,7 @@ namespace ServicePomixPMO.API.Data
             modelBuilder.Entity<Cartable>().ToTable("Cartable", "WF");
             modelBuilder.Entity<CartableItem>().ToTable("CartableItems", "WF");
             modelBuilder.Entity<UserLog>().ToTable("UserLog", "Log");
-            modelBuilder.Entity<RequestLog>().ToTable("RequestLogs", "Log");
+            modelBuilder.Entity<RequestLog>().ToTable("RequestLog", "Log");
             modelBuilder.Entity<UserAccess>().ToTable("UserAccess", "Sec");
             modelBuilder.Entity<ShahkarLog>().ToTable("ShahkarLog", "Log"); // اضافه شده
             modelBuilder.Entity<RefreshToken>().ToTable("RefreshTokens", "Sec");
@@ -44,7 +44,7 @@ namespace ServicePomixPMO.API.Data
                  .HasOne(u => u.Role)
                  .WithMany()
                  .HasForeignKey(u => u.RoleId)
-                 .OnDelete(DeleteBehavior.Restrict); 
+                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Request>()
                 .HasIndex(r => r.DocumentNumber)

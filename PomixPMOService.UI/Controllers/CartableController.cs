@@ -382,8 +382,8 @@ namespace PomixPMOService.UI.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var apiResponse = await response.Content.ReadAsStringAsync();
-                    return Content(apiResponse, "application/json");
+                    var apiResponse = await response.Content.ReadFromJsonAsync<DocTextResponse>();
+                    return Json(new { success = apiResponse.Success, documentText = apiResponse.DocumentText, isRead = apiResponse.IsRead });
                 }
                 else
                 {

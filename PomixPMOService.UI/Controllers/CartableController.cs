@@ -1,10 +1,10 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http.Headers;
-using System.Text.Json;
-using PomixPMOService.UI.Controllers;
-using System.Dynamic;
 using PomixPMOService.API.Controllers;
+using System.Dynamic;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -256,6 +256,65 @@ namespace PomixPMOService.UI.Controllers
                 return View("Index", await GetCartableData(1, ""));
             }
         }
+
+
+        public class UpdateValidationStatusModel
+        {
+            public long RequestId { get; set; }
+            public bool ValidateByExpert { get; set; }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateValidationStatus([FromBody] UpdateValidationStatusModel model)
+        {
+            try
+            {
+                _logger.LogInformation("Received UpdateValidationStatus request for RequestId: {RequestId}, ValidateByExpert: {ValidateByExpert}", model.RequestId, model.ValidateByExpert);
+
+                var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("JWT token not found for RequestId: {RequestId}", model.RequestId);
+                    return Json(new { success = false, message = "توکن یافت نشد. لطفاً دوباره وارد سیستم شوید." });
+                }
+
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                _logger.LogInformation("Sending POST to Request/UpdateValidationStatus");
+                var content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json");
+                var response = await _client.PostAsync("Request/UpdateValidationStatus", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("API call successful for RequestId: {RequestId}, Response: {Response}", model.RequestId, responseContent);
+                    return Json(new
+                    {
+                        success = true,
+                        message = model.ValidateByExpert ? "درخواست با موفقیت تأیید شد ✅" : "درخواست با موفقیت رد شد ❌"
+                    });
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("API call failed for RequestId: {RequestId}, StatusCode: {StatusCode}, Error: {Error}", model.RequestId, response.StatusCode, error);
+                    return Json(new
+                    {
+                        success = false,
+                        message = string.IsNullOrEmpty(error) ? "خطا در به‌روزرسانی وضعیت درخواست: پاسخ سرور خالی است." : $"خطا در به‌روزرسانی وضعیت درخواست: {error}"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating validation status for RequestId: {RequestId}", model.RequestId);
+                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
+            }
+        }
+
+
+
 
         [HttpPost]
         public async Task<IActionResult> MarkDocumentAsRead(long requestId)

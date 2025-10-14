@@ -101,7 +101,9 @@
                     <option value="pending" selected="@(currentFilter == "pending")">در انتظار بررسی</option>
                 </select>
 
-                <button type="submit" class="btn btn-primary">اعمال فیلتر</button>
+                <button type="submit" class="btn btn-primary">
+                <i class="fa fa-search" aria-hidden="true" style="color: whitesmoke;"></i>
+                </button>
             </form>
         </div>
 
@@ -258,20 +260,17 @@
                                             </button>
                                         </td>
                                         <!-- تایید -->
-                                        <td class="text-center">
-                                            <ul class="nav nav-price justify-content-center mt-2">
-                                                <li>
-                                                    <a data-bs-toggle="tab" class="approval-tab active show text-success" data-value="true" data-request-id="@item.RequestId">
-                                                        <i class="fa fa-check me-1"></i>
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a data-bs-toggle="tab" class="approval-tab text-danger" data-value="false" data-request-id="@item.RequestId">
-                                                        <i class="fa fa-times me-1"></i>
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                            <input type="hidden" name="approval-@item.RequestId" id="approvalValue-@item.RequestId" value="true" />
+                                        <td class="text-center" style="width:120px;">
+                                            <div class="form-check form-switch d-flex justify-content-center align-items-center">
+                                                <input class="form-check-input approval-toggle"
+                                                       type="checkbox"
+                                                       id="approval-@item.RequestId"
+                                                       data-request-id="@item.RequestId"
+                                                @(item.ValidateByExpert.HasValue && item.ValidateByExpert.Value ? "checked" : "")>
+                                                <label class="form-check-label ms-2" for="approval-@item.RequestId">
+                                                    @(item.ValidateByExpert.HasValue && item.ValidateByExpert.Value ? "تایید" : "عدم تایید")
+                                                </label>
+                                            </div>
                                         </td>
                                     </tr>
                                 }
@@ -478,63 +477,37 @@
                 }
             });
 
-            $(document).ready(function () {
-                $('.approval-tab').click(function () {
-                    var requestId = $(this).data('request-id');
-                    var val = $(this).data('value');
-                    var isApproved = (val === true || val === "true"); // تبدیل رشته به boolean واقعی
-                    var $this = $(this);
+        $(document).ready(function () {
+            $('.approval-toggle').change(function () {
+                var checkbox = $(this);
+                var requestId = checkbox.data('request-id');
+                var isChecked = checkbox.is(':checked');
+                var token = $('input[name="__RequestVerificationToken"]').val();
 
-                    // لاگ برای دیباگ
-                    console.log('requestId:', requestId, 'val:', val, 'isApproved:', isApproved);
-
-                    $.ajax({
-                        url: '/Cartable/UpdateValidationStatus',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify({
-                            requestId: requestId,
-                            validateByExpert: isApproved
-                        }),
-                        dataType: 'json',
-                        headers: {
-                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                        },
-                        success: function (res) {
-                            if (res.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: isApproved ? 'تأیید شد ✅' : 'رد شد ❌',
-                                    text: res.message || (isApproved ? 'سند تأیید شد.' : 'سند رد شد.'),
-                                    confirmButtonText: 'باشه',
-                                    confirmButtonColor: '#198754'
-                                });
-
-                                var row = $('tr[data-request-id="' + requestId + '"]');
-                                row.find('.approval-tab').removeClass('active show');
-                                $this.addClass('active show');
-                                row.find('#approvalValue-' + requestId).val(isApproved ? 'true' : 'false');
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'خطا',
-                                    text: res.message || 'خطا در به‌روزرسانی وضعیت سند.',
-                                    confirmButtonText: 'باشه'
-                                });
-                            }
-                        },
-                        error: function (xhr) {
-                            var errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'خطا',
-                                text: errorMessage,
-                                confirmButtonText: 'باشه'
-                            });
-                        }
-                    });
+                fetch('/Cartable/UpdateValidationStatus', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ RequestId: requestId, ValidateByExpert: isChecked })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        checkbox.next('label').text(isChecked ? "تایید" : "عدم تایید");
+                    } else {
+                        alert(data.message);
+                        checkbox.prop('checked', !isChecked);
+                    }
+                })
+                .catch(err => {
+                    alert("خطا در ارتباط با سرور");
+                    checkbox.prop('checked', !isChecked);
                 });
             });
+        });
 
             // Form validation
             $('#needs-validation-form').on('submit', function(e) {

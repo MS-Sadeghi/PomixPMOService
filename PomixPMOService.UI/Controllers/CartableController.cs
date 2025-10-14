@@ -25,19 +25,36 @@ namespace PomixPMOService.UI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(int page = 1, string search = "")
+        public async Task<IActionResult> Index(int page = 1, string search = "", string filterStatus = "")
         {
+            // گرفتن داده‌ها از API
             var model = await GetCartableData(page, search);
-            // دریافت وضعیت IsRead از API برای هر آیتم
+
+            // اعمال فیلتر بر اساس وضعیت
+            if (!string.IsNullOrEmpty(filterStatus))
+            {
+                switch (filterStatus.ToLower())
+                {
+                    case "approved":
+                        model.Items = model.Items.Where(x => x.ValidateByExpert == true).ToList();
+                        break;
+                    case "rejected":
+                        model.Items = model.Items.Where(x => x.ValidateByExpert == false).ToList();
+                        break;
+                    case "pending":
+                        model.Items = model.Items.Where(x => x.ValidateByExpert == null).ToList();
+                        break;
+                }
+            }
+
+            // بررسی خوانده شدن سندها
             foreach (var item in model.Items)
             {
                 try
                 {
                     var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
                     if (!string.IsNullOrEmpty(token))
-                    {
                         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    }
 
                     var response = await _client.GetAsync($"Service/GetTextByRequestId/{item.RequestId}");
                     if (response.IsSuccessStatusCode)
@@ -48,18 +65,19 @@ namespace PomixPMOService.UI.Controllers
                     else
                     {
                         item.IsRead = false;
-                        _logger.LogWarning("Failed to fetch IsRead for RequestId: {RequestId}", item.RequestId);
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     item.IsRead = false;
-                    _logger.LogError(ex, "Error fetching IsRead for RequestId: {RequestId}", item.RequestId);
                 }
             }
+
             ViewBag.FormModel = new CartableFormViewModel();
+            ViewBag.FilterStatus = filterStatus;
             return View(model);
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]

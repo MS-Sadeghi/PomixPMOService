@@ -24,6 +24,8 @@ namespace PomixPMOService.UI.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        #region CartableIndex
+
         [HttpGet]
         public async Task<IActionResult> Index(int page = 1, string search = "", string filterStatus = "")
         {
@@ -77,7 +79,6 @@ namespace PomixPMOService.UI.Controllers
             ViewBag.FilterStatus = filterStatus;
             return View(model);
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -331,9 +332,6 @@ namespace PomixPMOService.UI.Controllers
             }
         }
 
-
-
-
         [HttpPost]
         public async Task<IActionResult> MarkDocumentAsRead(long requestId)
         {
@@ -397,6 +395,7 @@ namespace PomixPMOService.UI.Controllers
             }
         }
 
+        [HttpGet]
         private async Task<PaginatedCartableViewModel> GetCartableData(int page, string search)
         {
             var pageSize = 10;
@@ -441,7 +440,6 @@ namespace PomixPMOService.UI.Controllers
         {
             try
             {
-                // اعتبارسنجی ورودی‌ها
                 if (string.IsNullOrEmpty(model.NationalCode) || model.NationalCode.Length != 10 || !System.Text.RegularExpressions.Regex.IsMatch(model.NationalCode, @"^\d{10}$"))
                 {
                     return Json(new { success = false, message = "کد ملی نامعتبر است." });
@@ -451,7 +449,6 @@ namespace PomixPMOService.UI.Controllers
                     return Json(new { success = false, message = "شماره موبایل نامعتبر است." });
                 }
 
-                // دریافت توکن JWT
                 var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
                 if (string.IsNullOrEmpty(token))
                 {
@@ -459,7 +456,6 @@ namespace PomixPMOService.UI.Controllers
                 }
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                // ارسال درخواست به سرویس شاهکار
                 var response = await _client.PostAsJsonAsync("Service/CheckMobileNationalCode", new
                 {
                     NationalId = model.NationalCode,
@@ -505,6 +501,8 @@ namespace PomixPMOService.UI.Controllers
             }
         }
 
+        #endregion
+
         [HttpGet]
         public IActionResult Shahkar()
         {
@@ -519,6 +517,7 @@ namespace PomixPMOService.UI.Controllers
 
     }
 
+    #region Helper
     public static class PersianDateHelper
     {
         public static string ToPersianDate(this DateTime date)
@@ -547,6 +546,9 @@ namespace PomixPMOService.UI.Controllers
         }
     }
 
+    #endregion
+
+    #region ViewModels
     public class PaginatedResponse<T>
     {
         public List<T> Items { get; set; } = new List<T>();
@@ -614,4 +616,7 @@ namespace PomixPMOService.UI.Controllers
         public bool IsRead { get; set; }
         public string? Message { get; set; }
     }
+
+    #endregion
+
 }

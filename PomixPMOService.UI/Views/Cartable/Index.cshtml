@@ -83,6 +83,43 @@
         .btn-close:hover::after {
             background-color: #9f67fa;
         }
+    /* حالت پیش‌فرض: بی‌رنگ و خنثی */
+    .radiobtns .btn-outline-success,
+    .radiobtns .btn-outline-danger {
+        background-color: transparent;
+        border-color: #dcdcdc;
+        color: #6c757d;
+        transition: all 0.3s ease;
+    }
+
+    /* ✅ وقتی تایید انتخاب میشه (رنگ سبز پاستیلی) */
+    .radiobtns .btn-check:checked + .btn-outline-success {
+        background-color: #d7f8e4;
+        border-color: #a8e6cf;
+        color: #2b7a4b;
+    }
+
+    /* ❌ وقتی رد انتخاب میشه (رنگ صورتی پاستیلی) */
+    .radiobtns .btn-check:checked + .btn-outline-danger {
+        background-color: #ffe0e9;
+        border-color: #ffb3c6;
+        color: #a33d5b;
+    }
+
+    /* افکت hover فقط زمانی فعال بشه که روش بری، نه همیشه */
+    .radiobtns .btn-outline-success:hover:not(.active),
+    .radiobtns .btn-outline-danger:hover:not(.active) {
+        border-color: #bfbfbf;
+        background-color: #f8f9fa;
+    }
+
+    /* کمی لطافت بیشتر برای دکمه‌ها */
+    .radiobtns label.btn {
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        font-weight: 500;
+    }
+
 </style>
 
 <div class="input-group mb-5">
@@ -270,12 +307,17 @@
                                         </td>
                                         <!-- تایید -->
                                         <td class="text-center" style="width:120px;">
-                                            <div class="form-check form-switch d-flex justify-content-center align-items-center">
-                                                <input class="form-check-input approval-toggle"
-                                                       type="checkbox"
-                                                       id="approval-@item.RequestId"
-                                                       data-request-id="@item.RequestId"
+                                            <div class="btn-group btn-group-sm radiobtns" role="group" aria-label="Approval radio toggle button group" style="border-radius: 3px;">
+                                                <input type="radio" class="btn-check approval-radio" name="approval-@item.RequestId" id="approve-@item.RequestId" data-request-id="@item.RequestId" data-value="true"
                                                 @(item.ValidateByExpert.HasValue && item.ValidateByExpert.Value ? "checked" : "")>
+                                                <label class="btn btn-outline-success" for="approve-@item.RequestId">
+                                                تایید                                                  
+                                                </label>
+                                                <input type="radio" class="btn-check approval-radio" name="approval-@item.RequestId" id="reject-@item.RequestId" data-request-id="@item.RequestId" data-value="false"
+                                                @(item.ValidateByExpert.HasValue && !item.ValidateByExpert.Value ? "checked" : "")>
+                                                <label class="btn btn-outline-danger br-0" for="reject-@item.RequestId">
+                                                عدم تایید 
+                                                </label>
                                             </div>
                                         </td>
                                     </tr>
@@ -472,36 +514,66 @@
                         }
                     });
 
-                    $('.approval-toggle').change(function () {
-                        var checkbox = $(this);
-                        var requestId = checkbox.data('request-id');
-                        var isChecked = checkbox.is(':checked');
-                        var token = $('input[name="__RequestVerificationToken"]').val();
+        // Approval radio change
+        $(document).on('change', '.approval-radio', function () {
+            var radio = $(this);
+            var requestId = radio.data('request-id');
+            var value = radio.data('value'); // "true" یا "false"
+            var validateByExpert = (value === 'true');
+            var token = $('input[name="__RequestVerificationToken"]').val();
 
-                        fetch('/Cartable/UpdateValidationStatus', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'RequestVerificationToken': token
-                            },
-                            body: JSON.stringify({ RequestId: requestId, ValidateByExpert: isChecked })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                toastr.success(data.message || (isChecked ? "تایید" : "عدم تایید"));
-                                checkbox.next('label').text(isChecked ? "تایید" : "عدم تایید");
-                            } else {
-                                toastr.error(data.message || 'خطا در به‌روزرسانی.');
-                                checkbox.prop('checked', !isChecked);
-                            }
-                        })
-                        .catch(err => {
-                            toastr.error("خطا در ارتباط با سرور");
-                            checkbox.prop('checked', !isChecked);
-                        });
-                    });
+            fetch('/Cartable/UpdateValidationStatus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ RequestId: requestId, ValidateByExpert: validateByExpert })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message || (validateByExpert ? "تایید شد" : "رد شد"));
+                } else {
+                    toastr.error(data.message || 'خطا در به‌روزرسانی.');
+                    radio.prop('checked', false);
+                }
+            })
+            .catch(err => {
+                toastr.error("خطا در ارتباط با سرور");
+                radio.prop('checked', false);
+            });
+        });
 
+        $(document).on('click', '.btn-group .btn-check:checked + label', function () {
+            var label = $(this);
+            var radio = $('#' + label.attr('for'));
+            var requestId = radio.data('request-id');
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            radio.prop('checked', false);
+            fetch('/Cartable/UpdateValidationStatus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ RequestId: requestId, ValidateByExpert: null })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.info("وضعیت به هیچکدام بازگشت.");
+                } else {
+                    toastr.error(data.message);
+                    radio.prop('checked', true);
+                }
+            })
+            .catch(err => {
+                toastr.error("خطا");
+                radio.prop('checked', true);
+            });
+        });
                     // Form validation
                     $('#needs-validation-form').on('submit', function(e) {
                         if (!this.checkValidity()) {

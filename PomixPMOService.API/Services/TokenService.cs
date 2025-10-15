@@ -22,6 +22,12 @@ namespace ServicePomixPMO.API.Services
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
+        /// <summary>
+        /// تولید Access Token و Refresh Token برای کاربر.
+        /// Access Token با اعتبار ۱۵ دقیقه و Refresh Token با اعتبار ۷ روز تولید شده و در دیتابیس ذخیره می‌شود.
+        /// </summary>
+        /// <param name="user">کاربری که برای آن توکن تولید می‌شود</param>
+        /// <returns>شیء شامل Access Token و Refresh Token</returns>
         public async Task<object> GenerateTokensAsync(User user)
         {
             var accessToken = await GenerateJwtToken(user);
@@ -45,6 +51,12 @@ namespace ServicePomixPMO.API.Services
             };
         }
 
+        /// <summary>
+        /// بازیابی یک Refresh Token خاص از دیتابیس.
+        /// بررسی می‌کند که توکن معتبر (غیرباطل و غیرمنقضی) باشد.
+        /// </summary>
+        /// <param name="refreshToken">مقدار Refresh Token</param>
+        /// <returns>شیء RefreshToken یا null اگر توکن نامعتبر باشد</returns>
         public async Task<RefreshToken?> GetRefreshTokenAsync(string refreshToken)
         {
             return await _context.RefreshTokens
@@ -53,6 +65,12 @@ namespace ServicePomixPMO.API.Services
                     && !rt.IsRevoked);
         }
 
+        /// <summary>
+        /// باطل کردن یک Refresh Token خاص.
+        /// توکن را در دیتابیس پیدا کرده و پرچم IsRevoked را به true تنظیم می‌کند.
+        /// </summary>
+        /// <param name="refreshToken">مقدار Refresh Token</param>
+        /// <returns>شیء با وضعیت موفقیت و پیام مربوطه</returns>
         public async Task<object> RevokeRefreshTokenAsync(string refreshToken)
         {
             var token = await _context.RefreshTokens
@@ -69,12 +87,45 @@ namespace ServicePomixPMO.API.Services
             return new { Success = true, Message = "Refresh Token با موفقیت باطل شد." };
         }
 
+        /// <summary>
+        /// باطل کردن تمام Refresh Token‌های فعال یک کاربر.
+        /// تمام توکن‌های غیرباطل و غیرمنقضی کاربر را پیدا کرده و باطل می‌کند.
+        /// </summary>
+        /// <param name="userId">شناسه کاربر</param>
+        /// <returns>شیء با وضعیت موفقیت و پیام مربوطه</returns>
+        public async Task<object> RevokeAllRefreshTokensAsync(long userId)
+        {
+            var tokens = await _context.RefreshTokens
+                .Where(rt => rt.UserId == userId && !rt.IsRevoked && rt.ExpiryDate > DateTime.UtcNow)
+                .ToListAsync();
+
+            if (!tokens.Any())
+            {
+                return new { Success = false, Message = "هیچ Refresh Token فعالی برای این کاربر یافت نشد." };
+            }
+
+            foreach (var token in tokens)
+            {
+                token.IsRevoked = true;
+                _context.RefreshTokens.Update(token);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new { Success = true, Message = "تمام Refresh Token‌های فعال کاربر با موفقیت باطل شدند." };
+        }
+
+        /// <summary>
+        /// تولید Access Token (JWT) برای کاربر.
+        /// اطلاعات کاربر و دسترسی‌های او را به توکن اضافه کرده و با کلید JWT امضا می‌کند.
+        /// </summary>
+        /// <param name="user">کاربری که برای آن توکن تولید می‌شود</param>
+        /// <returns>رشته JWT با اعتبار ۱۵ دقیقه</returns>
         private async Task<string> GenerateJwtToken(User user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            // گرفتن دسترسی‌های کاربر از جدول UserAccesses
             var permissions = await _context.UserAccesses
                 .Where(ua => ua.UserId == user.UserId)
                 .Select(ua => ua.Permission)
@@ -87,7 +138,6 @@ namespace ServicePomixPMO.API.Services
                 new Claim(ClaimTypes.Role, user.Role.RoleName)
             };
 
-            // اضافه کردن دسترسی‌ها به عنوان ادعاها
             claims.AddRange(permissions.Select(p => new Claim("Permission", p)));
 
             var token = new JwtSecurityToken(

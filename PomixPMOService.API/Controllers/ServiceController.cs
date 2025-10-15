@@ -488,20 +488,18 @@ namespace PomixPMOService.API.Controllers
             try
             {
                 // جستجو در جدول VerifyDocLog برای یافتن رکورد مرتبط با RequestId
-                var document = await _context.VerifyDocLog
+                var verifyDocLog = await _context.VerifyDocLog
                     .Where(x => x.RequestId == requestId)
-                    .Select(x => new DocTextResponse
+                    .Select(x => new
                     {
-                        Success = true,
-                        DocumentText = x.ResponseText ?? "", // استفاده از ResponseText از VerifyDocLog
-                        IsRead = x.IsRead ?? false, // استفاده از IsRead با پیش‌فرض false در صورت null
-                        ExistDoc = x.IsExist ?? false, // اضافه کردن ExistDoc از VerifyDocLog
-                        Message = null
+                        ResponseText = x.ResponseText,
+                        IsRead = x.IsRead ?? false,
+                        ExistDoc = x.IsExist ?? false
                     })
                     .FirstOrDefaultAsync();
 
                 // اگر هیچ رکوردی یافت نشد
-                if (document == null)
+                if (verifyDocLog == null)
                 {
                     return new DocTextResponse
                     {
@@ -513,18 +511,99 @@ namespace PomixPMOService.API.Controllers
                     };
                 }
 
-                // اگر متن سند خالی است، پیام خطا تنظیم می‌شود اما IsRead و ExistDoc حفظ می‌شوند
-                if (string.IsNullOrEmpty(document.DocumentText))
+                // اگر ResponseText خالی باشد
+                if (string.IsNullOrEmpty(verifyDocLog.ResponseText))
                 {
-                    document.Success = false;
-                    document.Message = "متن سند خالی است.";
+                    return new DocTextResponse
+                    {
+                        Success = false,
+                        DocumentText = null,
+                        IsRead = verifyDocLog.IsRead,
+                        ExistDoc = verifyDocLog.ExistDoc,
+                        Message = "محتوای پاسخ سند خالی است."
+                    };
                 }
 
-                return document;
+                try
+                {
+                    // پارست کردن ResponseText
+                    using var outerDoc = JsonDocument.Parse(verifyDocLog.ResponseText);
+                    var outerRoot = outerDoc.RootElement;
+
+                    string? innerResponseText = null;
+                    if (outerRoot.TryGetProperty("responseText", out var responseTextElement))
+                    {
+                        innerResponseText = responseTextElement.GetString();
+                    }
+
+                    if (string.IsNullOrEmpty(innerResponseText))
+                    {
+                        return new DocTextResponse
+                        {
+                            Success = false,
+                            DocumentText = null,
+                            IsRead = verifyDocLog.IsRead,
+                            ExistDoc = verifyDocLog.ExistDoc,
+                            Message = "داده‌ای در پاسخ یافت نشد."
+                        };
+                    }
+
+                    // پارست کردن innerResponseText
+                    using var jsonDoc = JsonDocument.Parse(innerResponseText);
+                    var root = jsonDoc.RootElement;
+
+                    if (!root.TryGetProperty("result", out var resultElement) ||
+                        !resultElement.TryGetProperty("data", out var dataElement))
+                    {
+                        return new DocTextResponse
+                        {
+                            Success = false,
+                            DocumentText = null,
+                            IsRead = verifyDocLog.IsRead,
+                            ExistDoc = verifyDocLog.ExistDoc,
+                            Message = "داده‌ای در پاسخ یافت نشد."
+                        };
+                    }
+
+                    string? importantText = dataElement.TryGetProperty("ImpotrtantAnnexText", out var annexText)
+                        ? annexText.GetString()
+                        : null;
+
+                    if (string.IsNullOrEmpty(importantText))
+                    {
+                        return new DocTextResponse
+                        {
+                            Success = false,
+                            DocumentText = null,
+                            IsRead = verifyDocLog.IsRead,
+                            ExistDoc = verifyDocLog.ExistDoc,
+                            Message = "متنی برای این سند وجود ندارد."
+                        };
+                    }
+
+                    return new DocTextResponse
+                    {
+                        Success = true,
+                        DocumentText = importantText,
+                        IsRead = verifyDocLog.IsRead,
+                        ExistDoc = verifyDocLog.ExistDoc,
+                        Message = null
+                    };
+                }
+                catch (JsonException ex)
+                {
+                    return new DocTextResponse
+                    {
+                        Success = false,
+                        DocumentText = null,
+                        IsRead = verifyDocLog.IsRead,
+                        ExistDoc = verifyDocLog.ExistDoc,
+                        Message = $"خطا در پردازش JSON: {ex.Message}"
+                    };
+                }
             }
             catch (Exception ex)
             {
-                // مدیریت خطاها
                 return new DocTextResponse
                 {
                     Success = false,

@@ -1,10 +1,13 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using PomixPMOService.API.Controllers;
 using System.Dynamic;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -83,96 +86,97 @@ namespace PomixPMOService.UI.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ValidateSteps(CartableFormViewModel model)
         {
-            bool isValid = true;
+            // ریست کردن پیام‌ها
             model.Step1Message = model.Step2Message = model.Step3Message = "";
 
-            // گام 1: احراز هویت با سرویس شاهکار
-            if (string.IsNullOrEmpty(model.NationalCode) || model.NationalCode.Length != 10 || !System.Text.RegularExpressions.Regex.IsMatch(model.NationalCode, @"^\d{10}$"))
+            bool step1Valid = true, step2Valid = true, step3Valid = true;
+
+            // 🟢 گام 1: احراز هویت با سرویس شاهکار
+            if (string.IsNullOrEmpty(model.NationalCode) || model.NationalCode.Length != 10 || !Regex.IsMatch(model.NationalCode, @"^\d{10}$"))
             {
                 model.Step1Message = "کد ملی نامعتبر است.";
-                isValid = false;
+                step1Valid = false;
             }
-            if (string.IsNullOrEmpty(model.MobileNumber) || model.MobileNumber.Length != 11 || !System.Text.RegularExpressions.Regex.IsMatch(model.MobileNumber, @"^09\d{9}$"))
+            if (string.IsNullOrEmpty(model.MobileNumber) || model.MobileNumber.Length != 11 || !Regex.IsMatch(model.MobileNumber, @"^09\d{9}$"))
             {
                 model.Step1Message += " شماره موبایل نامعتبر است.";
-                isValid = false;
+                step1Valid = false;
             }
 
-            if (isValid)
+            if (step1Valid)
             {
                 try
                 {
                     var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
                     if (string.IsNullOrEmpty(token))
                     {
-                        ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
-                        return RedirectToAction("LoginPage", "Home");
-                    }
-                    _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                    var response = await _client.PostAsJsonAsync("Service/ProcessCombinedRequest", new CombinedRequestViewModel
-                    {
-                        NationalId = model.NationalCode,
-                        MobileNumber = model.MobileNumber,
-                        DocumentNumber = model.DocumentNumber,
-                        VerificationCode = model.VerifyCode
-                    });
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var result = await response.Content.ReadFromJsonAsync<dynamic>();
-                        bool isMatch = result?.data?.Shahkar?.IsSuccessful ?? false;
-                        if (isMatch)
-                        {
-                            model.Step1Message = "احراز هویت معتبر است.";
-                        }
-                        else
-                        {
-                            model.Step1Message = "کد ملی و شماره موبایل تطابق ندارند.";
-                            isValid = false;
-                        }
+                        model.Step1Message = "لطفاً ابتدا وارد سیستم شوید.";
+                        step1Valid = false;
                     }
                     else
                     {
-                        model.Step1Message = "خطا در ارتباط با سرویس احراز هویت.";
-                        isValid = false;
+                        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                        var response = await _client.PostAsJsonAsync("Service/ProcessCombinedRequest", new CombinedRequestViewModel
+                        {
+                            NationalId = model.NationalCode,
+                            MobileNumber = model.MobileNumber,
+                            DocumentNumber = model.DocumentNumber,
+                            VerificationCode = model.VerifyCode
+                        });
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var content = await response.Content.ReadAsStringAsync();
+                            dynamic result = JsonConvert.DeserializeObject<dynamic>(content);
+                            bool isMatch = result?.data?.Shahkar?.IsSuccessful == true;
+
+                            model.Step1Message = isMatch ? "احراز هویت معتبر است." : "کد ملی و شماره موبایل تطابق ندارند.";
+                            step1Valid = isMatch;
+                        }
+                        else
+                        {
+                            model.Step1Message = "خطا در ارتباط با سرویس احراز هویت.";
+                            step1Valid = false;
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
                     model.Step1Message = $"خطا در ارتباط با سرویس احراز هویت: {ex.Message}";
-                    isValid = false;
+                    step1Valid = false;
                 }
             }
 
-            // گام 2: احراز سند
-            if (string.IsNullOrEmpty(model.VerifyCode) || model.VerifyCode.Length != 6 || !System.Text.RegularExpressions.Regex.IsMatch(model.VerifyCode, @"^\d{6}$"))
+            // 🟢 گام 2: احراز سند (مستقل از گام 1)
+            if (string.IsNullOrEmpty(model.VerifyCode) || model.VerifyCode.Length != 6 || !Regex.IsMatch(model.VerifyCode, @"^\d{6}$"))
             {
                 model.Step2Message = "رمز تصدیق نامعتبر است.";
-                isValid = false;
+                step2Valid = false;
             }
-            if (string.IsNullOrEmpty(model.DocumentNumber) || model.DocumentNumber.Length != 18 || !System.Text.RegularExpressions.Regex.IsMatch(model.DocumentNumber, @"^\d{18}$"))
+            if (string.IsNullOrEmpty(model.DocumentNumber) || model.DocumentNumber.Length != 18 || !Regex.IsMatch(model.DocumentNumber, @"^\d{18}$"))
             {
                 model.Step2Message += " شناسه سند نامعتبر است.";
-                isValid = false;
+                step2Valid = false;
             }
-            if (isValid && string.IsNullOrEmpty(model.Step2Message))
+            if (step2Valid && string.IsNullOrEmpty(model.Step2Message))
             {
                 model.Step2Message = "احراز سند معتبر است.";
             }
 
-            // گام 3: تطابق کد ملی
-            if (string.IsNullOrEmpty(model.ClientNationalCode) || model.ClientNationalCode.Length != 10 || !System.Text.RegularExpressions.Regex.IsMatch(model.ClientNationalCode, @"^\d{10}$"))
+            // 🟢 گام 3: تطابق کد ملی موکل (مستقل از گام‌های دیگر)
+            if (string.IsNullOrEmpty(model.ClientNationalCode) || model.ClientNationalCode.Length != 10 || !Regex.IsMatch(model.ClientNationalCode, @"^\d{10}$"))
             {
                 model.Step3Message = "کد ملی موکل نامعتبر است.";
-                isValid = false;
+                step3Valid = false;
             }
             else
             {
                 model.Step3Message = "تطابق کد ملی معتبر است.";
             }
 
-            if (isValid)
+            // پیام نهایی
+            if (step1Valid && step2Valid && step3Valid)
             {
                 ViewBag.SuccessMessage = "همه گام‌ها معتبر هستند.";
             }
@@ -180,6 +184,8 @@ namespace PomixPMOService.UI.Controllers
             ViewBag.FormModel = model;
             return View("Index", await GetCartableData(1, ""));
         }
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]

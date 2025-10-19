@@ -8,119 +8,7 @@
     var showDocumentTab = ViewBag.ShowDocumentTab as bool? ?? false;
     var documentError = ViewBag.DocumentError as string ?? null;
 }
-<style>
-    .iColor {
-        color: #6c757d !important;
-    }
-
-    .modern-input .form-control {
-        border: none;
-        border-bottom: 2px solid #ccc;
-        border-radius: 0;
-        background-color: transparent;
-        box-shadow: none;
-        transition: all 0.3s ease;
-        font-size: 0.95rem;
-    }
-
-        .modern-input .form-control:focus {
-            border-bottom: 2px solid #6f42c1;
-            box-shadow: none;
-        }
-
-    .modern-input label {
-        color: #777;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-    }
-
-    .modern-input .form-control:focus + label i {
-        color: #6f42c1;
-    }
-
-    .modal-content {
-        backdrop-filter: blur(8px);
-        background-color: rgba(255, 255, 255, 0.9);
-        border-radius: 1.25rem;
-        padding: 1.5rem 1.75rem;
-    }
-
-    .custom-modal {
-        width: 670px;
-        border-radius: 2px;
-    }
-
-    .btn-close {
-        background: none;
-        width: 1.5rem;
-        height: 1.5rem;
-        position: relative;
-        opacity: 1;
-    }
-
-        .btn-close::before,
-        .btn-close::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 1.2rem;
-            height: 2px;
-            background-color: #7c3aed;
-            transform-origin: center;
-            transition: all 0.2s ease;
-        }
-
-        .btn-close::before {
-            transform: translate(-50%, -50%) rotate(45deg);
-        }
-
-        .btn-close::after {
-            transform: translate(-50%, -50%) rotate(-45deg);
-        }
-
-        .btn-close:hover::before,
-        .btn-close:hover::after {
-            background-color: #9f67fa;
-        }
-    /* حالت پیش‌فرض: بی‌رنگ و خنثی */
-    .radiobtns .btn-outline-success,
-    .radiobtns .btn-outline-danger {
-        background-color: transparent;
-        border-color: #dcdcdc;
-        color: #6c757d;
-        transition: all 0.3s ease;
-    }
-
-    /* ✅ وقتی تایید انتخاب میشه (رنگ سبز پاستیلی) */
-    .radiobtns .btn-check:checked + .btn-outline-success {
-        background-color: #d7f8e4;
-        border-color: #a8e6cf;
-        color: #2b7a4b;
-    }
-
-    /* ❌ وقتی رد انتخاب میشه (رنگ صورتی پاستیلی) */
-    .radiobtns .btn-check:checked + .btn-outline-danger {
-        background-color: #ffe0e9;
-        border-color: #ffb3c6;
-        color: #a33d5b;
-    }
-
-    /* افکت hover فقط زمانی فعال بشه که روش بری، نه همیشه */
-    .radiobtns .btn-outline-success:hover:not(.active),
-    .radiobtns .btn-outline-danger:hover:not(.active) {
-        border-color: #bfbfbf;
-        background-color: #f8f9fa;
-    }
-
-    /* کمی لطافت بیشتر برای دکمه‌ها */
-    .radiobtns label.btn {
-        border-radius: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        font-weight: 500;
-    }
-
-</style>
+<link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
 
 <div class="input-group mb-5">
     <form asp-action="Index" method="get" class="w-100">
@@ -183,7 +71,7 @@
                                     <th class="wd-10p border-bottom-0 sorting">ارتباط متقاضی با سند </th>
                                     <th class="wd-10p border-bottom-0 sorting">احراز وکالت</th>
                                     <th class="wd-20p border-bottom-0 sorting">نمایش سند</th>
-                                    <th class="wd-20p border-bottom-0 sorting">تایید</th>
+                                    <th class="wd-20p border-bottom-0 sorting">تایید درخواست</th>
                                 </tr>
                             </thead>
                             <tbody id="cartableBody">
@@ -215,7 +103,7 @@
                                         <td>@item.RequestId</td>
                                         <td class="px-4 py-3">
                                             <span class="block">@item.CreatedAt.ToPersianTime()</span>
-                                            <span class="block text-sm text-gray-500">@item.CreatedAt.ToPersianDate()</span>
+                                            <span class="block text-sm text-muted">@item.CreatedAt.ToPersianDate()</span>
                                         </td>
                                         <td>@item.NationalId</td>
                                         <td>@item.MobileNumber</td>
@@ -424,7 +312,7 @@
                         @formModel?.Step2Message
                     </span>
                     <div class="text-end mt-3">
-                        <button type="submit" class="btn btn-primary px-4 py-2">بررسی</button>
+                        <button type="submit" id="btnVerify" class="btn btn-primary px-4 py-2">بررسی</button>
                     </div>
                 </form>
             </div>
@@ -518,8 +406,8 @@
         $(document).on('change', '.approval-radio', function () {
             var radio = $(this);
             var requestId = radio.data('request-id');
-            var value = radio.data('value'); // "true" یا "false"
-            var validateByExpert = (value === 'true');
+            var validateByExpert = radio.attr('id').startsWith('approve');
+
             var token = $('input[name="__RequestVerificationToken"]').val();
 
             fetch('/Cartable/UpdateValidationStatus', {
@@ -533,7 +421,7 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    toastr.success(data.message || (validateByExpert ? "تایید شد" : "رد شد"));
+                    toastr.success(data.message || "وضعیت با موفقیت به‌روز شد");
                 } else {
                     toastr.error(data.message || 'خطا در به‌روزرسانی.');
                     radio.prop('checked', false);
@@ -574,16 +462,41 @@
                 radio.prop('checked', true);
             });
         });
-                    // Form validation
-                    $('#needs-validation-form').on('submit', function(e) {
-                        if (!this.checkValidity()) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            $(this).addClass('was-validated');
-                            toastr.error('لطفاً فیلدهای مورد نیاز را درست پر کنید.');
-                        }
-                    });
+        
+        // Form validation
+        $('#needs-validation-form').on('submit', function(e) {
+            e.preventDefault(); 
+            const form = $(this);
+            const btn = $('#btnVerify');
 
+            if (!this.checkValidity()) {
+                e.stopPropagation();
+                form.addClass('was-validated');
+                toastr.error('لطفاً فیلدهای مورد نیاز را درست پر کنید.');
+                return;
+            }
+
+            btn.prop('disabled', true)
+               .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>در حال بررسی...');
+
+            $.ajax({
+                url: form.attr('action'),
+                type: form.attr('method'),
+                data: form.serialize(),
+                success: function(res) {
+                    toastr.success('درخواست با موفقیت ارسال شد');
+                        $('#scrollingmodal').modal('hide');    
+                        $('#cartableBody').load(window.location.href + ' #cartableBody > *');
+                },
+                error: function() {
+                    toastr.error('خطا در ارسال درخواست ');
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('بررسی');
+                }
+            });
         });
+
+    });
     </script>
 }

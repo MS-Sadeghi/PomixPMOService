@@ -271,6 +271,9 @@ namespace PomixPMOService.UI.Controllers
         #endregion
 
     }
+
+    #region ViewModels
+
     public class ChangePasswordViewModel
     {
         public string CurrentPassword { get; set; }
@@ -311,4 +314,6 @@ namespace PomixPMOService.UI.Controllers
         public string AccessToken { get; set; }
         public string RefreshToken { get; set; }
     }
+
+    #endregion
 }

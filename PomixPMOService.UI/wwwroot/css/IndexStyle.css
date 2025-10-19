@@ -1,0 +1,107 @@
+﻿
+.iColor {
+    color: #6c757d !important;
+}
+
+.modern-input .form-control {
+    border: none;
+    border-bottom: 2px solid #ccc;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+    .modern-input .form-control:focus {
+        border-bottom: 2px solid #6f42c1;
+        box-shadow: none;
+    }
+
+.modern-input label {
+    color: #777;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.modern-input .form-control:focus + label i {
+    color: #6f42c1;
+}
+
+.modal-content {
+    backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 1.25rem;
+    padding: 1.5rem 1.75rem;
+}
+
+.custom-modal {
+    width: 670px;
+    border-radius: 2px;
+}
+
+.btn-close {
+    background: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    position: relative;
+    opacity: 1;
+}
+
+    .btn-close::before,
+    .btn-close::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 1.2rem;
+        height: 2px;
+        background-color: #7c3aed;
+        transform-origin: center;
+        transition: all 0.2s ease;
+    }
+
+    .btn-close::before {
+        transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .btn-close::after {
+        transform: translate(-50%, -50%) rotate(-45deg);
+    }
+
+    .btn-close:hover::before,
+    .btn-close:hover::after {
+        background-color: #9f67fa;
+    }
+
+.radiobtns .btn-outline-success,
+.radiobtns .btn-outline-danger {
+    background-color: transparent;
+    border-color: #dcdcdc;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.radiobtns .btn-check:checked + .btn-outline-success {
+    background-color: #d7f8e4;
+    border-color: #a8e6cf;
+    color: #2b7a4b;
+}
+
+.radiobtns .btn-check:checked + .btn-outline-danger {
+    background-color: #ffe0e9;
+    border-color: #ffb3c6;
+    color: #a33d5b;
+}
+
+.radiobtns .btn-outline-success:hover:not(.active),
+.radiobtns .btn-outline-danger:hover:not(.active) {
+    border-color: #bfbfbf;
+    background-color: #f8f9fa;
+}
+
+.radiobtns label.btn {
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    font-weight: 500;
+}

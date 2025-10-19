@@ -73,7 +73,7 @@
 
 <div class="login-container">
     <div class="row w-100" style="max-width: 400px;">
-		<div class="login-right">
+        <div class="login-right">
             <h3 class="text-center pb-3">سامانه استعلام سند</h3>
             <form id="loginForm" asp-action="LoginPage" method="post" class="login100-form validate-form" autocomplete="off">
                 <!-- Username Input -->
@@ -99,7 +99,7 @@
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                         <i class="zmdi zmdi-key text-muted" aria-hidden="true"></i>
                     </a>
-                    <select  class="input100 border-start-0 form-control ms-0" id="methodSelect" required>
+                    <select class="input100 border-start-0 form-control ms-0" id="methodSelect" required>
                         <option value="security" selected>کد امنیتی</option>
                         <option value="sms">پیامک</option>
                     </select>
@@ -151,6 +151,18 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        @if (TempData["SuccessLogoutMessage"] != null)
+        {
+            @:toastr.options = {
+            @:"closeButton": true,
+            @:"progressBar": true,
+            @:"positionClass": "toast-top-center", // Optional: Change position for login page
+            @:"timeOut": "3000" // Shorter duration for success message
+            @:};
+            @:toastr.success('@TempData["SuccessLogoutMessage"]');
+        }
+    </script>
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             var select = document.getElementById('methodSelect');
             var securitySection = document.getElementById('securitySection');
@@ -168,6 +180,8 @@
 
             select.addEventListener('change', toggleSections);
             toggleSections();
+
+
         });
 
         const jwtToken = '@ViewBag.JwtToken';

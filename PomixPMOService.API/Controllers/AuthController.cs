@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PomixPMOService.API.Models.ViewModels;
 using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models;
 using ServicePomixPMO.API.Services;
-using PomixPMOService.API.Models.ViewModels;
-using System.Threading.Tasks;
 
 namespace PomixPMOService.API.Controllers
 {
@@ -226,6 +225,30 @@ namespace PomixPMOService.API.Controllers
             var user = await _context.Users.FindAsync(model.UserId);
             await LogAction(model.UserId, "RevokeAccess_Success", user?.Username ?? "Unknown", $"Permission {model.Permission} revoked");
             return Ok($"دسترسی {model.Permission} از کاربر {user?.Username ?? "Unknown"} حذف شد.");
+        }
+
+        [HttpPost("refresh/revoke")]
+        [Authorize]
+        public async Task<IActionResult> RevokeRefreshToken([FromBody] RefreshRequestViewModel model)
+        {
+            if (string.IsNullOrEmpty(model.RefreshToken))
+                return BadRequest("Refresh Token ارائه نشده است.");
+
+            var result = await _tokenService.RevokeRefreshTokenAsync(model.RefreshToken);
+            return Ok(result);
+        }
+
+        [HttpPost("revoke-all")]
+        [Authorize]
+        public async Task<IActionResult> RevokeAllRefreshTokens([FromBody] RevokeAllRequestViewModel model)
+        {
+            var result = await _tokenService.RevokeAllRefreshTokensAsync(model.UserId);
+            return Ok(result);
+        }
+
+        public class RevokeAllRequestViewModel
+        {
+            public long UserId { get; set; }
         }
 
         [HttpPost("ChangePassword")]

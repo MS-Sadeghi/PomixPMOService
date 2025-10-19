@@ -1,9 +1,11 @@
 ﻿using DNTCaptcha.Core;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using PomixPMOService.UI.ViewModels;
 using System.Net.Http.Headers;
-using System.Net.Http;
-using Newtonsoft.Json;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -54,30 +56,69 @@ namespace PomixPMOService.UI.Controllers
 
                     if (loginResponse?.Tokens?.AccessToken != null)
                     {
+                        // ذخیره توکن‌های Access و Refresh در Session
                         HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
+                        HttpContext.Session.SetString("RefreshToken", loginResponse.Tokens.RefreshToken ?? "");
                         return RedirectToAction("Index", "Cartable");
                     }
                     else
                     {
                         ViewBag.ErrorMessage = "خطا: توکن دریافت نشد.";
-                        return View(model); 
+                        return View(model);
                     }
                 }
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
                     ViewBag.ErrorMessage = "خطا در ورود: " + error;
-                    return View(model); 
+                    return View(model);
                 }
             }
             catch (Exception ex)
             {
                 ViewBag.ErrorMessage = "خطا در ارتباط با سرور: " + ex.Message;
-                return View(model); 
+                return View(model);
             }
         }
 
         #endregion
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                var token = HttpContext.Session.GetString("JwtToken");
+                var refreshToken = HttpContext.Session.GetString("RefreshToken");
+
+                HttpContext.Session.Remove("JwtToken");
+                HttpContext.Session.Remove("RefreshToken");
+                HttpContext.Session.Clear();
+
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(refreshToken))
+                {
+                    _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    var response = await _client.PostAsJsonAsync("auth/refresh/revoke", new { RefreshToken = refreshToken });
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"Failed to revoke refresh token: {await response.Content.ReadAsStringAsync()}");
+                    }
+                }
+
+                TempData["SuccessLogoutMessage"] = "شما با موفقیت از سیستم خارج شدید.";
+                return RedirectToAction("LoginPage");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Logout error: {ex.Message}");
+                ViewBag.ErrorMessage = "خطا در خروج از سیستم: " + ex.Message;
+                return RedirectToAction("LoginPage");
+            }
+        }
 
         #region Users
         public async Task<IActionResult> Users()
@@ -112,20 +153,38 @@ namespace PomixPMOService.UI.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetUserProfile()
         {
-            var token = HttpContext.Session.GetString("JwtToken");
-            if (string.IsNullOrEmpty(token))
-                return Json(new { success = false, message = "توکن یافت نشد." });
+            try
+            {
+                var token = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "توکن یافت نشد." });
+                }
 
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await _client.GetAsync("Auth/GetCurrentUser");
 
-            var response = await _client.GetAsync("Auth/GetCurrentUser");
-            if (!response.IsSuccessStatusCode)
-                return Json(new { success = false, message = "دریافت اطلاعات کاربر ناموفق بود." });
+                if (response.IsSuccessStatusCode)
+                {
+                    var userInfo = await response.Content.ReadFromJsonAsync<UserProfileViewModel>();
+                    return Json(new
+                    {
+                        success = true,
+                        name = userInfo.Name,
+                        lastName = userInfo.LastName,
+                        role = userInfo.Role
+                    });
+                }
 
-            var userInfo = await response.Content.ReadFromJsonAsync<object>();
-            return Json(userInfo);
+                return Json(new { success = false, message = "خطا در دریافت اطلاعات کاربر" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         public async Task<IActionResult> EditProfile()

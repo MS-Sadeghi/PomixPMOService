@@ -1,5 +1,4 @@
 ﻿using DNTCaptcha.Core;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using PomixPMOService.API.Controllers;
@@ -13,7 +12,6 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace PomixPMOService.UI.Controllers
 {
-    [Authorize]
     [NoCacheFilter]
     public class CartableController : Controller
     {

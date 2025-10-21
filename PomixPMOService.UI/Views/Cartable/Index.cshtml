@@ -20,7 +20,7 @@
             <form asp-action="Index" method="get" class="w-100 d-flex align-items-center">
                 <input type="text" class="form-control" name="search" value="@currentSearch" placeholder="جستجو..." />
 
-                <select name="filterStatus" class="form-select mx-2" style="max-width: 200px;">
+                <select name="filterStatus" class="form-select mx-2" style="max-width:200px; font-size:13px;">
                     <option value="" selected="@string.IsNullOrEmpty(currentFilter)">همه درخواست‌ها</option>
                     <option value="approved" selected="@(currentFilter == "approved")">تایید شده</option>
                     <option value="rejected" selected="@(currentFilter == "rejected")">رد شده</option>

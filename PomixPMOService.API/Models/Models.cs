@@ -19,6 +19,8 @@ namespace ServicePomixPMO.API.Models
 
         // navigation property
         public Role Role { get; set; } = null!;
+        public string? MobileNumber { get; set; }
+
 
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLogin { get; set; }

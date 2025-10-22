@@ -7,7 +7,7 @@ namespace PomixPMOService.UI.ViewModels
     {
 
         public long UserId { get; set; }
-        public string NationalCode { get; set; } = string.Empty;
+        public string NationalId { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public string? PasswordSalt { get; set; }       // اختیاری، می‌تونه null باشه
@@ -18,6 +18,7 @@ namespace PomixPMOService.UI.ViewModels
         public DateTime? LastLogin { get; set; }       // می‌تونه null باشه
         public bool IsActive { get; set; }
         public string? MobileNumber { get; set; }      // اختیاری، می‌تونه null باشه
+        public int RoleId { get; internal set; }
     }
 
     // در فایل ViewModels
@@ -45,6 +46,8 @@ namespace PomixPMOService.UI.ViewModels
 
         [Required(ErrorMessage = "نقش کاربر الزامی است")]
         public int RoleId { get; set; }
+
+        public string? MobileNumber { get; set; }
     }
 
     public class LoginViewModel

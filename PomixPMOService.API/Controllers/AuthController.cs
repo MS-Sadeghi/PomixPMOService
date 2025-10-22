@@ -104,6 +104,7 @@ namespace PomixPMOService.API.Controllers
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(viewModel.Password),
                 Name = viewModel.Name,
                 LastName = viewModel.LastName,
+                MobileNumber = viewModel.MobileNumber,
                 RoleId = viewModel.RoleId,
                 CreatedAt = DateTime.Now,
                 IsActive = true
@@ -134,12 +135,12 @@ namespace PomixPMOService.API.Controllers
                 Role = user.Role?.RoleName ?? "بدون نقش", // RoleName مستقیم از DB
                 CreatedAt = user.CreatedAt,
                 LastLogin = user.LastLogin,
-                IsActive = user.IsActive
+                IsActive = user.IsActive,
+                MobileNumber = user.MobileNumber
             };
 
             return CreatedAtAction(nameof(GetUsers), new { id = user.UserId }, result);
         }
-
 
 
         [HttpGet("GetUsers")]
@@ -147,6 +148,7 @@ namespace PomixPMOService.API.Controllers
         public async Task<ActionResult<IEnumerable<UserViewModel>>> GetUsers()
         {
             var users = await _context.Users
+                .Include(u => u.Role) // ✅ برای جلوگیری از NullReference در Role
                 .Select(u => new UserViewModel
                 {
                     UserId = u.UserId,
@@ -154,14 +156,97 @@ namespace PomixPMOService.API.Controllers
                     Username = u.Username,
                     Name = u.Name,
                     LastName = u.LastName,
-                    Role = u.Role.RoleName,
+                    Role = u.Role != null ? u.Role.RoleName : "بدون نقش",
                     CreatedAt = u.CreatedAt,
-                    LastLogin = u.LastLogin
+                    LastLogin = u.LastLogin,
+                    IsActive = u.IsActive,          // ✅ اضافه شد تا وضعیت فعال/غیرفعال هم برگرده
+                    MobileNumber = u.MobileNumber   // ✅ اضافه شد برای نمایش شماره موبایل
                 })
+                .OrderByDescending(u => u.CreatedAt) // 🔹 اختیاری: کاربران جدیدتر اول بیایند
                 .ToListAsync();
 
             return Ok(users);
         }
+
+        [HttpPut("UpdateUser/{id}")]
+        public async Task<IActionResult> UpdateUser(long id, [FromBody] CreateUserViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound("کاربر یافت نشد.");
+
+            user.Name = model.Name;
+            user.LastName = model.LastName;
+            user.Username = model.Username;
+            user.NationalId = model.NationalId;
+            user.MobileNumber = model.MobileNumber;
+            user.RoleId = model.RoleId;
+
+            // اگر رمز جدید فرستاده شده بود، بروزرسانی کن
+            if (!string.IsNullOrEmpty(model.Password))
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
+
+            await _context.SaveChangesAsync();
+            await LogAction(user.UserId, "UpdateUser_Success", user.Username, "User updated successfully");
+
+            return Ok("اطلاعات کاربر با موفقیت بروزرسانی شد.");
+        }
+
+        // 🔴 Soft Delete (غیرفعال کردن کاربر)
+        [HttpDelete("SoftDeleteUser/{id}")]
+        public async Task<IActionResult> SoftDeleteUser(long id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound("کاربر یافت نشد.");
+
+            if (!user.IsActive)
+                return BadRequest("کاربر از قبل غیرفعال است.");
+
+            user.IsActive = false;
+            await _context.SaveChangesAsync();
+            await LogAction(user.UserId, "SoftDeleteUser", user.Username, "User deactivated");
+
+            return Ok("کاربر با موفقیت غیرفعال شد.");
+        }
+
+        // 🟢 فعال‌سازی مجدد کاربر
+        [HttpPost("RestoreUser/{id}")]
+        public async Task<IActionResult> RestoreUser(long id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound("کاربر یافت نشد.");
+
+            if (user.IsActive)
+                return BadRequest("کاربر از قبل فعال است.");
+
+            user.IsActive = true;
+            await _context.SaveChangesAsync();
+            await LogAction(user.UserId, "RestoreUser", user.Username, "User restored");
+
+            return Ok("کاربر با موفقیت فعال شد.");
+        }
+
+        // ⚫ حذف واقعی از دیتابیس (اختیاری)
+        [HttpDelete("HardDeleteUser/{id}")]
+        public async Task<IActionResult> HardDeleteUser(long id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound("کاربر یافت نشد.");
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            await LogAction(user.UserId, "HardDeleteUser", user.Username, "User permanently deleted");
+
+            return Ok("کاربر به صورت دائم حذف شد.");
+        }
+
 
         [HttpPost("grant-access")]
         [Authorize(Policy = "CanManageAccess")]

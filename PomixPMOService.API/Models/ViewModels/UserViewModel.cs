@@ -34,6 +34,9 @@ namespace PomixPMOService.API.Models.ViewModels
         [StringLength(255)]
         public string? Password { get; set; }
 
+        public string? MobileNumber { get; set; }
+
+
         [Required]
         [StringLength(50)]
         public string? Username { get; set; }

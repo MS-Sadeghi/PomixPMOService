@@ -3,15 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
-using ServicePomixPMO.API.Data;
 using Polly;
 using Polly.Retry;
-using PomixPMOService.API.Models.ViewModels;
-using ServicePomixPMO;
+using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models;
-using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Request = ServicePomixPMO.API.Models.Request;
 
@@ -19,7 +16,7 @@ namespace PomixPMOService.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]               
+    [Authorize]
     public class ServiceController : ControllerBase
     {
         private readonly HttpClient _httpClient;
@@ -65,14 +62,12 @@ namespace PomixPMOService.API.Controllers
         [Authorize(Policy = "CanAccessShahkar")]
         public async Task<IActionResult> ProcessCombinedRequest([FromBody] CombinedRequestViewModel model)
         {
-
-
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Invalid model state: {Errors}", string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
                 return new JsonResult(new { success = false, message = "داده‌های ورودی نامعتبر است." });
             }
-                
+
             var userIdClaim = User.FindFirst("UserId")?.Value;
             if (!long.TryParse(userIdClaim, out long userId))
             {
@@ -194,7 +189,7 @@ namespace PomixPMOService.API.Controllers
                 _logger.LogInformation("Returning cached result for {CacheKey}", cacheKey);
                 return cachedResult;
             }
-             
+
             try
             {
                 var requestContent = new
@@ -388,7 +383,7 @@ namespace PomixPMOService.API.Controllers
                             resultElement.TryGetProperty("data", out var dataElement))
                         {
                             isExist = dataElement.TryGetProperty("ExistDoc", out var existDocElement) && existDocElement.GetBoolean();
-                            succseed = dataElement.TryGetProperty("Succseed", out var succseedElement) && succseedElement.GetBoolean();
+                            succseed = dataElement.TryGetProperty("succseed", out var succseedElement) && succseedElement.GetBoolean();
 
                             if (dataElement.TryGetProperty("lstFindPersonInQuery", out var personsElement) && personsElement.ValueKind == JsonValueKind.Array)
                             {

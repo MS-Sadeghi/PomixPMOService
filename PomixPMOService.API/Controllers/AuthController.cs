@@ -12,10 +12,10 @@ namespace PomixPMOService.API.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly PomixServiceContext _context;
+        private readonly IdentityManagementSystemContext _context;
         private readonly TokenService _tokenService;
 
-        public AuthController(PomixServiceContext context, TokenService tokenService)
+        public AuthController(IdentityManagementSystemContext context, TokenService tokenService)
         {
             _context = context;
             _tokenService = tokenService;

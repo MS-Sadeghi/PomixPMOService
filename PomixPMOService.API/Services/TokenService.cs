@@ -10,10 +10,10 @@ namespace ServicePomixPMO.API.Services
 {
     public class TokenService : ITokenService
     {
-        private readonly PomixServiceContext _context;
+        private readonly IdentityManagementSystemContext _context;
         private readonly IConfiguration _configuration;
 
-        public TokenService(PomixServiceContext context, IConfiguration configuration)
+        public TokenService(IdentityManagementSystemContext context, IConfiguration configuration)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));

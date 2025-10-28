@@ -3,9 +3,9 @@ using ServicePomixPMO.API.Models;
 
 namespace ServicePomixPMO.API.Data
 {
-    public class PomixServiceContext : DbContext
+    public class IdentityManagementSystemContext : DbContext
     {
-        public PomixServiceContext(DbContextOptions<PomixServiceContext> options) : base(options)
+        public IdentityManagementSystemContext(DbContextOptions<IdentityManagementSystemContext> options) : base(options)
         {
         }
 

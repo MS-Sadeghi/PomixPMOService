@@ -319,6 +319,46 @@
         </div>
     </div>
 </div>
+<!-- ==================== فوتر رسمی و حرفه‌ای ==================== -->
+<div class="container-fluid mt-5 pt-4 border-top bg-light">
+    <footer class="text-center py-4">
+        <!-- خط بالا -->
+        <div class="border-bottom border-secondary-subtle mb-3"></div>
+
+        <!-- لوگو + متن -->
+        <div class="d-flex flex-column align-items-center">
+            <!-- لوگوی کوچک (اختیاری) - می‌توانید تصویر واقعی را جایگزین کنید -->
+            <div class="mb-3">
+                <img src="~/images/logo1.png"
+                     alt="لوگوی اداره کل بنادر و دریانوردی هرمزگان"
+                     class="img-fluid"
+                     style="height: 50px; opacity: 0.85;"
+                     onerror="this.style.display='none'">
+            </div>
+
+            <!-- متن اصلی -->
+            <p class="mb-2 text-muted small lh-lg">
+                © <span class="text-dark fw-bold">۱۴۰۴</span> —
+                تمامی حقوق برای
+                <strong class="text-primary">اداره کل بنادر و دریانوردی استان هرمزگان</strong>
+                محفوظ است.
+            </p>
+
+            <p class="mb-0 text-secondary small">
+                توسعه‌یافته توسط
+                <strong class="text-success">تیم توسعه معاونت فناوری اطلاعات و ارتباطات</strong>
+            </p>
+        </div>
+
+        <!-- خط پایین -->
+        <div class="border-top border-secondary-subtle mt-3 pt-2">
+            <small class="text-muted">
+                نسخه ۱.۰ | سامانه احراز هویت اسناد
+            </small>
+        </div>
+    </footer>
+</div>
+<!-- =================================================== -->
 @section Scripts {
     <script>
         $(document).ready(function() {
@@ -331,40 +371,48 @@
                         $('#needs-validation-form')[0].reset();
                         $('.form-text').text('');
                     });
+        // View document text
+        $(document).on('click', '.btn-view-doc', function () {
+            var requestId = $(this).data('request-id');
+            $('#documentModalLabel').text('متن سند درخواست ' + requestId);
+            $('#documentModalBody').html('<div class="d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
+            $('#documentChecked').prop('checked', false);
+            $('#confirmDocument').data('request-id', requestId);
+            $('#documentModal').modal('show');
 
-                    // View document text
-                    $('.btn-view-doc').click(function() {
-                        var requestId = $(this).data('request-id');
-                        $('#documentModalLabel').text('متن سند درخواست ' + requestId);
-                        $('#documentModalBody').html('<div class="d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
+            $.ajax({
+                url: '/Cartable/GetDocumentText',
+                type: 'GET',
+                data: { requestId: requestId },
+                dataType: 'json',
+                success: function (res) {
+                    if (res && res.success && res.documentText && res.documentText.trim() !== "") {
+                        var text = res.documentText;
+                        var safe = $('<div/>').text(text).html();
+
+                        // ✨ فقط قسمت "مهلت اعتبار..." را برجسته و رنگی کن
+                        safe = safe.replace(
+                            /(مهلت اعتبار این وکالتنامه تا تاریخ\s*\d{4}\/\d{2}\/\d{2}\s*می باشد)/g,
+                            '<strong style="color:#d9534f; font-weight:bold;">$1</strong>'
+                        );
+
+                        $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.6;">' + safe + '</pre>');
+                        $('#documentChecked').prop('checked', res.isRead === true);
+                    } else {
+                        $('#documentModalBody').html('<p class="text-danger fw-bold text-center">رمز تصدیق یا شماره سند درست وارد نشده است.</p>');
                         $('#documentChecked').prop('checked', false);
-                        $('#confirmDocument').data('request-id', requestId);
-                        $('#documentModal').modal('show');
+                        toastr.error(res.message || 'رمز تصدیق یا شماره سند درست وارد نشده است.');
+                    }
+                },
+                error: function (xhr) {
+                    var errorMessage = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
+                    $('#documentModalBody').html('<p class="text-danger text-center">' + errorMessage + '</p>');
+                    $('#documentChecked').prop('checked', false);
+                    toastr.error(errorMessage);
+                }
+            });
+        });
 
-                        $.ajax({
-                            url: '/Cartable/GetDocumentText',
-                            type: 'GET',
-                            data: { requestId: requestId },
-                            dataType: 'json',
-                            success: function(res) {
-                                if (res && res.success && res.documentText && res.documentText.trim() !== "") {
-                                    var safe = $('<div/>').text(res.documentText).html();
-                                    $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.6;">' + safe + '</pre>');
-                                    $('#documentChecked').prop('checked', res.isRead === true);
-                                } else {
-                                    $('#documentModalBody').html('<p class="text-danger fw-bold text-center">رمز تصدیق یا شماره سند درست وارد نشده است.</p>');
-                                    $('#documentChecked').prop('checked', false);
-                                    toastr.error(res.message || 'رمز تصدیق یا شماره سند درست وارد نشده است.');
-                                }
-                            },
-                            error: function(xhr) {
-                                var errorMessage = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
-                                $('#documentModalBody').html('<p class="text-danger text-center">' + errorMessage + '</p>');
-                                $('#documentChecked').prop('checked', false);
-                                toastr.error(errorMessage);
-                            }
-                        });
-                    });
 
                     // Confirm document in modal
                     $('#confirmDocument').click(function() {

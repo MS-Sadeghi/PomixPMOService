@@ -9,7 +9,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // --- DbContext ---
-builder.Services.AddDbContext<PomixServiceContext>(options =>
+builder.Services.AddDbContext<IdentityManagementSystemContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // --- Services ---

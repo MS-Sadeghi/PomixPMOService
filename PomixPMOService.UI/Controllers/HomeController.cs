@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using PomixPMOService.UI.ViewModels;
 using System.Net.Http.Headers;
+using System.Reflection.Metadata.Ecma335;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -465,13 +466,37 @@ namespace PomixPMOService.UI.Controllers
             var errorObj = JsonConvert.DeserializeObject<dynamic>(error);
             return Json(new { success = false, message = errorObj?.message ?? $"خطا در تغییر رمز عبور: {error}" });
         }
+
+
+        public async Task<IActionResult> EditProfile()
+        {
+            var token = HttpContext.Session.GetString("JwtToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
+                return RedirectToAction("LoginPage");
+            }
+
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _client.GetAsync("Auth/GetCurrentUser");
+            if (!response.IsSuccessStatusCode)
+            {
+                ViewBag.ErrorMessage = "دریافت اطلاعات کاربر ناموفق بود.";
+                return View(new UserInfo());
+            }
+
+            var userInfo = await response.Content.ReadFromJsonAsync<UserInfo>();
+            return View(userInfo);
+        }
+
         #endregion
     }
 
     #region ViewModels
     public class ChangePasswordViewModel
     {
-        public string CurrentPassword { get; set; }
+        public string? CurrentPassword { get; set; }
         public string NewPassword { get; set; }
         public string ConfirmNewPassword { get; set; }
     }

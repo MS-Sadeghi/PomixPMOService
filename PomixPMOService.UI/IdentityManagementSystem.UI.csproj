@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PomixPMOService.API\PomixPMOService.API.csproj" />
+    <ProjectReference Include="..\PomixPMOService.API\IdentityManagementSystem.API.csproj" />
   </ItemGroup>
 
 </Project>

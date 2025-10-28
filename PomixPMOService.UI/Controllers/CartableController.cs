@@ -297,46 +297,50 @@ namespace PomixPMOService.UI.Controllers
         {
             try
             {
-                _logger.LogInformation("Received UpdateValidationStatus request for RequestId: {RequestId}, ValidateByExpert: {ValidateByExpert}", model.RequestId, model.ValidateByExpert);
+                _logger.LogInformation("Received UpdateValidationStatus for RequestId: {RequestId}", model.RequestId);
 
                 var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
                 if (string.IsNullOrEmpty(token))
-                {
-                    _logger.LogWarning("JWT token not found for RequestId: {RequestId}", model.RequestId);
                     return Json(new { success = false, message = "توکن یافت نشد. لطفاً دوباره وارد سیستم شوید." });
-                }
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                _logger.LogInformation("Sending POST to Request/UpdateValidationStatus");
-                var content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json");
-                var response = await _client.PostAsync("Request/UpdateValidationStatus", content);
+                var content = new StringContent(
+                    JsonSerializer.Serialize(model),
+                    Encoding.UTF8,
+                    "application/json"
+                );
 
+                // حتماً api/ داشته باشد
+                var response = await _client.PostAsync($"Request/UpdateValidationStatus", content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                // این خط مهم است: مستقیماً JSON API را برگردان
                 if (response.IsSuccessStatusCode)
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogInformation("API call successful for RequestId: {RequestId}, Response: {Response}", model.RequestId, responseContent);
-                    return Json(new
-                    {
-                        success = true,
-                        message = model.ValidateByExpert ? "درخواست با موفقیت تأیید شد ✅" : "درخواست با موفقیت رد شد ❌"
-                    });
+                    return Content(responseContent, "application/json");
                 }
                 else
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("API call failed for RequestId: {RequestId}, StatusCode: {StatusCode}, Error: {Error}", model.RequestId, response.StatusCode, error);
-                    return Json(new
+                    // فقط پیام API را برگردان (بدون بسته‌بندی دوباره)
+                    try
                     {
-                        success = false,
-                        message = string.IsNullOrEmpty(error) ? "خطا در به‌روزرسانی وضعیت درخواست: پاسخ سرور خالی است." : $"خطا در به‌روزرسانی وضعیت درخواست: {error}"
-                    });
+                        var errorObj = JsonSerializer.Deserialize<JsonElement>(responseContent);
+                        if (errorObj.TryGetProperty("message", out var msg))
+                        {
+                            return Json(new { success = false, message = msg.GetString() });
+                        }
+                    }
+                    catch { }
+
+                    return Json(new { success = false, message = "خطا در ارتباط با سرور." });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating validation status for RequestId: {RequestId}", model.RequestId);
-                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
+                _logger.LogError(ex, "Error in UpdateValidationStatus");
+                return Json(new { success = false, message = "خطا در ارتباط با سرور." });
             }
         }
 

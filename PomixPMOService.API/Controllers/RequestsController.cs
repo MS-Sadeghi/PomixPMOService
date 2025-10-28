@@ -12,11 +12,11 @@ namespace ServicePomixPMO.API.Controllers
     [Authorize]
     public class RequestController : ControllerBase
     {
-        private readonly PomixServiceContext _context;
+        private readonly IdentityManagementSystemContext _context;
         private readonly ILogger<RequestController> _logger;
         private readonly HttpClient _client;
 
-        public RequestController(PomixServiceContext context, ILogger<RequestController> logger)
+        public RequestController(IdentityManagementSystemContext context, ILogger<RequestController> logger)
         {
             _context = context;
             _logger = logger;
@@ -190,6 +190,7 @@ namespace ServicePomixPMO.API.Controllers
             request.UpdatedAt = DateTime.UtcNow;
             request.UpdatedBy = User.Identity?.Name ?? userId.ToString();
 
+
             _context.Request.Update(request);
             await _context.SaveChangesAsync();
 
@@ -199,7 +200,9 @@ namespace ServicePomixPMO.API.Controllers
                 RequestId = request.RequestId,
                 UserId = userId,
                 Action = model.ValidateByExpert ? "ValidateRequest_Approved" : "ValidateRequest_Rejected",
-                Details = $"تأیید درخواست توسط کارشناس حراست: {model.Description}",
+                Details = model.ValidateByExpert
+             ? $"درخواست در تاریخ {DateTime.UtcNow:yyyy/MM/dd HH:mm:ss} توسط کارشناس تأیید شد. توضیحات: {model.Description}"
+             : $"درخواست در تاریخ {DateTime.UtcNow:yyyy/MM/dd HH:mm:ss} توسط کارشناس رد شد. توضیحات: {model.Description}",
                 ActionTime = DateTime.UtcNow
             });
             await _context.SaveChangesAsync();
@@ -221,25 +224,46 @@ namespace ServicePomixPMO.API.Controllers
 
             try
             {
-                _logger.LogInformation("Processing UpdateValidationStatus for RequestId: {RequestId}, ValidateByExpert: {ValidateByExpert}", requestId, validateByExpert);
-
                 var userIdClaim = User.FindFirst("UserId")?.Value;
                 if (!long.TryParse(userIdClaim, out long userId))
-                {
-                    _logger.LogWarning("Could not extract UserId from JWT token.");
-                    return new JsonResult(new { success = false, message = "کاربر شناسایی نشد." }) { StatusCode = 401 };
-                }
-
-                _logger.LogInformation("Received requestId: {RequestId}, validateByExpert: {ValidateByExpert}", model.RequestId, model.ValidateByExpert);
-
+                    return Unauthorized("کاربر شناسایی نشد.");
 
                 var request = await _context.Request.FindAsync(requestId);
                 if (request == null)
+                    return NotFound("درخواست یافت نشد.");
+
+                // چک کردن آخرین لاگ
+                var latestLog = await _context.VerifyDocLog
+                    .Where(v => v.RequestId == requestId)
+                    .OrderByDescending(v => v.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                // اگر سند وجود ندارد → فقط اجازه رد
+                if (latestLog == null)
                 {
-                    _logger.LogWarning("Request not found for RequestId: {RequestId}", requestId);
-                    return new JsonResult(new { success = false, message = "درخواست یافت نشد." }) { StatusCode = 404 };
+                    if (validateByExpert)
+                    {
+                        return new JsonResult(new
+                        {
+                            success = false,
+                            message = "سند وجود ندارد. نمی‌توانید درخواست را تأیید کنید."
+                        })
+                        { StatusCode = 400 };
+                    }
+                    // رد مجاز است
+                }
+                // اگر سند وجود دارد → باید خوانده شده باشد
+                else if (!(latestLog.IsRead ?? false))
+                {
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        message = "برای تأیید یا رد درخواست، ابتدا باید متن سند را بررسی و گزینه «متن سند بررسی شد» را تیک بزنید."
+                    })
+                    { StatusCode = 400 };
                 }
 
+                // به‌روزرسانی وضعیت
                 request.ValidateByExpert = validateByExpert;
                 request.UpdatedAt = DateTime.UtcNow;
                 request.UpdatedBy = User.Identity?.Name ?? userId.ToString();
@@ -247,25 +271,19 @@ namespace ServicePomixPMO.API.Controllers
                 _context.Request.Update(request);
                 await _context.SaveChangesAsync();
 
-                //_context.RequestLogs.Add(new RequestLog
-                //{
-                //    RequestId = request.RequestId,
-                //    UserId = userId,
-                //    Action = validateByExpert ? "ValidationStatus_Approved" : "ValidationStatus_Rejected",
-                //    Details = validateByExpert ? "درخواست توسط کارشناس تأیید شد." : "درخواست توسط کارشناس رد شد.",
-                //    ActionTime = DateTime.UtcNow
-                //});
-                //await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Successfully updated ValidateByExpert and logged action for RequestId: {RequestId}", requestId);
-                return new JsonResult(new { success = true, message = validateByExpert ? "درخواست با موفقیت تأیید شد." : "درخواست با موفقیت رد شد." });
+                return Ok(new
+                {
+                    success = true,
+                    message = validateByExpert ? "درخواست با موفقیت تأیید شد." : "درخواست با موفقیت رد شد."
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating validation status for RequestId: {RequestId}", requestId);
-                return new JsonResult(new { success = false, message = $"خطا در به‌روزرسانی وضعیت درخواست: {ex.Message}" }) { StatusCode = 500 };
+                _logger.LogError(ex, "Error in UpdateValidationStatus for RequestId: {RequestId}", requestId);
+                return StatusCode(500, new { success = false, message = "خطا در سرور." });
             }
         }
+
 
     }
 

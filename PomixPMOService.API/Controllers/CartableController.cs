@@ -12,9 +12,9 @@ namespace ServicePomixPMO.API.Controllers
     [Authorize]
     public class CartablesController : ControllerBase
     {
-        private readonly PomixServiceContext _context;
+        private readonly IdentityManagementSystemContext _context;
 
-        public CartablesController(PomixServiceContext context)
+        public CartablesController(IdentityManagementSystemContext context)
         {
             _context = context;
         }

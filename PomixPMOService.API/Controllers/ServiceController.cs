@@ -23,7 +23,7 @@ namespace PomixPMOService.API.Controllers
     public class ServiceController : ControllerBase
     {
         private readonly HttpClient _httpClient;
-        private readonly PomixServiceContext _context;
+        private readonly IdentityManagementSystemContext _context;
         private readonly ShahkarServiceOptions _options;
         private readonly IMemoryCache _cache;
         private readonly ILogger<ServiceController> _logger;
@@ -32,7 +32,7 @@ namespace PomixPMOService.API.Controllers
 
         public ServiceController(
             HttpClient httpClient,
-            PomixServiceContext context,
+            IdentityManagementSystemContext context,
             IOptions<ShahkarServiceOptions> options,
             IMemoryCache cache,
             ILogger<ServiceController> logger)

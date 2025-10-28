@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PomixPMOService.UI", "PomixPMOService.UI\PomixPMOService.UI.csproj", "{E43D4AEF-7246-44BC-85CE-34607ADAFCBA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityManagementSystem.UI", "PomixPMOService.UI\IdentityManagementSystem.UI.csproj", "{E43D4AEF-7246-44BC-85CE-34607ADAFCBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PomixPMOService.API", "PomixPMOService.API\PomixPMOService.API.csproj", "{C70F16F3-8796-42E7-9089-0E4D8F966E71}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityManagementSystem.API", "PomixPMOService.API\IdentityManagementSystem.API.csproj", "{C70F16F3-8796-42E7-9089-0E4D8F966E71}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

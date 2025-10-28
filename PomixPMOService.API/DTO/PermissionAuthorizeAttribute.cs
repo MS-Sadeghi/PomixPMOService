@@ -16,7 +16,7 @@ namespace ServicePomixPMO
 
         public void OnAuthorization(AuthorizationFilterContext context)
         {
-            var dbContext = context.HttpContext.RequestServices.GetService(typeof(PomixServiceContext)) as PomixServiceContext;
+            var dbContext = context.HttpContext.RequestServices.GetService(typeof(IdentityManagementSystemContext)) as IdentityManagementSystemContext;
 
             // گرفتن UserId از سشن یا کوکی (اینجا باید بعد از لاگین ست بشه)
             var userIdString = context.HttpContext.User?.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;

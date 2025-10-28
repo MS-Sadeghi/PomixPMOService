@@ -36,6 +36,7 @@ namespace ServicePomixPMO.API.Models
       
         [StringLength(10)]
         public string? NationalId { get; set; }     // کد ملی
+    
 
         [StringLength(20)]
         public string? MobileNumber { get; set; }   // شماره همراه
@@ -57,6 +58,7 @@ namespace ServicePomixPMO.API.Models
         public string? CreatedBy { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
+
 
         [StringLength(100)]
         public string? UpdatedBy { get; set; }
@@ -127,30 +129,58 @@ namespace ServicePomixPMO.API.Models
         public string? UserAgent { get; set; }
     }
 
-    public class RequestLog
+    [Table("RequestHistory", Schema = "sec")]
+    public class RequestHistory
     {
         [Key]
         public long LogId { get; set; }
 
-        [ForeignKey("Request")]
+        // ارتباط با جدول Request
+        [ForeignKey(nameof(Request))]
         public long RequestId { get; set; }
-
         public Request? Request { get; set; }
 
-        [ForeignKey("User")]
-        public long? UserId { get; set; }
+        // وضعیت درخواست
+        [ForeignKey(nameof(Status))]
+        public int StatusId { get; set; }
+        public RequestStatus Status { get; set; } = null!;
 
-        public User? User { get; set; }
+        // کارشناس انجام‌دهنده یا دریافت‌کننده
+        [ForeignKey(nameof(Expert))]
+        public long? ExpertId { get; set; }
+        public User? Expert { get; set; }
+
+        // توضیح عملکرد
+        [StringLength(250)]
+        public string? ActionDescription { get; set; }
+
+        // زمان ایجاد لاگ
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // 🟢 فیلدهای مربوط به وضعیت به‌روزرسانی
+        [StringLength(100)]
+        public string? UpdatedStatus { get; set; }
+
+        [StringLength(100)]
+        public string? UpdatedStatusBy { get; set; }
+
+        public DateTime? UpdatedStatusDate { get; set; }
+    }
+
+    [Table("RequestStatus", Schema = "Define")]
+    public class RequestStatus
+    {
+        [Key]
+        public int StatusId { get; set; }
 
         [Required]
         [StringLength(50)]
-        public string? Action { get; set; }
+        public string StatusName { get; set; } = string.Empty;
 
-        public DateTime ActionTime { get; set; } = DateTime.UtcNow;
+        public string? Description { get; set; }
 
-        public string? Details { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
-
     // مدل جدید UserAccess
     public class UserAccess
     {

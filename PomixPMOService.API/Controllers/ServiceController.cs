@@ -65,6 +65,8 @@ namespace PomixPMOService.API.Controllers
         [Authorize(Policy = "CanAccessShahkar")]
         public async Task<IActionResult> ProcessCombinedRequest([FromBody] CombinedRequestViewModel model)
         {
+
+
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Invalid model state: {Errors}", string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
@@ -92,6 +94,21 @@ namespace PomixPMOService.API.Controllers
 
             _context.Request.Add(request);
             await _context.SaveChangesAsync();
+            // === ثبت تاریخچه درخواست (RequestHistory) ===
+            var history = new RequestHistory
+            {
+                RequestId = request.RequestId,
+                StatusId = 1,                                          // 1 = در انتظار بررسی
+                ExpertId = userId,                                     // کاربر جاری
+                ActionDescription = "درخواست جدید از فرم کارتابل ایجاد شد.",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedStatus = "در انتظار بررسی",
+                UpdatedStatusBy = User.Identity?.Name ?? "سیستم",
+                UpdatedStatusDate = DateTime.UtcNow
+            };
+
+            _context.RequestHistory.Add(history);
+            await _context.SaveChangesAsync();   // حتماً دوباره Save کن!
 
             long expertId = userId;
 
@@ -129,6 +146,8 @@ namespace PomixPMOService.API.Controllers
                 request.UpdatedBy = User.Identity?.Name ?? "Unknown";
                 _context.Request.Update(request);
                 await _context.SaveChangesAsync();
+
+
 
                 var combinedResult = new
                 {

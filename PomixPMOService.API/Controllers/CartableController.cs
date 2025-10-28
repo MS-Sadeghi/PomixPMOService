@@ -54,7 +54,7 @@ namespace ServicePomixPMO.API.Controllers
                     Status = ci.Status,
                     Description = ci.Description,
                     ValidateByExpert = ci.ValidateByExpert
-                    
+
                 })
                 .ToListAsync();
 
@@ -77,37 +77,42 @@ namespace ServicePomixPMO.API.Controllers
             cartableItem.AssignedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            // اضافه کردن لاگ برای عملیات Assign
-            _context.RequestLogs.Add(new RequestLog
+            // 🟢 اضافه کردن رکورد تاریخچه برای عملیات Assign
+            _context.RequestHistory.Add(new RequestHistory
             {
                 RequestId = cartableItem.RequestId,
-                UserId = (int?)viewModel.AssignedTo,
-                Action = "Assign",
-                Details = $"آیتم کارتابل به کاربر {viewModel.AssignedTo} تخصیص یافت",
-                ActionTime = DateTime.UtcNow
+                ExpertId = viewModel.AssignedTo, // کاربری که وظیفه به او اختصاص داده شده
+                StatusId = 1,
+                ActionDescription = $"آیتم کارتابل به کاربر {viewModel.AssignedTo} تخصیص یافت",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedStatus = "Assigned",
+                UpdatedStatusBy = User?.Identity?.Name, // یا Id کاربر جاری
+                UpdatedStatusDate = DateTime.UtcNow
             });
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // متد کمکی برای ایجاد آیتم کارتابل برای Request جدید
-        [HttpPost("create-for-request")]
-        public async Task<CartableItem> CreateCartableItemForRequest(long requestId, long cartableId, long? assignedToUserId = null)
-        {
-            var cartableItem = new CartableItem
+            // متد کمکی برای ایجاد آیتم کارتابل برای Request جدید
+            [HttpPost("create-for-request")]
+            public async Task<CartableItem> CreateCartableItemForRequest(long requestId, long cartableId, long? assignedToUserId = null)
             {
-                RequestId = requestId,
-                CartableId = cartableId,
-                AssignedTo = assignedToUserId,
-                AssignedAt = (DateTime)(assignedToUserId.HasValue ? DateTime.UtcNow : (DateTime?)null),
-                Status = "New"
-            };
+                var cartableItem = new CartableItem
+                {
+                    RequestId = requestId,
+                    CartableId = cartableId,
+                    AssignedTo = assignedToUserId,
+                    AssignedAt = (DateTime)(assignedToUserId.HasValue ? DateTime.UtcNow : (DateTime?)null),
+                    Status = "New"
+                };
 
-            _context.CartableItems.Add(cartableItem);
-            await _context.SaveChangesAsync();
+                _context.CartableItems.Add(cartableItem);
+                await _context.SaveChangesAsync();
 
-            return cartableItem;
+                return cartableItem;
+            }
         }
-    }
-}
+    } 
+

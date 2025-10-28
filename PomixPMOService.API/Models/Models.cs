@@ -141,8 +141,8 @@ namespace ServicePomixPMO.API.Models
         public Request? Request { get; set; }
 
         // وضعیت درخواست
-        [ForeignKey(nameof(Status))]
-        public int StatusId { get; set; }
+   
+         public int StatusId { get; set; }
         public RequestStatus Status { get; set; } = null!;
 
         // کارشناس انجام‌دهنده یا دریافت‌کننده

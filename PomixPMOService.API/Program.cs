@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using PomixPMOService.API.Controllers;
 using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Services;
+using ServicePomixPMO.API.Services.Logging;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,6 +52,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CanValidateRequest", policy =>
         policy.RequireClaim("Permission", "CanValidateRequest"));
 });
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<UserActionLogger>();
 
 // --- Swagger ---
 builder.Services.AddSwaggerGen(c =>

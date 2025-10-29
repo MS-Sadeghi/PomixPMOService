@@ -28,7 +28,7 @@ namespace ServicePomixPMO.API.Data
             modelBuilder.Entity<RequestStatus>().ToTable("RequestStatus", "Define");
             modelBuilder.Entity<Cartable>().ToTable("Cartable", "WF");
             modelBuilder.Entity<CartableItem>().ToTable("CartableItems", "WF");
-            modelBuilder.Entity<UserLog>().ToTable("UserLog", "Log");
+            modelBuilder.Entity<UserLog>().ToTable("UserLogs", "Log");
             modelBuilder.Entity<RequestHistory>().ToTable("RequestHistory", "Sec");
             modelBuilder.Entity<UserAccess>().ToTable("UserAccess", "Sec");
             modelBuilder.Entity<ShahkarLog>().ToTable("ShahkarLog", "Log"); // اضافه شده

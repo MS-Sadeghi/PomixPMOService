@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PomixPMOService.API.Models.ViewModels;
 using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models;
+using ServicePomixPMO.API.Services.Logging;
 
 namespace ServicePomixPMO.API.Controllers
 {
@@ -14,12 +15,16 @@ namespace ServicePomixPMO.API.Controllers
     {
         private readonly IdentityManagementSystemContext _context;
         private readonly ILogger<RequestController> _logger;
-        private readonly HttpClient _client;
+        private readonly UserActionLogger _actionLogger;
 
-        public RequestController(IdentityManagementSystemContext context, ILogger<RequestController> logger)
+        public RequestController(
+            IdentityManagementSystemContext context,
+            ILogger<RequestController> logger,
+            UserActionLogger actionLogger)
         {
             _context = context;
             _logger = logger;
+            _actionLogger = actionLogger;
         }
 
         [HttpGet]
@@ -27,7 +32,6 @@ namespace ServicePomixPMO.API.Controllers
         {
             var query = _context.Request.AsQueryable();
 
-            // اعمال فیلتر جستجو
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(r => r.NationalId.Contains(search) ||
@@ -37,10 +41,8 @@ namespace ServicePomixPMO.API.Controllers
 
             query = query.OrderByDescending(r => r.CreatedAt);
 
-            // شمارش کل ردیف‌ها
             var totalCount = await query.CountAsync();
 
-            // اعمال صفحه‌بندی
             var items = await query
                 .Select(r => new RequestViewModel
                 {
@@ -63,48 +65,14 @@ namespace ServicePomixPMO.API.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            var response = new PaginatedResponse<RequestViewModel>
+            return Ok(new PaginatedResponse<RequestViewModel>
             {
                 Items = items,
                 TotalCount = totalCount,
                 CurrentPage = page,
                 PageSize = pageSize
-            };
-
-            return Ok(response);
+            });
         }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<RequestViewModel>> Get(long id)
-        {
-            var request = await _context.Request
-                .Where(r => r.RequestId == id)
-                .Select(r => new RequestViewModel
-                {
-                    RequestId = r.RequestId,
-                    RequestCode = r.RequestCode,
-                    NationalId = r.NationalId,
-                    MobileNumber = r.MobileNumber,
-                    DocumentNumber = r.DocumentNumber,
-                    VerificationCode = r.VerificationCode,
-                    IsMatch = r.IsMatch ?? false,
-                    IsExist = r.IsExist ?? false,
-                    IsNationalIdInResponse = r.IsNationalIdInResponse ?? false,
-                    IsNationalIdInLawyers = r.IsNationalIdInLawyers ?? false, // اضافه شده
-                    ValidateByExpert = r.ValidateByExpert, // اضافه شده
-                    Description = r.Description,           // اضافه شده
-                    CreatedAt = r.CreatedAt,
-                    CreatedBy = r.CreatedBy
-                })
-                .FirstOrDefaultAsync();
-
-            if (request == null)
-                return NotFound();
-
-            return request;
-        }
-
-
 
         [HttpPost("CreateNewRequest")]
         [Authorize]
@@ -112,15 +80,12 @@ namespace ServicePomixPMO.API.Controllers
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long userId))
-            {
                 return Unauthorized("کاربر شناسایی نشد.");
-            }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // ایجاد درخواست
                 var newRequest = new Request
                 {
                     NationalId = model.NationalId,
@@ -133,9 +98,8 @@ namespace ServicePomixPMO.API.Controllers
                 };
 
                 _context.Request.Add(newRequest);
-                await _context.SaveChangesAsync(); // RequestId تولید می‌شود
+                await _context.SaveChangesAsync();
 
-                // لاگ شاهکار
                 var shahkarLog = new ShahkarLog
                 {
                     NationalId = model.NationalId,
@@ -147,7 +111,6 @@ namespace ServicePomixPMO.API.Controllers
                 };
                 _context.ShahkarLog.Add(shahkarLog);
 
-                // لاگ سند
                 var verifyLog = new VerifyDocLog
                 {
                     DocumentNumber = model.DocumentNumber,
@@ -159,12 +122,11 @@ namespace ServicePomixPMO.API.Controllers
                 };
                 _context.VerifyDocLog.Add(verifyLog);
 
-                // لاگ اولیه وضعیت در RequestHistory
                 var initialHistory = new RequestHistory
                 {
                     RequestId = newRequest.RequestId,
-                    StatusId = 1, // Pending
-                    ExpertId = null, // هنوز کارشناس تعیین نشده
+                    StatusId = 1,
+                    ExpertId = null,
                     ActionDescription = "درخواست جدید ایجاد شد و در انتظار بررسی قرار گرفت.",
                     CreatedAt = DateTime.UtcNow,
                     UpdatedStatus = "در انتظار بررسی",
@@ -173,9 +135,10 @@ namespace ServicePomixPMO.API.Controllers
                 };
                 _context.RequestHistory.Add(initialHistory);
 
-                // ذخیره همه با هم
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                await _actionLogger.Info(userId, "Create_Request", $"RequestId={newRequest.RequestId}, Document={model.DocumentNumber}");
 
                 return Ok(new
                 {
@@ -186,11 +149,11 @@ namespace ServicePomixPMO.API.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "Error in CreateNewRequest - UserId: {UserId}, Model: {@Model}", userId, model);
+                _logger.LogError(ex, "Error in CreateNewRequest");
+                await _actionLogger.Error(userId, "Create_Request", $"Exception: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "خطا در ایجاد درخواست." });
             }
         }
-
 
         [HttpPost("ValidateRequest")]
         [Authorize(Policy = "CanValidateRequest")]
@@ -208,32 +171,15 @@ namespace ServicePomixPMO.API.Controllers
                 if (request == null)
                     return NotFound("درخواست یافت نشد.");
 
-                // چک وضعیت فعلی (اختیاری: جلوگیری از تغییر مجدد)
-                var currentStatus = await _context.RequestHistory
-                    .Where(h => h.RequestId == model.RequestId)
-                    .OrderByDescending(h => h.CreatedAt)
-                    .FirstOrDefaultAsync();
-
-                if (currentStatus != null &&
-                    ((model.ValidateByExpert && currentStatus.StatusId == 2) ||
-                     (!model.ValidateByExpert && currentStatus.StatusId == 3)))
-                {
-                    return BadRequest("این درخواست قبلاً بررسی شده است.");
-                }
-
-                // تعیین StatusId
-                int newStatusId = model.ValidateByExpert ? 2 : 3; // 2=Approved, 3=Rejected
+                int newStatusId = model.ValidateByExpert ? 2 : 3;
                 string statusName = model.ValidateByExpert ? "تأیید شده" : "رد شده";
 
-                // به‌روزرسانی Request
                 request.ValidateByExpert = model.ValidateByExpert;
                 request.Description = model.Description;
                 request.UpdatedAt = DateTime.UtcNow;
                 request.UpdatedBy = User.Identity?.Name ?? userId.ToString();
-
                 _context.Request.Update(request);
 
-                // ثبت در تاریخچه
                 var history = new RequestHistory
                 {
                     RequestId = request.RequestId,
@@ -247,27 +193,27 @@ namespace ServicePomixPMO.API.Controllers
                     UpdatedStatusBy = User.Identity?.Name ?? userId.ToString(),
                     UpdatedStatusDate = DateTime.UtcNow
                 };
-
                 _context.RequestHistory.Add(history);
+
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                await _actionLogger.Info(userId, "Validate_Request", $"{statusName} by expert");
 
                 return Ok(new
                 {
                     RequestId = request.RequestId,
-                    Message = model.ValidateByExpert
-                        ? "درخواست با موفقیت تأیید شد."
-                        : "درخواست با موفقیت رد شد."
+                    Message = $"درخواست با موفقیت {statusName}."
                 });
             }
             catch (Exception ex)
-             {
+            {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "Error in ValidateRequest - RequestId: {RequestId}, UserId: {UserId}", model.RequestId, userId);
+                _logger.LogError(ex, "Error in ValidateRequest");
+                await _actionLogger.Error(userId, "Validate_Request", $"Exception: {ex.Message}");
                 return StatusCode(500, new { success = false, message = "خطا در سرور." });
             }
         }
-
 
         [HttpPost("UpdateValidationStatus")]
         [Authorize(Policy = "CanValidateRequest")]
@@ -286,8 +232,7 @@ namespace ServicePomixPMO.API.Controllers
                 if (request == null)
                     return NotFound(new { success = false, message = "درخواست یافت نشد." });
 
-                // 🔥 اصلاح این بخش - فقط برای تأیید چک کنیم
-                if (validateByExpert) // فقط وقتی می‌خواهد تأیید کند
+                if (validateByExpert)
                 {
                     var latestLog = await _context.VerifyDocLog
                         .Where(v => v.RequestId == requestId)
@@ -295,22 +240,20 @@ namespace ServicePomixPMO.API.Controllers
                         .FirstOrDefaultAsync();
 
                     if (latestLog == null)
-                        return BadRequest(new { success = false, message = "سند وجود ندارد. نمی‌توانید تأیید کنید." });
+                        return BadRequest(new { success = false, message = "❌ سند مربوط به این درخواست وجود ندارد. ابتدا باید سند را بررسی کنید." });
 
                     if (!(latestLog.IsRead ?? false))
-                        return BadRequest(new { success = false, message = "ابتدا سند را بررسی کنید." });
+                        return BadRequest(new { success = false, message = "❌ شما هنوز تیک 'سند مشاهده شد' را نزده‌اید. لطفاً ابتدا سند را بررسی کنید." });
                 }
 
                 int statusId = validateByExpert ? 2 : 3;
                 string statusName = validateByExpert ? "تأیید شده" : "رد شده";
 
-                // به‌روزرسانی Request
                 request.ValidateByExpert = validateByExpert;
                 request.UpdatedAt = DateTime.UtcNow;
                 request.UpdatedBy = User.Identity?.Name ?? userId.ToString();
                 _context.Request.Update(request);
 
-                // ثبت در RequestHistory
                 var history = new RequestHistory
                 {
                     RequestId = requestId,
@@ -326,31 +269,21 @@ namespace ServicePomixPMO.API.Controllers
 
                 await _context.SaveChangesAsync();
 
+                await _actionLogger.Info(userId, "UpdateValidationStatus", $"{statusName} by expert");
+
                 return Ok(new
                 {
                     success = true,
-                    message = validateByExpert ? "درخواست با موفقیت تأیید شد." : "درخواست با موفقیت رد شد."
+                    message = $"درخواست با موفقیت {statusName}."
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in UpdateValidationStatus for RequestId: {RequestId}", requestId);
-                return StatusCode(500, new { success = false, message = "خطا در سرور." });
+                _logger.LogError(ex, "Error in UpdateValidationStatus");
+                await _actionLogger.Error(0, "UpdateValidationStatus", $"Exception: {ex.Message}");
+                return StatusCode(500, new { success = false, message = "⚠️ خطا در سرور." });
             }
         }
-
-
-        // متد کمکی برای گرفتن آخرین وضعیت
-        private async Task<RequestHistory?> GetCurrentStatusAsync(long requestId)
-        {
-            return await _context.RequestHistory
-                .Include(h => h.Status) // برای دسترسی به StatusName
-                .Where(h => h.RequestId == requestId)
-                .OrderByDescending(h => h.CreatedAt) // ← ActionTime → CreatedAt
-                .FirstOrDefaultAsync();
-        }
-
-
     }
 
     public class NewRequestViewModel
@@ -360,12 +293,10 @@ namespace ServicePomixPMO.API.Controllers
         public string DocumentNumber { get; set; } = string.Empty;
         public string VerificationCode { get; set; } = string.Empty;
     }
+
     public class UpdateValidationStatusViewModel
     {
         public long RequestId { get; set; }
         public bool ValidateByExpert { get; set; }
     }
-
-
 }
-

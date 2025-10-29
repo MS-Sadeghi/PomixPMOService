@@ -284,7 +284,6 @@ namespace PomixPMOService.UI.Controllers
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                // استفاده از مدل صحیح برای API
                 var apiModel = new
                 {
                     RequestId = model.RequestId,
@@ -296,8 +295,7 @@ namespace PomixPMOService.UI.Controllers
 
                 _logger.LogInformation("Sending request to API: {Json}", json);
 
-                // فراخوانی API با آدرس صحیح
-                var response = await _client.PostAsync($"Request/UpdateValidationStatus", content);
+                var response = await _client.PostAsync("Request/UpdateValidationStatus", content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("API Response - Status: {StatusCode}, Content: {Content}",
@@ -307,7 +305,6 @@ namespace PomixPMOService.UI.Controllers
                 {
                     try
                     {
-                        // پردازش پاسخ موفق
                         var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse>(responseContent);
                         return Json(new { success = true, message = apiResponse?.Message ?? "وضعیت با موفقیت به‌روز شد." });
                     }
@@ -319,26 +316,55 @@ namespace PomixPMOService.UI.Controllers
                 }
                 else
                 {
-                    // پردازش خطای API
                     try
                     {
-                        var errorResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse>(responseContent);
-                        return Json(new
+                        // ✅ تنظیم برای نادیده گرفتن تفاوت حروف بزرگ و کوچک
+                        var options = new System.Text.Json.JsonSerializerOptions
                         {
-                            success = false,
-                            message = errorResponse?.Message ?? $"خطا از سمت سرور: {response.StatusCode}"
-                        });
+                            PropertyNameCaseInsensitive = true
+                        };
+
+                        var errorResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse>(responseContent, options);
+
+                        if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                        {
+                            // 🔥 دریافت دقیق پیام خطا از API
+                            string errorMessage = errorResponse?.Message ?? responseContent ?? "عملیات ناموفق بود";
+
+                            if (errorMessage.Contains("سند وجود ندارد"))
+                            {
+                                return Json(new { success = false, message = "❌ سند وجود ندارد. نمی‌توانید تأیید کنید." });
+                            }
+                            else if (errorMessage.Contains("سند را بررسی"))
+                            {
+                                return Json(new { success = false, message = "❌ ابتدا باید سند را مطالعه و تیک 'سند مشاهده شد' را بزنید." });
+                            }
+                            else
+                            {
+                                return Json(new { success = false, message = $"❌ {errorMessage}" });
+                            }
+                        }
+                        else
+                        {
+                            return Json(new
+                            {
+                                success = false,
+                                message = errorResponse?.Message ?? $"خطا از سمت سرور: {response.StatusCode}"
+                            });
+                        }
                     }
-                    catch
+                    catch (Exception parseEx)
                     {
+                        _logger.LogError(parseEx, "Error parsing API error response: {Content}", responseContent);
                         return Json(new
                         {
                             success = false,
-                            message = $"خطا در ارتباط با سرور: {response.StatusCode}"
+                            message = $"❌ پاسخ نامعتبر از سمت سرور: {responseContent}"
                         });
                     }
                 }
             }
+
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in UpdateValidationStatus for RequestId: {RequestId}", model.RequestId);

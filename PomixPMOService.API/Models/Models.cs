@@ -107,27 +107,29 @@ namespace ServicePomixPMO.API.Models
         public string Status { get; set; } = "New";
     }
 
+    [Table("UserLog", Schema = "Log")]
     public class UserLog
     {
         [Key]
-        [Column("log_id")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long LogId { get; set; }
 
-        [Column("userid")]
-        public int? UserId { get; set; }
+        public long? UserId { get; set; }
 
-        [Column("action")]
+        [MaxLength(255)]
         public string? Action { get; set; }
 
-        [Column("action_time")]
-        public DateTime? ActionTime { get; set; }
+        public DateTime ActionTime { get; set; } = DateTime.UtcNow;
 
-        [Column("ip_address")]
+        [MaxLength(50)]
         public string? IpAddress { get; set; }
 
-        [Column("user_agent")]
+        [MaxLength(512)]
         public string? UserAgent { get; set; }
+        public string ActionResult { get; internal set; }
+        public string LogLevel { get; internal set; }
     }
+
 
     [Table("RequestHistory", Schema = "sec")]
     public class RequestHistory

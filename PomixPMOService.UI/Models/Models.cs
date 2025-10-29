@@ -119,26 +119,16 @@ namespace PomixPMOService.UI.Models
 
     public class UserLog
     {
-        [Key]
         public long LogId { get; set; }
-
-        [ForeignKey("User")]
         public long UserId { get; set; }
-
-        public User? User { get; set; }
-
-        [Required]
-        [StringLength(50)]
-        public string? Action { get; set; }
-
-        public DateTime ActionTime { get; set; } = DateTime.UtcNow;
-
-        [StringLength(45)]
-        public string? IpAddress { get; set; }
-
-        [StringLength(255)]
-        public string? UserAgent { get; set; }
+        public string Action { get; set; } = string.Empty;
+        public string ActionResult { get; set; } = string.Empty;
+        public DateTime ActionTime { get; set; }
+        public string IpAddress { get; set; } = string.Empty;
+        public string UserAgent { get; set; } = string.Empty;
+        public string LogLevel { get; set; } = "Info"; // پیش‌فرض
     }
+
 
     [Table("ShahkarLog", Schema = "Log")]
     public class ShahkarLog

@@ -261,7 +261,7 @@ namespace ServicePomixPMO.API.Controllers
                 });
             }
             catch (Exception ex)
-            {
+             {
                 await transaction.RollbackAsync();
                 _logger.LogError(ex, "Error in ValidateRequest - RequestId: {RequestId}, UserId: {UserId}", model.RequestId, userId);
                 return StatusCode(500, new { success = false, message = "خطا در سرور." });
@@ -280,26 +280,26 @@ namespace ServicePomixPMO.API.Controllers
             {
                 var userIdClaim = User.FindFirst("UserId")?.Value;
                 if (!long.TryParse(userIdClaim, out long userId))
-                    return Unauthorized("کاربر شناسایی نشد.");
+                    return Unauthorized(new { success = false, message = "کاربر شناسایی نشد." });
 
                 var request = await _context.Request.FindAsync(requestId);
                 if (request == null)
-                    return NotFound("درخواست یافت نشد.");
+                    return NotFound(new { success = false, message = "درخواست یافت نشد." });
 
-                // آخرین وضعیت از RequestHistory
-                var currentStatus = await GetCurrentStatusAsync(requestId);
+                // 🔥 اصلاح این بخش - فقط برای تأیید چک کنیم
+                if (validateByExpert) // فقط وقتی می‌خواهد تأیید کند
+                {
+                    var latestLog = await _context.VerifyDocLog
+                        .Where(v => v.RequestId == requestId)
+                        .OrderByDescending(v => v.CreatedAt)
+                        .FirstOrDefaultAsync();
 
-                // چک سند
-                var latestLog = await _context.VerifyDocLog
-                    .Where(v => v.RequestId == requestId)
-                    .OrderByDescending(v => v.CreatedAt)
-                    .FirstOrDefaultAsync();
+                    if (latestLog == null)
+                        return BadRequest(new { success = false, message = "سند وجود ندارد. نمی‌توانید تأیید کنید." });
 
-                if (latestLog == null && validateByExpert)
-                    return BadRequest("سند وجود ندارد. نمی‌توانید تأیید کنید.");
-
-                if (latestLog != null && !(latestLog.IsRead ?? false))
-                    return BadRequest("ابتدا سند را بررسی کنید.");
+                    if (!(latestLog.IsRead ?? false))
+                        return BadRequest(new { success = false, message = "ابتدا سند را بررسی کنید." });
+                }
 
                 int statusId = validateByExpert ? 2 : 3;
                 string statusName = validateByExpert ? "تأیید شده" : "رد شده";
@@ -315,14 +315,14 @@ namespace ServicePomixPMO.API.Controllers
                 {
                     RequestId = requestId,
                     StatusId = statusId,
-                    ExpertId = userId, // ← تغییر داده شد
-                    ActionDescription = $"{statusName} توسط کارشناس", // ← Action → ActionDescription
-                    CreatedAt = DateTime.UtcNow, // ← ActionTime → CreatedAt
+                    ExpertId = userId,
+                    ActionDescription = $"{statusName} توسط کارشناس",
+                    CreatedAt = DateTime.UtcNow,
                     UpdatedStatus = statusName,
                     UpdatedStatusBy = User.Identity?.Name ?? userId.ToString(),
                     UpdatedStatusDate = DateTime.UtcNow
                 };
-                _context.RequestHistory.Add(history); // ← RequestHistory جمع شده به RequestHistories
+                _context.RequestHistory.Add(history);
 
                 await _context.SaveChangesAsync();
 
@@ -334,7 +334,7 @@ namespace ServicePomixPMO.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in UpdateValidationStatus");
+                _logger.LogError(ex, "Error in UpdateValidationStatus for RequestId: {RequestId}", requestId);
                 return StatusCode(500, new { success = false, message = "خطا در سرور." });
             }
         }

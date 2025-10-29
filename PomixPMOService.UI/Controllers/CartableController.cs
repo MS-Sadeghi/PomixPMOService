@@ -194,6 +194,7 @@ namespace PomixPMOService.UI.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitRequest(CartableFormViewModel model)
         {
+            // کدهای قبلی validation (کپچا و شرایط) بدون تغییر باقی می‌ماند
             if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
             {
                 ViewBag.ErrorMessage = "کد امنیتی اشتباه است.";
@@ -218,7 +219,7 @@ namespace PomixPMOService.UI.Controllers
                 }
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var requestData = new
+                var requestData = new CombinedRequestViewModel
                 {
                     NationalId = model.ClientNationalCode,
                     MobileNumber = model.MobileNumber,
@@ -227,45 +228,19 @@ namespace PomixPMOService.UI.Controllers
                 };
 
                 var response = await _client.PostAsJsonAsync("Service/ProcessCombinedRequest", requestData);
+
                 if (response.IsSuccessStatusCode)
                 {
-                    var combinedResult = await response.Content.ReadFromJsonAsync<dynamic>();
-                    var verifyDoc = combinedResult.data.VerifyDoc;
-                    var verifyDocResponseText = (string)verifyDoc.ResponseText;
+                    // ✅ دریافت پاسخ و ثبت موفقیت‌آمیز
+                    var responseContent = await response.Content.ReadAsStringAsync();
 
-                    dynamic verifyDocData = new ExpandoObject();
-                    ViewBag.DocumentError = null;
+                    // فقط برای اطمینان از دریافت داده‌ها لاگ بگیرید
+                    _logger.LogInformation("API Response: {Response}", responseContent);
 
-                    try
-                    {
-                        var responseTextDoc = JsonDocument.Parse(verifyDocResponseText);
-                        var dataElement = responseTextDoc.RootElement.GetProperty("result").GetProperty("data");
-
-                        verifyDocData.DocType = dataElement.TryGetProperty("DocType", out var docType) ? docType.GetString() : null;
-                        verifyDocData.SignSubject = dataElement.TryGetProperty("SignSubject", out var signSubject) ? signSubject.GetString() : null;
-                        verifyDocData.DocDate = dataElement.TryGetProperty("DocDate", out var docDate) ? docDate.GetString() : null;
-                        verifyDocData.Desc = dataElement.TryGetProperty("Desc", out var desc) ? desc.GetString() : null;
-                        verifyDocData.DocImage = dataElement.TryGetProperty("DocImage", out var docImage) ? docImage.GetString() : null;
-                        verifyDocData.DocImage_Base64 = dataElement.TryGetProperty("DocImage_Base64", out var docImageBase64) ? docImageBase64.GetString() : null;
-                        verifyDocData.ImpotrtantAnnexText = dataElement.TryGetProperty("ImpotrtantAnnexText", out var importantAnnexText) ? importantAnnexText.GetString() : null;
-
-                        var lstPersons = dataElement.TryGetProperty("LstFindPersonInQuery", out var personsElement) && personsElement.ValueKind == JsonValueKind.Array
-                            ? JsonSerializer.Deserialize<List<dynamic>>(personsElement.GetRawText())
-                            : new List<dynamic>();
-
-                        verifyDocData.LstFindPersonInQuery = lstPersons;
-
-                        ViewBag.RequestId = combinedResult.data.RequestId != null ? combinedResult.data.RequestId : 0;
-                    }
-                    catch (Exception)
-                    {
-                        ViewBag.DocumentError = "خطا در پردازش محتوای سند.";
-                    }
-
-                    ViewBag.VerifyDocData = verifyDocData;
-                    ViewBag.ShowDocumentTab = true;
-                    ViewBag.SuccessMessage = "درخواست با موفقیت ثبت شد و سند آماده نمایش است.";
+                    ViewBag.SuccessMessage = "درخواست با موفقیت ثبت شد و به کارتابل اضافه گردید.";
                     ViewBag.FormModel = new CartableFormViewModel();
+
+                    // رفرش کردن داده‌های کارتابل
                     return View("Index", await GetCartableData(1, ""));
                 }
                 else
@@ -297,50 +272,81 @@ namespace PomixPMOService.UI.Controllers
         {
             try
             {
-                _logger.LogInformation("Received UpdateValidationStatus for RequestId: {RequestId}", model.RequestId);
+                _logger.LogInformation("UpdateValidationStatus called for RequestId: {RequestId}, ValidateByExpert: {ValidateByExpert}",
+                    model.RequestId, model.ValidateByExpert);
 
                 var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
                 if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("Token not found for UpdateValidationStatus");
                     return Json(new { success = false, message = "توکن یافت نشد. لطفاً دوباره وارد سیستم شوید." });
+                }
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var content = new StringContent(
-                    JsonSerializer.Serialize(model),
-                    Encoding.UTF8,
-                    "application/json"
-                );
+                // استفاده از مدل صحیح برای API
+                var apiModel = new
+                {
+                    RequestId = model.RequestId,
+                    ValidateByExpert = model.ValidateByExpert
+                };
 
-                // حتماً api/ داشته باشد
+                var json = System.Text.Json.JsonSerializer.Serialize(apiModel);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                _logger.LogInformation("Sending request to API: {Json}", json);
+
+                // فراخوانی API با آدرس صحیح
                 var response = await _client.PostAsync($"Request/UpdateValidationStatus", content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("API Response - Status: {StatusCode}, Content: {Content}",
+                    response.StatusCode, responseContent);
 
-                // این خط مهم است: مستقیماً JSON API را برگردان
                 if (response.IsSuccessStatusCode)
                 {
-                    return Content(responseContent, "application/json");
+                    try
+                    {
+                        // پردازش پاسخ موفق
+                        var apiResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse>(responseContent);
+                        return Json(new { success = true, message = apiResponse?.Message ?? "وضعیت با موفقیت به‌روز شد." });
+                    }
+                    catch (Exception jsonEx)
+                    {
+                        _logger.LogError(jsonEx, "Error parsing API response");
+                        return Json(new { success = true, message = "وضعیت با موفقیت به‌روز شد." });
+                    }
                 }
                 else
                 {
-                    // فقط پیام API را برگردان (بدون بسته‌بندی دوباره)
+                    // پردازش خطای API
                     try
                     {
-                        var errorObj = JsonSerializer.Deserialize<JsonElement>(responseContent);
-                        if (errorObj.TryGetProperty("message", out var msg))
+                        var errorResponse = System.Text.Json.JsonSerializer.Deserialize<ApiResponse>(responseContent);
+                        return Json(new
                         {
-                            return Json(new { success = false, message = msg.GetString() });
-                        }
+                            success = false,
+                            message = errorResponse?.Message ?? $"خطا از سمت سرور: {response.StatusCode}"
+                        });
                     }
-                    catch { }
-
-                    return Json(new { success = false, message = "خطا در ارتباط با سرور." });
+                    catch
+                    {
+                        return Json(new
+                        {
+                            success = false,
+                            message = $"خطا در ارتباط با سرور: {response.StatusCode}"
+                        });
+                    }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in UpdateValidationStatus");
-                return Json(new { success = false, message = "خطا در ارتباط با سرور." });
+                _logger.LogError(ex, "Error in UpdateValidationStatus for RequestId: {RequestId}", model.RequestId);
+                return Json(new
+                {
+                    success = false,
+                    message = $"خطا در برقراری ارتباط با سرور: {ex.Message}"
+                });
             }
         }
 
@@ -406,7 +412,6 @@ namespace PomixPMOService.UI.Controllers
                 return Json(new { success = false, message = $"خطا در دریافت متن سند: {ex.Message}" });
             }
         }
-
         [HttpGet]
         private async Task<PaginatedCartableViewModel> GetCartableData(int page, string search)
         {
@@ -561,6 +566,48 @@ namespace PomixPMOService.UI.Controllers
     #endregion
 
     #region ViewModels
+
+    // اضافه کردن این مدل‌ها به CartableController.cs
+    public class ApiResponseWrapper
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public CombinedResultData Data { get; set; }
+    }
+
+    public class CombinedResultData
+    {
+        public ShahkarResponse Shahkar { get; set; }
+        public VerifyDocResponse VerifyDoc { get; set; }
+        public long RequestId { get; set; }
+    }
+
+    public class CombinedRequestViewModel
+    {
+        public string NationalId { get; set; } = string.Empty;
+        public string MobileNumber { get; set; } = string.Empty;
+        public string DocumentNumber { get; set; } = string.Empty;
+        public string VerificationCode { get; set; } = string.Empty;
+    }
+
+    public class VerifyDocResponse
+    {
+        public bool IsSuccessful { get; set; }
+        public string ResponseText { get; set; }
+        public List<PersonInQuery> PersonsInQuery { get; set; }
+        public bool ExistDoc { get; set; }
+        public bool IsNationalIdInLawyers { get; set; }
+        public bool IsNationalIdInResponse { get; set; }
+    }
+
+    public class PersonInQuery
+    {
+        public string NationalNo { get; set; }
+        public string Name { get; set; }
+        public string Family { get; set; }
+        public string RoleType { get; set; }
+        // سایر خصوصیات
+    }
     public class PaginatedResponse<T>
     {
         public List<T> Items { get; set; } = new List<T>();
@@ -613,14 +660,12 @@ namespace PomixPMOService.UI.Controllers
         public bool IsRead { get; set; } // اضافه شده برای وضعیت خوانده شدن سند
     }
 
-    public class CombinedRequestViewModel
-    {
-        public string NationalId { get; set; } = string.Empty;
-        public string MobileNumber { get; set; } = string.Empty;
-        public string DocumentNumber { get; set; } = string.Empty;
-        public string VerificationCode { get; set; } = string.Empty;
-    }
 
+    public class ApiResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+    }
     public class DocTextResponse
     {
         public bool Success { get; set; }

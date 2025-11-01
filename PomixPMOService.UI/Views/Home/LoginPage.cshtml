@@ -1,11 +1,11 @@
 ﻿@model PomixPMOService.UI.ViewModels.LoginViewModel
-@using DNTCaptcha.Core      
+@using DNTCaptcha.Core
 @{
     ViewData["Title"] = "ورود به سامانه";
     Layout = "~/Views/Shared/_LayoutAuth.cshtml";
 }
 
-<style>  
+<style>
     .login-container {
         display: flex;
         justify-content: center;
@@ -25,7 +25,6 @@
         flex: 0 0 450px;
         background: rgba(255, 255, 255, 0.25);
         backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
         border-radius: 20px;
         padding: 40px;
         box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
@@ -58,26 +57,42 @@
         padding: 10px;
     }
 
-    .text-muted {
-        color: #666;
-        font-size: 0.9rem;
+    .captchaInput {
+        height: 45px !important;
+        border-radius: 8px !important;
+        border: 1px solid #ccc !important;
+        padding: 10px !important;
+        width: 100% !important;
+        text-align: right !important;
+        direction: rtl !important;
     }
 
-    #securitySection {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
+    /* استایل برای تصویر کپچا */
+    .captcha-container img {
+        margin-left: 10px !important;
+        margin-right: 0 !important;
     }
 
+    /* استایل برای دکمه رفرش */
+    .captcha-refresh-btn {
+        margin-left: 10px !important;
+        margin-right: 0 !important;
+    }
+
+    /* استایل برای گروه کپچا */
+    .captcha-group {
+        direction: rtl !important;
+        text-align: right !important;
+    }
 </style>
 
 <div class="login-container">
     <div class="row w-100" style="max-width: 400px;">
         <div class="login-right">
             <h3 class="text-center pb-3">سامانه استعلام سند</h3>
-            <form id="loginForm" asp-action="LoginPage" method="post" class="login100-form validate-form" autocomplete="off">
+            <form id="loginForm" asp-action="LoginPage" method="post" autocomplete="off">
                 <!-- Username Input -->
-                <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا نام کاربری را وارد کنید">
+                <div class="wrap-input100 input-group">
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                         <i class="zmdi zmdi-account text-muted" aria-hidden="true"></i>
                     </a>
@@ -86,7 +101,7 @@
                 </div>
 
                 <!-- Password Input -->
-                <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا رمز عبور را وارد کنید" id="Password-toggle">
+                <div class="wrap-input100 input-group" id="Password-toggle">
                     <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
                         <i class="zmdi zmdi-eye" aria-hidden="true"></i>
                     </a>
@@ -94,47 +109,29 @@
                     <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
 
-                <!-- Two-Factor Authentication Type -->
-               <div class="wrap-input100 validate-input input-group" data-bs-validate="لطفا نوع احراز هویت را انتخاب کنید">
-                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
-                        <i class="zmdi zmdi-key text-muted" aria-hidden="true"></i>
-                    </a>
-                    <select class="input100 border-start-0 form-control ms-0" id="methodSelect" required>
-                        <option value="security" selected>کد امنیتی</option>
-                        <option value="sms">پیامک</option>
-                    </select>
-                </div> 
-
-                <!-- Google Authenticator Section -->
-                <div id="securitySection" class="form-group text-start mt-2">
+                <!-- Captcha Section -->
+                <div id="securitySection" class="form-group text-start mt-2" style="direction: rtl;">
                     <dnt-captcha asp-captcha-generator-max="9999"
                                  asp-captcha-generator-min="1000"
                                  asp-captcha-generator-language="English"
                                  asp-captcha-generator-display-mode="ShowDigits"
                                  asp-use-relative-urls="true"
                                  asp-placeholder="کد امنیتی را وارد کنید"
-                                 asp-validation-error-message=" "
-                                 asp-too-many-requests-error-message="تعداد درخواست ها زیاد است، لطفا چند لحظه صبر کنید!"
+                                 asp-validation-error-message="کد امنیتی صحیح نیست"
+                                 asp-too-many-requests-error-message="تعداد درخواست‌ها زیاد است، لطفاً چند لحظه صبر کنید"
                                  asp-font-name="Tahoma"
                                  asp-font-size="30"
-                                 asp-fore-color="#3333333"
+                                 asp-fore-color="#333333"
                                  asp-back-color="#FCF6F5FF"
                                  asp-text-box-class="form-control captchaInput"
-                                 asp-text-box-template="<div class='form-group'>{0}</div>"
+                                 asp-text-box-template="<div class='form-group' style='direction: rtl; text-align: right;'>{0}</div>"
                                  asp-validation-message-class="text-danger"
                                  asp-refresh-button-class="icon icon-refresh btn"
                                  asp-show-refresh-button="true" />
                 </div>
 
-                <!-- SMS Section -->
-                <div id="smsSection" class="form-group" style="display: none; display: flex; align-items: center; gap: 6px;">
-                    <input type="text" class="form-control" placeholder="کد ارسال شده را وارد کنید">
-                    <button type="button" id="verifyCodeBtn">تایید</button>
-                </div>
-
-
                 <!-- Submit Button -->
-                <div class="form-group">
+                <div class="form-group mt-3">
                     <button type="submit" class="btn btn-primary mb-1">ورود</button>
                 </div>
 
@@ -153,50 +150,19 @@
     <script>
         @if (TempData["SuccessLogoutMessage"] != null)
         {
-            @:toastr.options = {
-            @:"closeButton": true,
-            @:"progressBar": true,
-            @:"positionClass": "toast-top-center", // Optional: Change position for login page
-            @:"timeOut": "3000" // Shorter duration for success message
-            @:};
-            @:toastr.success('@TempData["SuccessLogoutMessage"]');
+                @:toastr.options = {
+                @:"closeButton": true,
+                @:"progressBar": true,
+                @:"positionClass": "toast-top-center",
+                @:"timeOut": "3000"
+                @:};
+                @:toastr.success('@TempData["SuccessLogoutMessage"]');
         }
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var select = document.getElementById('methodSelect');
-            var securitySection = document.getElementById('securitySection');
-            var smsSection = document.getElementById('smsSection');
-
-            function toggleSections() {
-                if (select.value === 'sms') {
-                    smsSection.style.display = 'block';
-                    securitySection.style.display = 'none';
-                } else {
-                    smsSection.style.display = 'none';
-                    securitySection.style.display = 'block';
-                }
-            }
-
-            select.addEventListener('change', toggleSections);
-            toggleSections();
-
-
-        });
 
         const jwtToken = '@ViewBag.JwtToken';
         if (jwtToken) {
-            try {
-                localStorage.setItem('jwtToken', jwtToken);
-                console.log('Token stored:', jwtToken);
-                console.log('Redirecting to /Cartable/Index...');
-                setTimeout(() => {
-                    window.location.href = '/Cartable/Index';
-                }, 1000);
-            } catch (error) {
-                console.error('Error in login script:', error);
-                alert('خطا در اجرای اسکریپت لاگین: ' + error.message);
-            }
+            localStorage.setItem('jwtToken', jwtToken);
+            window.location.href = '/Cartable/Index';
         }
     </script>
 }

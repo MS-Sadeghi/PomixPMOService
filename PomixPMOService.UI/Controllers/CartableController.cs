@@ -1,14 +1,19 @@
 ﻿using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using PomixPMOService.API.Controllers;
 using PomixPMOService.UI.Filters;
+using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
+using PomixPMOService.UI.Enums;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
+using PomixPMOService.UI.Helpers;
 
 namespace PomixPMOService.UI.Controllers
 {
@@ -82,6 +87,9 @@ namespace PomixPMOService.UI.Controllers
 
             ViewBag.FormModel = new CartableFormViewModel();
             ViewBag.FilterStatus = filterStatus;
+
+            ViewBag.RejectReasons = EnumHelper.ToSelectList<RejectReason>();
+
             return View(model);
         }
 
@@ -264,6 +272,7 @@ namespace PomixPMOService.UI.Controllers
         {
             public long RequestId { get; set; }
             public bool ValidateByExpert { get; set; }
+            public string? Description { get; set; } 
         }
 
         [HttpPost]
@@ -287,7 +296,8 @@ namespace PomixPMOService.UI.Controllers
                 var apiModel = new
                 {
                     RequestId = model.RequestId,
-                    ValidateByExpert = model.ValidateByExpert
+                    ValidateByExpert = model.ValidateByExpert,
+                    Description = model.ValidateByExpert == false ? model.Description : null // فقط برای رد
                 };
 
                 var json = System.Text.Json.JsonSerializer.Serialize(apiModel);
@@ -588,7 +598,6 @@ namespace PomixPMOService.UI.Controllers
             }
         }
     }
-
     #endregion
 
     #region ViewModels

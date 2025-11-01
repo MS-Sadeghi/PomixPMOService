@@ -264,6 +264,39 @@
     </div>
 </div>
 
+
+<!-- Modal برای رد درخواست -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" style="max-width:200px; font-size:11px;" id="rejectModalLabel">دلیل رد درخواست</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <form id="rejectForm">
+                    <input type="hidden" id="rejectRequestId" />
+
+                    <div class="mb-3">
+                        <label class="form-label" >">علت عدم تایید درخواست:</label>
+                        <select class="form-select" id="predefinedReason" asp-items="@ViewBag.RejectReasons"></select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">توضیحات تکمیلی (اختیاری):</label>
+                        <textarea class="form-control" id="customDescription" rows="3" placeholder="مثلاً: تاریخ انقضا وکالتنامه: ۱۴۰۳/۰۵/۱۰"></textarea>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                <button type="button" class="btn btn-danger" id="confirmReject">تأیید رد درخواست</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal for Adding New Document -->
 <div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable custom-modal">
@@ -363,188 +396,236 @@
     <script>
         $(document).ready(function() {
 
-                    // Initialize tooltips
-                    $('[data-bs-toggle="tooltip"]').tooltip();
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
 
-                    // Reset modal form on close
-                    $('#scrollingmodal').on('hidden.bs.modal', function() {
-                        $('#needs-validation-form')[0].reset();
-                        $('.form-text').text('');
-                    });
-        // View document text
-        $(document).on('click', '.btn-view-doc', function () {
-            var requestId = $(this).data('request-id');
-            $('#documentModalLabel').text('متن سند درخواست ' + requestId);
-            $('#documentModalBody').html('<div class="d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
-            $('#documentChecked').prop('checked', false);
-            $('#confirmDocument').data('request-id', requestId);
-            $('#documentModal').modal('show');
-
-            $.ajax({
-                url: '/Cartable/GetDocumentText',
-                type: 'GET',
-                data: { requestId: requestId },
-                dataType: 'json',
-                success: function (res) {
-                    if (res && res.success && res.documentText && res.documentText.trim() !== "") {
-                        var text = res.documentText;
-                        var safe = $('<div/>').text(text).html();
-
-                        // ✨ فقط قسمت "مهلت اعتبار..." را برجسته و رنگی کن
-                        safe = safe.replace(
-                            /(مهلت اعتبار این وکالتنامه تا تاریخ\s*\d{4}\/\d{2}\/\d{2}\s*می باشد)/g,
-                            '<strong style="color:#d9534f; font-weight:bold;">$1</strong>'
-                        );
-
-                        $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.6;">' + safe + '</pre>');
-                        $('#documentChecked').prop('checked', res.isRead === true);
-                    } else {
-                        $('#documentModalBody').html('<p class="text-danger fw-bold text-center">رمز تصدیق یا شماره سند درست وارد نشده است.</p>');
-                        $('#documentChecked').prop('checked', false);
-                        toastr.error(res.message || 'رمز تصدیق یا شماره سند درست وارد نشده است.');
-                    }
-                },
-                error: function (xhr) {
-                    var errorMessage = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
-                    $('#documentModalBody').html('<p class="text-danger text-center">' + errorMessage + '</p>');
-                    $('#documentChecked').prop('checked', false);
-                    toastr.error(errorMessage);
-                }
+            // Reset modal form on close
+            $('#scrollingmodal').on('hidden.bs.modal', function() {
+                $('#needs-validation-form')[0].reset();
+                $('.form-text').text('');
             });
-        });
 
+            // متغیر برای ذخیره درخواست در حال رد
+            let pendingReject = null;
 
-                    // Confirm document in modal
-                    $('#confirmDocument').click(function() {
-                        if ($('#documentChecked').is(':checked')) {
-                            var requestId = $(this).data('request-id');
-                            $.ajax({
-                                url: '/Cartable/MarkDocumentAsRead',
-                                type: 'POST',
-                                data: { requestId: requestId },
-                                dataType: 'json',
-                                headers: {
-                                    'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
-                                },
-                                success: function(res) {
-                                    if (res.success) {
-                                        toastr.success(res.message || 'سند با موفقیت به عنوان خوانده شده علامت‌گذاری شد.');
-                                        $('#documentModal').modal('hide');
+            // --- 1. View document text ---
+            $(document).on('click', '.btn-view-doc', function () {
+                const requestId = $(this).data('request-id');
+                $('#documentModalLabel').text('متن سند درخواست ' + requestId);
+                $('#documentModalBody').html('<div class="d-flex justify-content-center align-items-center"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
+                $('#documentChecked').prop('checked', false);
+                $('#confirmDocument').data('request-id', requestId);
+                $('#documentModal').modal('show');
 
-                                        // Update icon color and tooltip
-                                        var row = $('tr[data-request-id="' + requestId + '"]');
-                                        row.find('.btn-view-doc i.typcn-document-text')
-                                            .css('color', 'green')
-                                            .attr('title', 'خوانده شده');
-                                    } else {
-                                        toastr.error(res.message || 'خطا در علامت‌گذاری سند.');
-                                    }
-                                },
-                                error: function(xhr) {
-                                    var errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
-                                    toastr.error(errorMessage);
-                                }
-                            });
+                $.ajax({
+                    url: '/Cartable/GetDocumentText',
+                    type: 'GET',
+                    data: { requestId: requestId },
+                    dataType: 'json',
+                    success: function (res) {
+                        if (res && res.success && res.documentText && res.documentText.trim() !== "") {
+                            let text = res.documentText;
+                            let safe = $('<div/>').text(text).html();
+
+                            safe = safe.replace(
+                                /(مهلت اعتبار این وکالتنامه تا تاریخ\s*\d{4}\/\d{2}\/\d{2}\s*می باشد)/g,
+                                '<strong style="color:#d9534f; font-weight:bold;">$1</strong>'
+                            );
+
+                            $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.6;">' + safe + '</pre>');
+                            $('#documentChecked').prop('checked', res.isRead === true);
                         } else {
-                            toastr.warning('لطفاً ابتدا گزینه "متن سند بررسی شد" را تیک بزنید.');
+                            $('#documentModalBody').html('<p class="text-danger fw-bold text-center">رمز تصدیق یا شماره سند درست وارد نشده است.</p>');
+                            $('#documentChecked').prop('checked', false);
+                            toastr.error(res.message || 'رمز تصدیق یا شماره سند درست وارد نشده است.');
+                        }
+                    },
+                    error: function (xhr) {
+                        const errorMessage = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
+                        $('#documentModalBody').html('<p class="text-danger text-center">' + errorMessage + '</p>');
+                        $('#documentChecked').prop('checked', false);
+                        toastr.error(errorMessage);
+                    }
+                });
+            });
+
+            // --- 2. Confirm document ---
+            $('#confirmDocument').click(function() {
+                if ($('#documentChecked').is(':checked')) {
+                    const requestId = $(this).data('request-id');
+                    $.ajax({
+                        url: '/Cartable/MarkDocumentAsRead',
+                        type: 'POST',
+                        data: { requestId: requestId },
+                        dataType: 'json',
+                        headers: {
+                            'X-CSRF-TOKEN': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                toastr.success(res.message || 'سند با موفقیت به عنوان خوانده شده علامت‌گذاری شد.');
+                                $('#documentModal').modal('hide');
+                                const row = $('tr[data-request-id="' + requestId + '"]');
+                                row.find('.btn-view-doc i.typcn-document-text')
+                                    .css('color', 'green')
+                                    .attr('title', 'خوانده شده');
+                            } else {
+                                toastr.error(res.message || 'خطا در علامت‌گذاری سند.');
+                            }
+                        },
+                        error: function(xhr) {
+                            const errorMessage = xhr.responseJSON?.message || 'خطا در ارتباط با سرور.';
+                            toastr.error(errorMessage);
                         }
                     });
-
-        // Approval radio change
-        $(document).on('change', '.approval-radio', function () {
-            var radio = $(this);
-            var requestId = radio.data('request-id');
-            var validateByExpert = radio.attr('id').startsWith('approve');
-
-            var token = $('input[name="__RequestVerificationToken"]').val();
-
-            fetch('/Cartable/UpdateValidationStatus', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify({ RequestId: requestId, ValidateByExpert: validateByExpert })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    toastr.success(data.message || "وضعیت با موفقیت به‌روز شد");
                 } else {
-                    toastr.error(data.message || 'خطا در به‌روزرسانی.');
+                    toastr.warning('لطفاً ابتدا گزینه "متن سند بررسی شد" را تیک بزنید.');
+                }
+            });
+
+            // --- 3. Approval radio change (فقط برای تأیید فوری) ---
+            $(document).on('change', '.approval-radio', function () {
+                const radio = $(this);
+                const requestId = radio.data('request-id');
+                const isApprove = radio.attr('id').startsWith('approve');
+
+                if (!isApprove) {
+                    // عدم تأیید → مودال
+                    pendingReject = { radio, requestId };
+                    $('#rejectRequestId').val(requestId);
+                    $('#predefinedReason').val('');
+                    $('#customDescription').val('');
+                    $('#rejectModal').modal('show');
                     radio.prop('checked', false);
+                    return;
                 }
-            })
-            .catch(err => {
-                toastr.error("خطا در ارتباط با سرور");
+
+                // تأیید → فوری
+                submitValidation(requestId, true, null);
+            });
+
+            // --- 4. تأیید نهایی رد در مودال ---
+            $('#confirmReject').click(function() {
+                if (!pendingReject) return;
+
+                const reasonText = $('#predefinedReason option:selected').text().trim();
+                const custom = $('#customDescription').val()?.trim() || '';
+                let description = '';
+
+                if (reasonText && reasonText !== "-- انتخاب کنید --") {
+                    description += reasonText;
+                }
+
+                if (custom) {
+                    if (description) description += " - ";
+                    description += custom;
+                }
+
+                if (!description) {
+                    toastr.warning('لطفاً حداقل یک دلیل انتخاب کنید یا توضیح بنویسید.');
+                    return;
+                }
+
+                submitValidation(pendingReject.requestId, false, description);
+                $('#rejectModal').modal('hide');
+                pendingReject.radio.prop('checked', true);
+                pendingReject = null;
+            });
+
+            // --- 5. کلیک روی برچسب انتخاب‌شده → لغو ---
+            $(document).on('click', '.btn-group .btn-check:checked + label', function () {
+                const label = $(this);
+                const radio = $('#' + label.attr('for'));
+                const requestId = radio.data('request-id');
+
                 radio.prop('checked', false);
+                submitValidation(requestId, null, null);
             });
-        });
 
-        $(document).on('click', '.btn-group .btn-check:checked + label', function () {
-            var label = $(this);
-            var radio = $('#' + label.attr('for'));
-            var requestId = radio.data('request-id');
-            var token = $('input[name="__RequestVerificationToken"]').val();
+            // --- 6. تابع ارسال (واحد) ---
+            function submitValidation(requestId, validateByExpert, description) {
+                const token = $('input[name="__RequestVerificationToken"]').val();
 
-            radio.prop('checked', false);
-            fetch('/Cartable/UpdateValidationStatus', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify({ RequestId: requestId, ValidateByExpert: null })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    toastr.info("وضعیت به هیچکدام بازگشت.");
-                } else {
-                    toastr.error(data.message);
-                    radio.prop('checked', true);
-                }
-            })
-            .catch(err => {
-                toastr.error("خطا");
-                radio.prop('checked', true);
-            });
-        });
-        
-        // Form validation
-        $('#needs-validation-form').on('submit', function(e) {
-            e.preventDefault(); 
-            const form = $(this);
-            const btn = $('#btnVerify');
-
-            if (!this.checkValidity()) {
-                e.stopPropagation();
-                form.addClass('was-validated');
-                toastr.error('لطفاً فیلدهای مورد نیاز را درست پر کنید.');
-                return;
+                fetch('/Cartable/UpdateValidationStatus', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        RequestId: requestId,
+                        ValidateByExpert: validateByExpert,
+                        Description: description
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        toastr.success(data.message || "وضعیت با موفقیت به‌روز شد");
+                        const row = $(`tr[data-request-id="${requestId}"]`);
+                        if (validateByExpert === true) {
+                            row.find(`#approve-${requestId}`).prop('checked', true);
+                            row.find(`#reject-${requestId}`).prop('checked', false);
+                        } else if (validateByExpert === false) {
+                            row.find(`#approve-${requestId}`).prop('checked', false);
+                            row.find(`#reject-${requestId}`).prop('checked', true);
+                        } else {
+                            row.find(`.approval-radio`).prop('checked', false);
+                        }
+                    } else {
+                        toastr.error(data.message || 'خطا در به‌روزرسانی.');
+                        $(`tr[data-request-id="${requestId}"] .approval-radio`).prop('checked', false);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    toastr.error("خطا در ارتباط با سرور");
+                    $(`tr[data-request-id="${requestId}"] .approval-radio`).prop('checked', false);
+                });
             }
 
-            btn.prop('disabled', true)
-               .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>در حال بررسی...');
-
-            $.ajax({
-                url: form.attr('action'),
-                type: form.attr('method'),
-                data: form.serialize(),
-                success: function(res) {
-                    toastr.success('درخواست با موفقیت ارسال شد');
-                        $('#scrollingmodal').modal('hide');    
-                        $('#cartableBody').load(window.location.href + ' #cartableBody > *');
-                },
-                error: function() {
-                    toastr.error('خطا در ارسال درخواست ');
-                },
-                complete: function() {
-                    btn.prop('disabled', false).html('بررسی');
+            // --- 7. لغو مودال ---
+            $('#rejectModal').on('hidden.bs.modal', function() {
+                if (pendingReject) {
+                    pendingReject.radio.prop('checked', false);
+                    pendingReject = null;
                 }
             });
-        });
 
-    });
+            // --- 8. Form validation ---
+            $('#needs-validation-form').on('submit', function(e) {
+                e.preventDefault();
+                const form = $(this);
+                const btn = $('#btnVerify');
+
+                if (!this.checkValidity()) {
+                    e.stopPropagation();
+                    form.addClass('was-validated');
+                    toastr.error('لطفاً فیلدهای مورد نیاز را درست پر کنید.');
+                    return;
+                }
+
+                btn.prop('disabled', true)
+                   .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>در حال بررسی...');
+
+                $.ajax({
+                    url: form.attr('action'),
+                    type: form.attr('method'),
+                    data: form.serialize(),
+                    success: function(res) {
+                        toastr.success('درخواست با موفقیت ارسال شد');
+                        $('#scrollingmodal').modal('hide');
+                        $('#cartableBody').load(window.location.href + ' #cartableBody > *');
+                    },
+                    error: function() {
+                        toastr.error('خطا در ارسال درخواست ');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html('بررسی');
+                    }
+                });
+            });
+
+        });
     </script>
 }

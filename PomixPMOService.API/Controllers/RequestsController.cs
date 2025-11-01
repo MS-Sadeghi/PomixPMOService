@@ -221,6 +221,7 @@ namespace ServicePomixPMO.API.Controllers
         {
             var requestId = model.RequestId;
             var validateByExpert = model.ValidateByExpert;
+            var description = model.Description;
 
             try
             {
@@ -232,24 +233,17 @@ namespace ServicePomixPMO.API.Controllers
                 if (request == null)
                     return NotFound(new { success = false, message = "درخواست یافت نشد." });
 
-                if (validateByExpert)
+                // فقط برای عدم تأیید، بررسی سند خوانده شده
+                if (!validateByExpert && string.IsNullOrWhiteSpace(description))
                 {
-                    var latestLog = await _context.VerifyDocLog
-                        .Where(v => v.RequestId == requestId)
-                        .OrderByDescending(v => v.CreatedAt)
-                        .FirstOrDefaultAsync();
-
-                    if (latestLog == null)
-                        return BadRequest(new { success = false, message = "❌ سند مربوط به این درخواست وجود ندارد. ابتدا باید سند را بررسی کنید." });
-
-                    if (!(latestLog.IsRead ?? false))
-                        return BadRequest(new { success = false, message = "❌ شما هنوز تیک 'سند مشاهده شد' را نزده‌اید. لطفاً ابتدا سند را بررسی کنید." });
+                    return BadRequest(new { success = false, message = "برای رد درخواست، توضیح الزامی است." });
                 }
 
                 int statusId = validateByExpert ? 2 : 3;
                 string statusName = validateByExpert ? "تأیید شده" : "رد شده";
 
                 request.ValidateByExpert = validateByExpert;
+                request.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
                 request.UpdatedAt = DateTime.UtcNow;
                 request.UpdatedBy = User.Identity?.Name ?? userId.ToString();
                 _context.Request.Update(request);
@@ -259,7 +253,9 @@ namespace ServicePomixPMO.API.Controllers
                     RequestId = requestId,
                     StatusId = statusId,
                     ExpertId = userId,
-                    ActionDescription = $"{statusName} توسط کارشناس",
+                    ActionDescription = validateByExpert
+                        ? "درخواست تأیید شد توسط کارشناس"
+                        : $"درخواست رد شد: {description ?? "بدون توضیح"}",
                     CreatedAt = DateTime.UtcNow,
                     UpdatedStatus = statusName,
                     UpdatedStatusBy = User.Identity?.Name ?? userId.ToString(),
@@ -281,7 +277,7 @@ namespace ServicePomixPMO.API.Controllers
             {
                 _logger.LogError(ex, "Error in UpdateValidationStatus");
                 await _actionLogger.Error(0, "UpdateValidationStatus", $"Exception: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "⚠️ خطا در سرور." });
+                return StatusCode(500, new { success = false, message = "خطا در سرور." });
             }
         }
     }
@@ -298,5 +294,6 @@ namespace ServicePomixPMO.API.Controllers
     {
         public long RequestId { get; set; }
         public bool ValidateByExpert { get; set; }
+        public string? Description { get; set; }
     }
 }

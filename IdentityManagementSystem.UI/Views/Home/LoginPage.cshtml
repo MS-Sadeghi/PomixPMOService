@@ -1,0 +1,168 @@
+﻿@model IdentityManagementSystem.UI.ViewModels.LoginViewModel
+@using DNTCaptcha.Core
+@{
+    ViewData["Title"] = "ورود به سامانه";
+    Layout = "~/Views/Shared/_LayoutAuth.cshtml";
+}
+
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .row.w-100 {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto;
+    }
+
+    .login-right {
+        flex: 0 0 450px;
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: transform 0.3s ease;
+    }
+
+        .login-right:hover {
+            transform: translateY(-5px);
+        }
+
+    .btn-primary {
+        border: none;
+        padding: 12px;
+        width: 100%;
+        border-radius: 5px;
+        font-weight: 500;
+        color: #fff;
+        transition: background 0.3s ease;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        height: 45px;
+        padding: 10px;
+    }
+
+    .captchaInput {
+        height: 45px !important;
+        border-radius: 8px !important;
+        border: 1px solid #ccc !important;
+        padding: 10px !important;
+        width: 100% !important;
+        text-align: right !important;
+        direction: rtl !important;
+    }
+
+    /* استایل برای تصویر کپچا */
+    .captcha-container img {
+        margin-left: 10px !important;
+        margin-right: 0 !important;
+    }
+
+    /* استایل برای دکمه رفرش */
+    .captcha-refresh-btn {
+        margin-left: 10px !important;
+        margin-right: 0 !important;
+    }
+
+    /* استایل برای گروه کپچا */
+    .captcha-group {
+        direction: rtl !important;
+        text-align: right !important;
+    }
+</style>
+
+<div class="login-container">
+    <div class="row w-100" style="max-width: 400px;">
+        <div class="login-right">
+            <h3 class="text-center pb-3">سامانه استعلام سند</h3>
+            <form id="loginForm" asp-action="LoginPage" method="post" autocomplete="off">
+                <!-- Username Input -->
+                <div class="wrap-input100 input-group">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-account text-muted" aria-hidden="true"></i>
+                    </a>
+                    <input asp-for="Username" class="input100 border-start-0 form-control ms-0" placeholder="نام کاربری" required />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+
+                <!-- Password Input -->
+                <div class="wrap-input100 input-group" id="Password-toggle">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-eye" aria-hidden="true"></i>
+                    </a>
+                    <input asp-for="Password" type="password" class="input100 border-start-0 form-control ms-0" placeholder="کلمه عبور" required />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <!-- Captcha Section -->
+                <div id="securitySection" class="form-group text-start mt-2" style="direction: rtl;">
+                    <dnt-captcha asp-captcha-generator-max="9999"
+                                 asp-captcha-generator-min="1000"
+                                 asp-captcha-generator-language="English"
+                                 asp-captcha-generator-display-mode="ShowDigits"
+                                 asp-use-relative-urls="true"
+                                 asp-placeholder="کد امنیتی را وارد کنید"
+                                 asp-validation-error-message="کد امنیتی صحیح نیست"
+                                 asp-too-many-requests-error-message="تعداد درخواست‌ها زیاد است، لطفاً چند لحظه صبر کنید"
+                                 asp-font-name="Tahoma"
+                                 asp-font-size="30"
+                                 asp-fore-color="#333333"
+                                 asp-back-color="#FCF6F5FF"
+                                 asp-text-box-class="form-control captchaInput"
+                                 asp-text-box-template="<div class='form-group' style='direction: rtl; text-align: right;'>{0}</div>"
+                                 asp-validation-message-class="text-danger"
+                                 asp-refresh-button-class="icon icon-refresh btn"
+                                 asp-show-refresh-button="true" />
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group mt-3">
+                    <button type="submit" class="btn btn-primary mb-1">ورود</button>
+                </div>
+
+                <!-- Error Message -->
+                @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+                {
+                    <div class="text-danger text-center mt-2">@ViewBag.ErrorMessage</div>
+                }
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        @if (TempData["SuccessLogoutMessage"] != null)
+        {
+                @:toastr.options = {
+                @:"closeButton": true,
+                @:"progressBar": true,
+                @:"positionClass": "toast-top-center",
+                @:"timeOut": "3000"
+                @:};
+                @:toastr.success('@TempData["SuccessLogoutMessage"]');
+        }
+
+        const jwtToken = '@ViewBag.JwtToken';
+        if (jwtToken) {
+            localStorage.setItem('jwtToken', jwtToken);
+            window.location.href = '/Cartable/Index';
+        }
+    </script>
+}

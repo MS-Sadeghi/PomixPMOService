@@ -1,0 +1,248 @@
+﻿@model IEnumerable<IdentityManagementSystem.UI.ViewModels.UserViewModel>
+@{
+    ViewData["Title"] = "کاربران";
+    Layout = "_Layout";
+}
+
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+}
+
+<div class="input-group mb-5">
+    <input type="text" class="form-control" placeholder="جستجو" id="searchInput">
+    <div class="input-group-text btn btn-primary">
+        <i class="fa fa-search" aria-hidden="true"></i>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header d-flex align-items-center">
+        <h2 class="card-title">کاربران</h2>
+        <button id="AddUser" type="button" class="btn btn-primary btn-pill left-btn">افزودن کاربر</button>
+    </div>
+    <div class="card-body">
+        @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
+        {
+            <div class="alert alert-success">@ViewBag.SuccessMessage</div>
+        }
+        @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+        {
+            <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+        }
+        <div class="table-responsive">
+            <table class="table table-bordered border text-nowrap mb-0" id="basic-edit">
+                <thead>
+                    <tr>
+                        <th>نام</th>
+                        <th>نام خانوادگی</th>
+                        <th>موقعیت</th>
+                        <th>نام کاربری</th>
+                        <th>تاریخ ثبت</th>
+                        <th>آخرین ورود</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>@user.Name</td>
+                                <td>@user.LastName</td>
+                                <td>@user.Role</td>
+                                <td>@user.Username</td>
+                                <td>@(user.CreatedAt?.ToString("yyyy/MM/dd") ?? "-")</td>
+                                <td>@(user.LastLogin?.ToString("yyyy/MM/dd HH:mm") ?? "-")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center">هیچ کاربری یافت نشد.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content modal-content-demo">
+            <div class="modal-header">
+                <h6 class="modal-title" id="addUserModalLabel">افزودن کاربر جدید</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+                <form asp-controller="Home" asp-action="CreateUser" method="post" class="needs-validation" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-row">
+                        <div class="col-xl-6 mb-3">
+                            <label for="Name">نام</label>
+                            <input class="form-control" id="Name" name="Name" required>
+                            <div class="valid-feedback">معتبر است!</div>
+                            <div class="invalid-feedback">لطفاً نام را وارد کنید.</div>
+                        </div>
+                        <div class="col-xl-6 mb-3">
+                            <label for="LastName">نام خانوادگی</label>
+                            <input class="form-control" id="LastName" name="LastName" required>
+                            <div class="valid-feedback">معتبر است!</div>
+                            <div class="invalid-feedback">لطفاً نام خانوادگی را وارد کنید.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-xl-6 mb-3">
+                            <label for="Username">نام کاربری</label>
+                            <input class="form-control" id="Username" name="Username" required>
+                            <div class="valid-feedback">معتبر است!</div>
+                            <div class="invalid-feedback">لطفاً نام کاربری را وارد کنید.</div>
+                        </div>
+                        <div class="col-xl-6 mb-3">
+                            <label for="NationalId">کد ملی</label>
+                            <input class="form-control" id="NationalId" name="NationalId" required maxlength="10">
+                            <div class="valid-feedback">معتبر است!</div>
+                            <div class="invalid-feedback">لطفاً کد ملی را وارد کنید.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-xl-6 mb-3">
+                            <label for="RoleId">نقش کاربر</label>
+                            <select class="form-control" id="RoleId" name="RoleId" required>
+                                <option value="">انتخاب کنید</option>
+                                <!-- این لیست باید از API پر شود -->
+                                <option value="1">ادمین</option>
+                                <option value="2">کاربر عادی</option>
+                            </select>
+                            <div class="valid-feedback">معتبر است!</div>
+                            <div class="invalid-feedback">لطفاً نقش کاربر را انتخاب کنید.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-xl-6 mb-3">
+                            <label for="Password">رمز عبور</label>
+                            <div class="wrap-input100 validate-input input-group" id="Password-toggle1">
+                                <a href="javascript:void(0)" class="input-group-text bg-white text-muted toggle-password">
+                                    <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
+                                </a>
+                                <input class="input100 form-control" type="password" id="Password" name="Password" placeholder="رمز عبور" autocomplete="new-password" required minlength="6">
+                            </div>
+                            <div class="valid-feedback">معتبر است!</div>
+                            <div class="invalid-feedback">لطفاً رمز عبور را وارد کنید (حداقل 6 کاراکتر).</div>
+                        </div>
+                        <div class="col-xl-6 mb-3">
+                            <label for="ConfirmPassword">تأیید رمز عبور</label>
+                            <div class="wrap-input100 validate-input input-group" id="Password-toggle2">
+                                <a href="javascript:void(0)" class="input-group-text bg-white text-muted toggle-password">
+                                    <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
+                                </a>
+                                <input class="input100 form-control" type="password" id="ConfirmPassword" name="ConfirmPassword" placeholder="تأیید رمز عبور" autocomplete="new-password" required>
+                            </div>
+                            <div class="valid-feedback">معتبر است!</div>
+                            <div class="invalid-feedback">لطفاً تأیید رمز عبور را وارد کنید.</div>
+                            <div id="passwordMismatch" class="invalid-feedback d-none">رمز عبور و تأیید رمز عبور باید یکسان باشند.</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" type="submit">ثبت کاربر</button>
+                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">بستن</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('AddUser').addEventListener('click', function () {
+        var modal = new bootstrap.Modal(document.getElementById('addUserModal'));
+        modal.show();
+    });
+
+    (function () {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+
+        document.getElementById('AddUser').addEventListener('click', function () {
+        var modal = new bootstrap.Modal(document.getElementById('addUserModal'));
+        modal.show();
+    });
+
+    document.querySelectorAll('.toggle-password').forEach(function(toggle) {
+        toggle.addEventListener('click', function() {
+            var input = this.closest('.input-group').querySelector('input');
+            var icon = this.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('zmdi-eye');
+                icon.classList.add('zmdi-eye-off');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('zmdi-eye-off');
+                icon.classList.add('zmdi-eye');
+            }
+        });
+    });
+
+    (function () {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                var password = document.getElementById('Password');
+                var confirmPassword = document.getElementById('ConfirmPassword');
+                var passwordMismatch = document.getElementById('passwordMismatch');
+
+                if (password.value !== confirmPassword.value) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    passwordMismatch.classList.remove('d-none');
+                    confirmPassword.classList.add('is-invalid');
+                } else {
+                    passwordMismatch.classList.add('d-none');
+                    confirmPassword.classList.remove('is-invalid');
+                }
+
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+
+    document.getElementById('ConfirmPassword').addEventListener('input', function() {
+        var password = document.getElementById('Password');
+        var confirmPassword = this;
+        var passwordMismatch = document.getElementById('passwordMismatch');
+
+        if (password.value !== confirmPassword.value) {
+            passwordMismatch.classList.remove('d-none');
+            confirmPassword.classList.add('is-invalid');
+        } else {
+            passwordMismatch.classList.add('d-none');
+            confirmPassword.classList.remove('is-invalid');
+        }
+    });
+</script>

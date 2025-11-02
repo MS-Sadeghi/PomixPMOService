@@ -5,6 +5,7 @@ using PomixPMOService.API.Models.ViewModels;
 using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models;
 using ServicePomixPMO.API.Services;
+using System.Security.Claims;
 
 namespace PomixPMOService.API.Controllers
 {
@@ -399,6 +400,7 @@ namespace PomixPMOService.API.Controllers
                 return StatusCode(500, "خطا در سرور: " + ex.Message);
             }
         }
+        
 
         private async Task LogAction(long userId, string action, string? username, string result)
         {
@@ -428,8 +430,8 @@ namespace PomixPMOService.API.Controllers
 
     public class ChangePasswordViewModel
     {
-        public string CurrentPassword { get; set; }
-        public string NewPassword { get; set; }
-        public string ConfirmNewPassword { get; set; }
+        public string? CurrentPassword { get; set; }
+        public string? NewPassword { get; set; }
+        public string? ConfirmNewPassword { get; set; }
     }
 }

@@ -105,3 +105,43 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     font-weight: 500;
 }
+
+/* ==== اسکرول زیبا برای متن سند ==== */
+#documentModalBody {
+    max-height: 65vh; /* حداکثر ارتفاع: ۶۵٪ صفحه */
+    overflow-y: auto; /* فقط عمودی اسکرول بشه */
+    padding-right: 12px; /* فاصله از اسکرول‌بار */
+    line-height: 1.8;
+    font-size: 0.95rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    scrollbar-width: thin; /* فایرفاکس */
+    scrollbar-color: #007bff #f1f1f1;
+}
+
+    /* اسکرول‌بار کروم، سافاری، اج */
+    #documentModalBody::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #documentModalBody::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    #documentModalBody::-webkit-scrollbar-thumb {
+        background: #007bff;
+        border-radius: 10px;
+    }
+
+        #documentModalBody::-webkit-scrollbar-thumb:hover {
+            background: #0056b3;
+        }
+
+    /* هایلایت مهلت اعتبار (قرمز) */
+    #documentModalBody strong {
+        background: #ffebee;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+    }

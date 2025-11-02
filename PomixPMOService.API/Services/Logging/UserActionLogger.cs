@@ -2,6 +2,7 @@
 using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace ServicePomixPMO.API.Services.Logging
@@ -54,5 +55,10 @@ namespace ServicePomixPMO.API.Services.Logging
 
         public Task Error(long userId, string action, string result)
             => LogAsync(userId, action, result, "Error");
+
+        internal async Task Error(ClaimsPrincipal user, string v, string message)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -129,12 +129,16 @@ namespace ServicePomixPMO.API.Services
                 .ToListAsync();
 
             var claims = new List<Claim>
-            {
+    {
                 new Claim("UserId", user.UserId.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, user.Role.RoleName)
+                new Claim("Username", user.Username),
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()), // استاندارد
+                new Claim(ClaimTypes.Name, user.Name ?? user.Username),       // نام واقعی
+                new Claim(ClaimTypes.Surname, user.LastName ?? ""),           // نام خانوادگی
+                new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User")     // نقش
             };
 
+            // اضافه کردن پرمیشن‌ها
             claims.AddRange(permissions.Select(p => new Claim("Permission", p)));
 
             var token = new JwtSecurityToken(

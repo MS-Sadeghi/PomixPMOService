@@ -5,6 +5,7 @@ using PomixPMOService.API.Models.ViewModels;
 using ServicePomixPMO.API.Data;
 using ServicePomixPMO.API.Models;
 using ServicePomixPMO.API.Services.Logging;
+using System.Security.Claims;
 
 namespace ServicePomixPMO.API.Controllers
 {
@@ -174,6 +175,16 @@ namespace ServicePomixPMO.API.Controllers
                 int newStatusId = model.ValidateByExpert ? 2 : 3;
                 string statusName = model.ValidateByExpert ? "تأیید شده" : "رد شده";
 
+                if (model.ValidateByExpert == true)
+                {
+                    var isRead = await _context.VerifyDocLog.AnyAsync(d => d.RequestId == model.RequestId && d.IsRead == true);
+                    if (!isRead)
+                        return BadRequest("لطفاً ابتدا متن سند را مشاهده و تأیید کنید.");
+                }
+
+                if (model.ValidateByExpert == false && string.IsNullOrWhiteSpace(model.Description))
+                    return BadRequest("برای رد درخواست، توضیح الزامی است.");
+
                 request.ValidateByExpert = model.ValidateByExpert;
                 request.Description = model.Description;
                 request.UpdatedAt = DateTime.UtcNow;
@@ -221,63 +232,103 @@ namespace ServicePomixPMO.API.Controllers
         {
             var requestId = model.RequestId;
             var validateByExpert = model.ValidateByExpert;
-            var description = model.Description;
+            var description = model.Description?.Trim();
 
             try
             {
-                var userIdClaim = User.FindFirst("UserId")?.Value;
-                if (!long.TryParse(userIdClaim, out long userId))
+                // 1. شناسایی کاربر
+                if (!long.TryParse(User.FindFirst("UserId")?.Value, out long userId))
                     return Unauthorized(new { success = false, message = "کاربر شناسایی نشد." });
 
-                var request = await _context.Request.FindAsync(requestId);
+                var username = User.FindFirst("Username")?.Value
+                    ?? User.FindFirst("username")?.Value
+                    ?? User.FindFirst(ClaimTypes.Name)?.Value
+                    ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? $"کاربر {userId}";
+
+                // 2. پیدا کردن درخواست
+                var request = await _context.Request
+                    .FirstOrDefaultAsync(r => r.RequestId == requestId);
+
                 if (request == null)
                     return NotFound(new { success = false, message = "درخواست یافت نشد." });
 
-                // فقط برای عدم تأیید، بررسی سند خوانده شده
-                if (!validateByExpert && string.IsNullOrWhiteSpace(description))
+                // 3. شرط تأیید: باید سند خوانده شده باشد
+                if (validateByExpert == true)
                 {
-                    return BadRequest(new { success = false, message = "برای رد درخواست، توضیح الزامی است." });
+                    var latestLog = await _context.VerifyDocLog
+                        .Where(v => v.RequestId == requestId)
+                        .OrderByDescending(v => v.CreatedAt)
+                        .FirstOrDefaultAsync();
+
+                    if (latestLog == null)
+                        return BadRequest(new
+                        {
+                            success = false,
+                            message = "❌ سندی برای این درخواست آپلود نشده. ابتدا سند را بررسی کنید."
+                        });
+
+                    if (!(latestLog.IsRead ?? false))
+                        return BadRequest(new
+                        {
+                            success = false,
+                            message = "❌ شما هنوز تیک «سند مشاهده شد» را نزده‌اید. لطفاً ابتدا سند را بخوانید و تأیید کنید."
+                        });
                 }
 
+                // 4. شرط رد: توضیح الزامی است
+                if (validateByExpert == false && string.IsNullOrWhiteSpace(description))
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "❌ برای رد درخواست، وارد کردن دلیل الزامی است."
+                    });
+
+                // 5. تعیین وضعیت
                 int statusId = validateByExpert ? 2 : 3;
                 string statusName = validateByExpert ? "تأیید شده" : "رد شده";
 
+                // 6. به‌روزرسانی درخواست
                 request.ValidateByExpert = validateByExpert;
-                request.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+                request.Description = string.IsNullOrWhiteSpace(description) ? null : description;
                 request.UpdatedAt = DateTime.UtcNow;
-                request.UpdatedBy = User.Identity?.Name ?? userId.ToString();
-                _context.Request.Update(request);
+                request.UpdatedBy = username;
 
+                // 7. ثبت تاریخچه
                 var history = new RequestHistory
                 {
                     RequestId = requestId,
                     StatusId = statusId,
                     ExpertId = userId,
                     ActionDescription = validateByExpert
-                        ? "درخواست تأیید شد توسط کارشناس"
-                        : $"درخواست رد شد: {description ?? "بدون توضیح"}",
+                        ? "درخواست توسط کارشناس تأیید شد"
+                        : $"درخواست رد شد: {description}",
                     CreatedAt = DateTime.UtcNow,
                     UpdatedStatus = statusName,
-                    UpdatedStatusBy = User.Identity?.Name ?? userId.ToString(),
+                    UpdatedStatusBy = username,
                     UpdatedStatusDate = DateTime.UtcNow
                 };
-                _context.RequestHistory.Add(history);
 
+                _context.Request.Update(request);
+                _context.RequestHistory.Add(history);
                 await _context.SaveChangesAsync();
 
-                await _actionLogger.Info(userId, "UpdateValidationStatus", $"{statusName} by expert");
+                // 8. لاگ
+                await _actionLogger.Info(userId, "UpdateValidationStatus",
+                    $"{statusName} درخواست #{requestId} توسط کارشناس");
 
                 return Ok(new
                 {
                     success = true,
-                    message = $"درخواست با موفقیت {statusName}."
+                    message = $"درخواست با موفقیت {statusName}.",
+                    data = new { requestId, statusName }
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in UpdateValidationStatus");
-                await _actionLogger.Error(0, "UpdateValidationStatus", $"Exception: {ex.Message}");
-                return StatusCode(500, new { success = false, message = "خطا در سرور." });
+                _logger.LogError(ex, "خطا در UpdateValidationStatus - RequestId: {RequestId}", requestId);
+                await _actionLogger.Error(User, "UpdateValidationStatus", ex.Message);
+                return StatusCode(500, new { success = false, message = "⚠️ خطای سرور رخ داد." });
             }
         }
     }

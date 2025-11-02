@@ -166,15 +166,41 @@
                                 </a>
                             </li> *@
 
+                            <!-- =================================== -->
+                            <!-- 1. منوی مدیریت کاربران (جدا) -->
+                            <!-- =================================== -->
                             <li class="slide">
-                                <a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0)">
+                                <a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
                                     <i class="side-menu__icon fe fe-users"></i>
                                     <span class="side-menu__label">مدیریت کاربران</span>
                                     <i class="angle fe fe-chevron-right"></i>
                                 </a>
                                 <ul class="slide-menu">
-                                    <li class="side-menu-label1"><a href="javascript:void(0)">Authentication</a></li>
-                                    <li><a class="slide-item" asp-controller="Home" asp-action="Users"> کاربران</a></li>
+                                    <li class="side-menu-label1"><a href="javascript:void(0);">کاربران سیستم</a></li>
+                                    <li>
+                                        <a asp-controller="Home" asp-action="Users" class="slide-item">
+                                            <i class="fe fe-user-check"></i> لیست کاربران
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <!-- =================================== -->
+                            <!-- 2. منوی گزارش‌گیری (کاملاً جدا) -->
+                            <!-- =================================== -->
+                            <li class="slide">
+                                <a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
+                                    <i class="side-menu__icon fe fe-pie-chart"></i>
+                                    <span class="side-menu__label">گزارش‌گیری</span>
+                                    <i class="angle fe fe-chevron-right"></i>
+                                </a>
+                                <ul class="slide-menu">
+                                    <li class="side-menu-label1"><a href="javascript:void(0);">آمار و تحلیل</a></li>
+                                    <li>
+                                        <a asp-controller="Reports" asp-action="Index" class="slide-item">
+                                            <i class="fe fe-bar-chart-2"></i> داشبورد گزارش‌ها
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
                         </ul>

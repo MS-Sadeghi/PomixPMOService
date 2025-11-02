@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using IdentityManagementSystem.UI.Filters;
 
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // پیکربندی سرویس‌ها
@@ -35,7 +37,7 @@ builder.Services.AddHttpClient("PomixApi", client =>
 
 builder.Services.AddDNTCaptcha(options =>
 {
-    options.UseCookieStorageProvider(SameSiteMode.None)  // برای CORS، یا Lax اگر لازم
+    options.UseCookieStorageProvider(SameSiteMode.Lax)
            .ShowThousandsSeparators(false)
            .WithEncryptionKey("YourEncryptionKey")
            .AbsoluteExpiration(minutes: 7);

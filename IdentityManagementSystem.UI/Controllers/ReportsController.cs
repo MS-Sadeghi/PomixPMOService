@@ -1,81 +1,111 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using IdentityManagementSystem.API.Data;
-using IdentityManagementSystem.API.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Web;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
     public class ReportsController : Controller
     {
-        private readonly IdentityManagementSystemContext _context;
+        private readonly HttpClient _client;
+        private readonly IHttpContextAccessor _accessor;
+        private readonly ILogger<ReportsController> _logger;
 
-        public ReportsController(IdentityManagementSystemContext context)
+        public ReportsController(
+            IHttpClientFactory clientFactory,
+            IHttpContextAccessor accessor,
+            ILogger<ReportsController> logger)
         {
-            _context = context;
+            _client = clientFactory.CreateClient("PomixApi");
+            _accessor = accessor;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index(string docNumber = "")
         {
-            var model = new ReportsViewModel();
-
-            // 1. جستجوی سند خاص
-            if (!string.IsNullOrEmpty(docNumber))
+            var token = _accessor.HttpContext?.Session.GetString("JwtToken");
+            if (string.IsNullOrEmpty(token))
             {
-                model.SearchedDocNumber = docNumber;
-                model.DocRequestCount = await _context.Request
-                    .CountAsync(r => r.DocumentNumber == docNumber);
+                TempData["Error"] = "لطفاً ابتدا وارد شوید.";
+                return RedirectToAction("Login", "Home");
             }
 
-            // 2. 10 سند پر درخواست
-            model.TopDocuments = await _context.Request
-                .GroupBy(r => r.DocumentNumber)
-                .Select(g => new DocStats
-                {
-                    DocumentNumber = g.Key ?? "نامشخص",
-                    RequestCount = g.Count()
-                })
-                .OrderByDescending(x => x.RequestCount)
-                .Take(10)
-                .ToListAsync();
-
-            // 3. کاربر برتر (هفته، ماه، سال)
-            var now = DateTime.UtcNow;
-            model.TopUserWeek = await GetTopUser(now.AddDays(-7), now);
-            model.TopUserMonth = await GetTopUser(now.AddMonths(-1), now);
-            model.TopUserYear = await GetTopUser(now.AddYears(-1), now);
-
-            // 4. آمار کلی
-            var total = await _context.Request.CountAsync();
-            var approved = await _context.Request.CountAsync(r => r.ValidateByExpert == true);
-            var rejected = await _context.Request.CountAsync(r => r.ValidateByExpert == false);
-
-            model.Stats = new RequestStats
+            try
             {
-                Total = total,
-                Approved = approved,
-                Rejected = rejected,
-                Pending = total - approved - rejected
-            };
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            return View(model);
-        }
+                var url = $"api/Reports/stats?docNumber={HttpUtility.UrlEncode(docNumber)}";
+                var response = await _client.GetAsync(url);
 
-        private async Task<UserStats> GetTopUser(DateTime from, DateTime to)
-        {
-            var top = await _context.Request
-                .Where(r => r.CreatedAt >= from && r.CreatedAt <= to)
-                .GroupBy(r => r.CreatedBy)
-                .Select(g => new { User = g.Key ?? "ناشناس", Count = g.Count() })
-                .OrderByDescending(x => x.Count)
-                .FirstOrDefaultAsync();
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning("API Error: {Status} - {Error}", response.StatusCode, error);
+                    ViewBag.Error = "خطا در دریافت گزارش‌ها. لطفاً دوباره تلاش کنید.";
+                    return View(new ReportsViewModel());
+                }
 
-            return top != null
-                ? new UserStats { Username = top.User, RequestCount = top.Count }
-                : new UserStats { Username = "هیچ", RequestCount = 0 };
+                var json = await response.Content.ReadAsStringAsync();
+                var apiResult = JsonSerializer.Deserialize<ReportsApiResponse>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (apiResult == null)
+                {
+                    ViewBag.Error = "داده‌ای دریافت نشد.";
+                    return View(new ReportsViewModel());
+                }
+
+                // تبدیل به ViewModel
+                var model = new ReportsViewModel
+                {
+                    SearchedDocNumber = apiResult.SearchedDocNumber,
+                    DocRequestCount = apiResult.DocRequestCount,
+                    TopDocuments = apiResult.TopDocuments?.Select(d => new DocStats
+                    {
+                        DocumentNumber = d.DocumentNumber,
+                        RequestCount = d.RequestCount
+                    }).ToList() ?? new List<DocStats>(),
+
+                    TopUserWeek = new UserStats
+                    {
+                        Username = apiResult.TopUserWeek?.Username ?? "هیچ",
+                        RequestCount = apiResult.TopUserWeek?.RequestCount ?? 0
+                    },
+                    TopUserMonth = new UserStats
+                    {
+                        Username = apiResult.TopUserMonth?.Username ?? "هیچ",
+                        RequestCount = apiResult.TopUserMonth?.RequestCount ?? 0
+                    },
+                    TopUserYear = new UserStats
+                    {
+                        Username = apiResult.TopUserYear?.Username ?? "هیچ",
+                        RequestCount = apiResult.TopUserYear?.RequestCount ?? 0
+                    },
+                    Stats = new RequestStats
+                    {
+                        Total = apiResult.Stats?.Total ?? 0,
+                        Approved = apiResult.Stats?.Approved ?? 0,
+                        Rejected = apiResult.Stats?.Rejected ?? 0,
+                        Pending = apiResult.Stats?.Pending ?? 0
+                    }
+                };
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "خطا در دریافت گزارش‌ها");
+                ViewBag.Error = "خطای سرور. لطفاً با پشتیبانی تماس بگیرید.";
+                return View(new ReportsViewModel());
+            }
         }
     }
 
-    // مدل‌های گزارش
+    // ==================== ViewModelهای UI ====================
     public class ReportsViewModel
     {
         public string? SearchedDocNumber { get; set; }
@@ -105,5 +135,17 @@ namespace IdentityManagementSystem.UI.Controllers
         public int Approved { get; set; }
         public int Rejected { get; set; }
         public int Pending { get; set; }
+    }
+
+    // ==================== DTOهای API (برای Deserialize) ====================
+    public class ReportsApiResponse
+    {
+        public string? SearchedDocNumber { get; set; }
+        public int DocRequestCount { get; set; }
+        public List<DocStats>? TopDocuments { get; set; }
+        public UserStats? TopUserWeek { get; set; }
+        public UserStats? TopUserMonth { get; set; }
+        public UserStats? TopUserYear { get; set; }
+        public RequestStats? Stats { get; set; }
     }
 }

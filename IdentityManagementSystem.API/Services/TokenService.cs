@@ -5,7 +5,6 @@ using IdentityManagementSystem.API.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using IdentityManagementSystem.API.Services;
 
 namespace IdentityManagementSystem.API.Services
 {

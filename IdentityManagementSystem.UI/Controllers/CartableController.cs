@@ -203,7 +203,7 @@ namespace IdentityManagementSystem.UI.Controllers
         public async Task<IActionResult> SubmitRequest(CartableFormViewModel model)
         {
             // کدهای قبلی validation (کپچا و شرایط) بدون تغییر باقی می‌ماند
-            if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
+            if (!_captchaValidatorService.HasRequestValidCaptchaEntry(Language.Persian, DisplayMode.ShowDigits))
             {
                 ViewBag.ErrorMessage = "کد امنیتی اشتباه است.";
                 ViewBag.FormModel = model;

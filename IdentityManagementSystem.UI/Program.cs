@@ -37,7 +37,9 @@ builder.Services.AddHttpClient("PomixApi", client =>
 
 builder.Services.AddDNTCaptcha(options =>
 {
-    options.UseCookieStorageProvider(SameSiteMode.Lax)
+    options.UseCookieStorageProvider()  // بدون هیچ پارامتری
+                                        // .UseSessionStorageProvider()  // گزینه جایگزین - امن‌تر
+                                        // .UseMemoryCacheStorageProvider()  // گزینه جایگزین - متکی به زمان سرور
            .ShowThousandsSeparators(false)
            .WithEncryptionKey("YourEncryptionKey")
            .AbsoluteExpiration(minutes: 7);

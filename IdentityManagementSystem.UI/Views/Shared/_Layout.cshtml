@@ -82,12 +82,12 @@
                                     <div class="d-flex align-items-center">
                                         <div class="d-flex">
                                             <!-- THEME SWITCH -->
-                                            <div class="d-flex country">
+                                            @* <div class="d-flex country">
                                                 <a class="nav-link icon theme-layout nav-link-bg layout-setting">
                                                     <span class="dark-layout"><i class="fe fe-moon"></i></span>
                                                     <span class="light-layout"><i class="fe fe-sun"></i></span>
                                                 </a>
-                                            </div>
+                                            </div> *@
                                             <!-- FULL SCREEN -->
                                             <div class="dropdown d-flex">
                                                 <a class="nav-link icon full-screen-link nav-link-bg">
@@ -101,12 +101,12 @@
                                                          class="avatar profile-user brround cover-image">
                                                 </a>
                                                 <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                                                    <div class="drop-heading">
+                                                    @* <div class="drop-heading">
                                                         <div class="text-center">
                                                             <h5 id="user-name" class="text-dark mb-0 fs-14 fw-semibold"></h5>
                                                             <small id="user-role" class="text-muted"></small>
                                                         </div>
-                                                    </div>
+                                                    </div> *@
                                                     <div class="dropdown-divider m-0"></div>
                                                     <a class="dropdown-item" asp-controller="Home" asp-action="EditProfile">
                                                         پروفایل <i class="dropdown-icon fe fe-user" style="float:right"></i>
@@ -178,9 +178,7 @@
                                 <ul class="slide-menu">
                                     <li class="side-menu-label1"><a href="javascript:void(0);">کاربران سیستم</a></li>
                                     <li>
-                                        <a asp-controller="Home" asp-action="Users" class="slide-item">
-                                            <i class="fe fe-user-check"></i> لیست کاربران
-                                        </a>
+                                        <a asp-controller="Home" asp-action="Users" class="slide-item">لیست کاربران</a>
                                     </li>
                                 </ul>
                             </li>
@@ -188,7 +186,7 @@
                             <!-- =================================== -->
                             <!-- 2. منوی گزارش‌گیری (کاملاً جدا) -->
                             <!-- =================================== -->
-                            <li class="slide">
+                            @* <li class="slide">
                                 <a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
                                     <i class="side-menu__icon fe fe-pie-chart"></i>
                                     <span class="side-menu__label">گزارش‌گیری</span>
@@ -202,7 +200,7 @@
                                         </a>
                                     </li>
                                 </ul>
-                            </li>
+                            </li> *@
                         </ul>
                     </div>
                 </div>

@@ -49,6 +49,12 @@ namespace IdentityManagementSystem.UI.ViewModels
 
         public string? MobileNumber { get; set; }
     }
+    
+    public class RoleViewModel
+    {
+        public int roleId { get; set; }
+        public string roleName { get; set; } = string.Empty;
+    }
 
     public class LoginViewModel
     {

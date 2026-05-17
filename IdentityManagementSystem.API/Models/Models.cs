@@ -27,6 +27,12 @@ namespace IdentityManagementSystem.API.Models
         public bool IsActive { get; set; } = true;
     }
 
+        public class RoleViewModel
+        {
+            public int RoleId { get; set; }
+            public string RoleName { get; set; } = string.Empty;
+        }
+    
 
     public class Request
     {

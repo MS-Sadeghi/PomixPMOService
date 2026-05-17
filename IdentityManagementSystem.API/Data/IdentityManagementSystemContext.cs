@@ -10,6 +10,7 @@ namespace IdentityManagementSystem.API.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Role> Roles { get; set; }
         public DbSet<Request> Request { get; set; }
         public DbSet<Cartable> Cartable { get; set; }
         public DbSet<CartableItem> CartableItems { get; set; }

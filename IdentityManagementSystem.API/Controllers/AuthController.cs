@@ -170,21 +170,30 @@ namespace IdentityManagementSystem.API.Controllers
         }
 
         [HttpPut("UpdateUser/{id}")]
-        public async Task<IActionResult> UpdateUser(long id, [FromBody] CreateUserViewModel model)
+        public async Task<IActionResult> UpdateUser(long id, [FromBody] UpdateUserRequest model)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound("کاربر یافت نشد.");
 
-            user.Name = model.Name;
-            user.LastName = model.LastName;
-            user.Username = model.Username;
-            user.NationalId = model.NationalId;
-            user.MobileNumber = model.MobileNumber;
-            user.RoleId = model.RoleId;
+            // فقط فیلدهایی که مقدار دارند را به‌روزرسانی کن
+            if (!string.IsNullOrEmpty(model.Name))
+                user.Name = model.Name;
+
+            if (!string.IsNullOrEmpty(model.LastName))
+                user.LastName = model.LastName;
+
+            if (!string.IsNullOrEmpty(model.Username))
+                user.Username = model.Username;
+
+            if (!string.IsNullOrEmpty(model.NationalId))
+                user.NationalId = model.NationalId;
+
+            if (!string.IsNullOrEmpty(model.MobileNumber))
+                user.MobileNumber = model.MobileNumber;
+
+            if (model.RoleId.HasValue && model.RoleId.Value > 0)
+                user.RoleId = model.RoleId.Value;
 
             // اگر رمز جدید فرستاده شده بود، بروزرسانی کن
             if (!string.IsNullOrEmpty(model.Password))
@@ -193,7 +202,7 @@ namespace IdentityManagementSystem.API.Controllers
             await _context.SaveChangesAsync();
             await LogAction(user.UserId, "UpdateUser_Success", user.Username, "User updated successfully");
 
-            return Ok("اطلاعات کاربر با موفقیت بروزرسانی شد.");
+            return Ok(new { success = true, message = "اطلاعات کاربر با موفقیت بروزرسانی شد." });
         }
 
         // 🔴 Soft Delete (غیرفعال کردن کاربر)
@@ -400,7 +409,27 @@ namespace IdentityManagementSystem.API.Controllers
                 return StatusCode(500, "خطا در سرور: " + ex.Message);
             }
         }
-        
+
+        [HttpGet("GetRoles")]
+        public async Task<IActionResult> GetRoles()
+        {
+            try
+            {
+                var roles = await _context.Roles
+                    .Select(r => new
+                    {
+                        roleId = r.RoleId,
+                        roleName = r.RoleName
+                    })
+                    .ToListAsync();
+
+                return Ok(roles);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"خطا در دریافت نقش‌ها: {ex.Message}" });
+            }
+        }
 
         private async Task LogAction(long userId, string action, string? username, string result)
         {

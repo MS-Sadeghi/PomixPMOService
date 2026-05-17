@@ -158,21 +158,18 @@ namespace IdentityManagementSystem.UI.Controllers
                 if (!ModelState.IsValid)
                 {
                     var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-                    TempData["ErrorMessage"] = string.Join(" | ", errors);
-                    return RedirectToAction("Users");
+                    return Json(new { success = false, message = string.Join(" | ", errors) });
                 }
 
                 if (model.Password != model.ConfirmPassword)
                 {
-                    TempData["ErrorMessage"] = "رمز عبور و تأیید رمز عبور یکسان نیستند";
-                    return RedirectToAction("Users");
+                    return Json(new { success = false, message = "رمز عبور و تأیید رمز عبور یکسان نیستند" });
                 }
 
                 var token = HttpContext.Session.GetString("JwtToken");
                 if (string.IsNullOrEmpty(token))
                 {
-                    TempData["ErrorMessage"] = "لطفاً ابتدا وارد سیستم شوید";
-                    return RedirectToAction("Users");
+                    return Json(new { success = false, message = "لطفاً ابتدا وارد سیستم شوید" });
                 }
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -189,20 +186,17 @@ namespace IdentityManagementSystem.UI.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "کاربر با موفقیت ایجاد شد";
-                    return RedirectToAction("Users");
+                    return Json(new { success = true, message = "کاربر با موفقیت ایجاد شد" });
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    TempData["ErrorMessage"] = $"خطا در ایجاد کاربر: {errorContent}";
-                    return RedirectToAction("Users");
+                    return Json(new { success = false, message = $"خطا در ایجاد کاربر: {errorContent}" });
                 }
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"خطا در ارتباط با سرور: {ex.Message}";
-                return RedirectToAction("Users");
+                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
             }
         }
 
@@ -254,54 +248,46 @@ namespace IdentityManagementSystem.UI.Controllers
         {
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-                    TempData["ErrorMessage"] = string.Join(" | ", errors);
-                    return RedirectToAction("Users");
-                }
-
                 if (!string.IsNullOrEmpty(model.Password) && model.Password != model.ConfirmPassword)
                 {
-                    TempData["ErrorMessage"] = "رمز عبور و تأیید رمز عبور یکسان نیستند";
-                    return RedirectToAction("Users");
+                    return Json(new { success = false, message = "رمز عبور و تأیید رمز عبور یکسان نیستند" });
                 }
 
                 var token = HttpContext.Session.GetString("JwtToken");
                 if (string.IsNullOrEmpty(token))
                 {
-                    TempData["ErrorMessage"] = "لطفاً ابتدا وارد سیستم شوید";
-                    return RedirectToAction("Users");
+                    return Json(new { success = false, message = "لطفاً ابتدا وارد سیستم شوید" });
                 }
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _client.PutAsJsonAsync($"Auth/UpdateUser/{model.UserId}", new
+
+                // ساختن آبجکت برای ارسال به API
+                var updateData = new
                 {
                     model.Name,
                     model.LastName,
                     model.Username,
-                    model.Password,
+                    Password = string.IsNullOrEmpty(model.Password) ? null : model.Password,
                     model.NationalId,
                     model.MobileNumber,
                     model.RoleId
-                });
+                };
+
+                var response = await _client.PutAsJsonAsync($"Auth/UpdateUser/{model.UserId}", updateData);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "کاربر با موفقیت به‌روزرسانی شد";
-                    return RedirectToAction("Users");
+                    return Json(new { success = true, message = "کاربر با موفقیت به‌روزرسانی شد" });
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    TempData["ErrorMessage"] = $"خطا در به‌روزرسانی کاربر: {errorContent}";
-                    return RedirectToAction("Users");
+                    return Json(new { success = false, message = $"خطا در به‌روزرسانی کاربر: {errorContent}" });
                 }
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"خطا در ارتباط با سرور: {ex.Message}";
-                return RedirectToAction("Users");
+                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
             }
         }
 
@@ -311,7 +297,7 @@ namespace IdentityManagementSystem.UI.Controllers
         {
             try
             {
-                var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken?.ToString();
+                var token = HttpContext.Session.GetString("JwtToken");
                 if (string.IsNullOrEmpty(token))
                 {
                     return Json(new { success = false, message = "توکن یافت نشد. لطفاً دوباره وارد سیستم شوید." });
@@ -322,7 +308,9 @@ namespace IdentityManagementSystem.UI.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return Json(new { success = true, message = "کاربر با موفقیت غیرفعال شد." });
+                    // خواندن پیام از پاسخ API
+                    var result = await response.Content.ReadAsStringAsync();
+                    return Json(new { success = true, message = result ?? "کاربر با موفقیت غیرفعال شد." });
                 }
                 else
                 {
@@ -345,8 +333,7 @@ namespace IdentityManagementSystem.UI.Controllers
                 var token = HttpContext.Session.GetString("JwtToken");
                 if (string.IsNullOrEmpty(token))
                 {
-                    TempData["ErrorMessage"] = "لطفاً ابتدا وارد سیستم شوید";
-                    return RedirectToAction("Users");
+                    return Json(new { success = false, message = "لطفاً ابتدا وارد سیستم شوید" });
                 }
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -354,20 +341,17 @@ namespace IdentityManagementSystem.UI.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
-                    TempData["SuccessMessage"] = "کاربر با موفقیت فعال شد";
-                    return RedirectToAction("Users");
+                    return Json(new { success = true, message = "کاربر با موفقیت فعال شد" });
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    TempData["ErrorMessage"] = $"خطا در فعال‌سازی کاربر: {errorContent}";
-                    return RedirectToAction("Users");
+                    return Json(new { success = false, message = $"خطا در فعال‌سازی کاربر: {errorContent}" });
                 }
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"خطا در ارتباط با سرور: {ex.Message}";
-                return RedirectToAction("Users");
+                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
             }
         }
 
@@ -413,21 +397,22 @@ namespace IdentityManagementSystem.UI.Controllers
             {
                 var token = HttpContext.Session.GetString("JwtToken");
                 if (string.IsNullOrEmpty(token))
-                    return Json(new { success = false, message = "توکن یافت نشد." });
+                    return Unauthorized(); // یا return Json(new List<RoleViewModel>());
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var response = await _client.GetAsync("Auth/GetRoles");
+
                 if (response.IsSuccessStatusCode)
                 {
                     var roles = await response.Content.ReadFromJsonAsync<List<RoleViewModel>>();
-                    return Json(new { success = true, roles });
+                    return Ok(roles); // فقط لیست رو برگردون
                 }
 
-                return Json(new { success = false, message = "خطا در دریافت نقش‌ها" });
+                return Ok(new List<RoleViewModel>()); // لیست خالی
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return Ok(new List<RoleViewModel>());
             }
         }
 

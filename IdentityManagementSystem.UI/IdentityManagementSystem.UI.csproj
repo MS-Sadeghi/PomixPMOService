@@ -22,4 +22,10 @@
     <ProjectReference Include="..\IdentityManagementSystem.API\IdentityManagementSystem.API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="DNTCaptcha.Core">
+      <HintPath>..\Packages\DNTCaptcha.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

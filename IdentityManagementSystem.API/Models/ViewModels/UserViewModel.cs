@@ -62,4 +62,15 @@ namespace IdentityManagementSystem.API.Models.ViewModels
         [StringLength(50)]
         public string Permission { get; set; }
     }
+
+    public class UpdateUserRequest
+    {
+        public string? Name { get; set; }
+        public string? LastName { get; set; }
+        public string? Username { get; set; }
+        public string? Password { get; set; }
+        public string? NationalId { get; set; }
+        public string? MobileNumber { get; set; }
+        public int? RoleId { get; set; }
+    }
 }

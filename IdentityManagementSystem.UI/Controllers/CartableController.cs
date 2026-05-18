@@ -590,7 +590,8 @@ namespace IdentityManagementSystem.UI.Controllers
         {
             try
             {
-                return $"{date:HH:mm:ss}";
+                var TehranTime = date.AddHours(3.5);
+                return TehranTime.ToString("HH:mm:ss");
             }
             catch
             {

@@ -9,7 +9,74 @@
     var documentError = ViewBag.DocumentError as string ?? null;
 }
 <link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
+<style>
+    .modal-content {
+        background: #ffffff;
+    }
 
+    .modal-header .btn-close {
+        opacity: 0.6;
+        transition: opacity 0.2s;
+    }
+
+        .modal-header .btn-close:hover {
+            opacity: 1;
+        }
+
+    .form-control-sm {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #e0e4e8;
+        transition: all 0.2s;
+    }
+
+        .form-control-sm:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
+            outline: none;
+        }
+
+    .form-label {
+        font-size: 0.75rem;
+        letter-spacing: 0.3px;
+    }
+
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.4rem 1rem;
+        font-weight: 500;
+    }
+
+    .btn-light {
+        background-color: #f8f9fa;
+        border-color: #e0e4e8;
+        color: #4a5568;
+    }
+
+        .btn-light:hover {
+            background-color: #e9ecef;
+            border-color: #d0d4d8;
+        }
+
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+
+    /* لینک‌ها و متن‌ها */
+    .text-muted {
+        color: #6c757d !important;
+    }
+
+    .border-top {
+        border-color: #e9ecef !important;
+    }
+</style>
 <div class="input-group mb-5">
     <form asp-action="Index" method="get" class="w-100">
         @{
@@ -266,100 +333,103 @@
 
 
 <!-- Modal رد درخواست -->
-<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true" >
-    <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width:450px;">
-        <div class="modal-content shadow-lg border-0 rounded-4">
-            <div class="modal-header rounded-top-4">
-                <h5 class="modal-title d-flex align-items-center gap-2" id="rejectModalLabel">
-                     رد درخواست
-                </h5>
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 rounded-3">
+            <div class="modal-header border-bottom pb-3 pt-4 px-4">
+                <h5 class="modal-title fw-semibold text-dark" id="rejectModalLabel">عدم تایید درخواست</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
             </div>
-
-            <div class="modal-body p-4">
+            <div class="modal-body px-4 py-4">
                 <form id="rejectForm">
                     <input type="hidden" id="rejectRequestId" />
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">
-                            <i class="fa fa-exclamation-circle text-warning me-1"></i>
-                            علت عدم تأیید درخواست:
-                        </label>
-                        <select class="form-select rounded-3 shadow-sm" style="font-size:13px;" id="predefinedReason" asp-items="@ViewBag.RejectReasons">
+                        <label class="form-label fw-semibold mb-2">علت عدم تایید</label>
+                        <select class="form-select rounded-2" id="predefinedReason" asp-items="@ViewBag.RejectReasons">
+                            <option value="" class="p-1">انتخاب کنید...</option>
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            <i class="fa fa-comment-dots text-secondary me-1"></i>
-                            توضیحات تکمیلی (اختیاری):
-                        </label>
-                        <textarea class="form-control rounded-3 shadow-sm"
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold mb-2">توضیحات تکمیلی</label>
+                        <textarea class="form-control rounded-2"
                                   id="customDescription" rows="3"
-                                  placeholder="مثال: تاریخ انقضا وکالتنامه: ۱۴۰۳/۰۵/۱۰"></textarea>
+                                  placeholder="اختیاری"></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <button type="button" class="btn btn-light px-4 py-2 rounded-2" data-bs-dismiss="modal">انصراف</button>
+                        <button type="button" class="btn btn-danger px-4 py-2 rounded-2" id="confirmReject">تایید</button>
                     </div>
                 </form>
-            </div>
-
-            <div class="modal-footer pb-3 text-start">
-                <button type="button" class="btn btn-primary" id="confirmReject">
-                     تأیید
-                </button>
             </div>
         </div>
     </div>
 </div>
-
 
 <!-- Modal for Adding New Document -->
 <div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable custom-modal">
-        <div class="modal-content rounded-4 shadow-lg border-0">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-semibold text-black">ایجاد سند جدید</h5>
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content border-0 rounded-3">
+            <!-- Header مینیمال -->
+            <div class="modal-header border-bottom pb-3 pt-4 px-4">
+                <h6 class="modal-title fw-semibold text-dark" id="scrollingmodalLabel">ایجاد درخواست جدید</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body py-4 px-5">
+
+            <!-- Body با فرم -->
+            <div class="modal-body px-4 py-4">
                 <form asp-action="ValidateSteps" method="post" id="needs-validation-form">
                     @Html.AntiForgeryToken()
-                    <!-- Step 1 -->
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-6">
-                            <div class="form-floating modern-input">
-                                <input type="text" class="form-control" id="NationalCode" name="NationalCode" placeholder="کد ملی" required />
-                                <label for="NationalCode"><i class="fa fa-vcard-o me-2 text-muted"></i> کد ملی</label>
+
+                    <!-- فیلدهای مرحله اول -->
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-semibold mb-2">اطلاعات هویتی</label>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <input type="text" class="form-control form-control-sm rounded-2"
+                                       id="NationalCode" name="NationalCode"
+                                       placeholder="کد ملی" required />
+                            </div>
+                            <div class="col-12">
+                                <input type="text" class="form-control form-control-sm rounded-2"
+                                       id="MobileNumber" name="MobileNumber"
+                                       placeholder="شماره موبایل" required />
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-floating modern-input">
-                                <input type="text" class="form-control" id="MobileNumber" name="MobileNumber" placeholder="شماره موبایل" required />
-                                <label for="MobileNumber"><i class="fa fa-mobile me-2 text-muted"></i> شماره موبایل</label>
-                            </div>
-                        </div>
+                        <small class="text-@(string.IsNullOrEmpty(formModel?.Step1Message) || formModel.Step1Message.Contains("معتبر") ? "success" : "danger") d-block mt-2">
+                            @formModel?.Step1Message
+                        </small>
                     </div>
-                    <span class="small d-block mb-3 text-@(string.IsNullOrEmpty(formModel?.Step1Message) || formModel.Step1Message.Contains("معتبر") ? "success" : "danger")">
-                        @formModel?.Step1Message
-                    </span>
-                    <!-- Step 2 -->
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-6">
-                            <div class="form-floating modern-input">
-                                <input type="text" class="form-control" id="DocumentNumber" name="DocumentNumber" placeholder="شناسه سند" required />
-                                <label for="DocumentNumber"><i class="fa fa-wpforms me-2 text-muted"></i> شناسه سند</label>
+
+                    <!-- خط جداکننده ظریف -->
+                    <div class="border-top my-3"></div>
+
+                    <!-- فیلدهای مرحله دوم -->
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-semibold mb-2">اطلاعات سند</label>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <input type="text" class="form-control form-control-sm rounded-2"
+                                       id="DocumentNumber" name="DocumentNumber"
+                                       placeholder="شناسه سند" required />
+                            </div>
+                            <div class="col-12">
+                                <input type="text" class="form-control form-control-sm rounded-2"
+                                       id="VerifyCode" name="VerifyCode"
+                                       placeholder="رمز تصدیق" required />
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-floating modern-input">
-                                <input type="text" class="form-control" id="VerifyCode" name="VerifyCode" placeholder="رمز تصدیق" required />
-                                <label for="VerifyCode"><i class="fa fa-unlock-alt me-2 text-muted"></i> رمز تصدیق</label>
-                            </div>
-                        </div>
+                        <small class="text-@(string.IsNullOrEmpty(formModel?.Step2Message) || formModel.Step2Message.Contains("معتبر") ? "success" : "danger") d-block mt-2">
+                            @formModel?.Step2Message
+                        </small>
                     </div>
-                    <span class="small d-block mb-3 text-@(string.IsNullOrEmpty(formModel?.Step2Message) || formModel.Step2Message.Contains("معتبر") ? "success" : "danger")">
-                        @formModel?.Step2Message
-                    </span>
-                    <div class="text-end mt-3">
-                        <button type="submit" id="btnVerify" class="btn btn-primary px-4 py-2">بررسی</button>
+
+                    <!-- دکمه‌ها -->
+                    <div class="d-flex gap-2 justify-content-end mt-4 pt-2">
+                        <button type="button" class="btn btn-sm btn-light px-4 rounded-2" data-bs-dismiss="modal">انصراف</button>
+                        <button type="submit" id="btnVerify" class="btn btn-sm btn-primary px-4 rounded-2">ثبت درخواست</button>
                     </div>
                 </form>
             </div>
@@ -367,14 +437,6 @@
     </div>
 </div>
 
-        <!-- خط پایین -->
-        <div class="border-top border-secondary-subtle mt-3 pt-2">
-            <small class="text-muted">
-                نسخه ۱.۰ | سامانه احراز هویت اسناد
-            </small>
-        </div>
-    </footer>
-</div>
 @section Scripts {
     <script>
         $(document).ready(function () {
@@ -499,7 +561,7 @@
                 const reason = $('#predefinedReason option:selected').text().trim();
                 const custom = $('#customDescription').val()?.trim();
 
-                if (reason && reason !== "-- انتخاب کنید --") description += reason;
+                if (reason && reason !== "----") description += reason;
                 if (custom) {
                     if (description) description += " - ";
                     description += custom;

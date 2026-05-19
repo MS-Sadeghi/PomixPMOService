@@ -129,15 +129,21 @@ namespace IdentityManagementSystem.API.Services
                 .ToListAsync();
 
             var claims = new List<Claim>
-    {
-                new Claim("UserId", user.UserId.ToString()),
-                new Claim("Username", user.Username),
-                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()), // استاندارد
-                new Claim(ClaimTypes.Name, user.Name ?? user.Username),       // نام واقعی
-                new Claim(ClaimTypes.Surname, user.LastName ?? ""),           // نام خانوادگی
-                new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User")     // نقش
-            };
+{
+    new Claim("UserId", user.UserId.ToString()),
+    new Claim("Username", user.Username),
 
+    new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+
+    // این مهمه
+    new Claim(ClaimTypes.Name, user.Username),
+
+    new Claim("FullName", user.Name ?? ""),
+
+    new Claim(ClaimTypes.Surname, user.LastName ?? ""),
+
+    new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User")
+};
             // اضافه کردن پرمیشن‌ها
             claims.AddRange(permissions.Select(p => new Claim("Permission", p)));
 

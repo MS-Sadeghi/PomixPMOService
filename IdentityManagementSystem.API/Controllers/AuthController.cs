@@ -143,13 +143,26 @@ namespace IdentityManagementSystem.API.Controllers
             return CreatedAtAction(nameof(GetUsers), new { id = user.UserId }, result);
         }
 
+        private bool IsAdmin()
+        {
+            var roleIdClaim = User.FindFirst("RoleId")?.Value;
+            
+            if(int.TryParse(roleIdClaim, out var roleId)&& roleId==3) return true;
+            var roleName = User.FindFirst(ClaimTypes.Role)?.Value;
+            return roleName == "ادمین";
+        }
+
 
         [HttpGet("GetUsers")]
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<UserViewModel>>> GetUsers()
         {
+            if (!IsAdmin())
+            {
+                return Forbid();
+            }
             var users = await _context.Users
-                .Include(u => u.Role) // ✅ برای جلوگیری از NullReference در Role
+                .Include(u => u.Role) //  برای جلوگیری از NullReference در Role
                 .Select(u => new UserViewModel
                 {
                     UserId = u.UserId,
@@ -160,10 +173,10 @@ namespace IdentityManagementSystem.API.Controllers
                     Role = u.Role != null ? u.Role.RoleName : "بدون نقش",
                     CreatedAt = u.CreatedAt,
                     LastLogin = u.LastLogin,
-                    IsActive = u.IsActive,          // ✅ اضافه شد تا وضعیت فعال/غیرفعال هم برگرده
-                    MobileNumber = u.MobileNumber   // ✅ اضافه شد برای نمایش شماره موبایل
+                    IsActive = u.IsActive,          //  اضافه شد تا وضعیت فعال/غیرفعال هم برگرده
+                    MobileNumber = u.MobileNumber   //  اضافه شد برای نمایش شماره موبایل
                 })
-                .OrderByDescending(u => u.CreatedAt) // 🔹 اختیاری: کاربران جدیدتر اول بیایند
+                .OrderByDescending(u => u.CreatedAt) //  اختیاری: کاربران جدیدتر اول بیایند
                 .ToListAsync();
 
             return Ok(users);

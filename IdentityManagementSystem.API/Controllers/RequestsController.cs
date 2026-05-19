@@ -31,13 +31,32 @@ namespace IdentityManagementSystem.API.Controllers
         [HttpGet]
         public async Task<ActionResult<PaginatedResponse<RequestViewModel>>> GetAll(int page = 1, int pageSize = 10, string search = "")
         {
+            var username = User.Identity?.Name;
+
+            if (string.IsNullOrEmpty(username))
+                return Unauthorized();
+
+            var currentUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username);
+
+            if (currentUser == null)
+                return Unauthorized();
+
             var query = _context.Request.AsQueryable();
+
+            // اگر ادمین نیست، فقط Requestهای خودش
+            if (currentUser.RoleId != 3)
+            {
+                query = query.Where(r =>
+                    r.CreatedBy == username ||
+                    r.CreatedBy == currentUser.UserId.ToString());
+            }
 
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(r => r.NationalId.Contains(search) ||
-                                        r.MobileNumber.Contains(search) ||
-                                        r.DocumentNumber.Contains(search));
+                                         r.MobileNumber.Contains(search) ||
+                                         r.DocumentNumber.Contains(search));
             }
 
             query = query.OrderByDescending(r => r.CreatedAt);
@@ -74,6 +93,8 @@ namespace IdentityManagementSystem.API.Controllers
                 PageSize = pageSize
             });
         }
+
+
 
         [HttpPost("CreateNewRequest")]
         [Authorize]

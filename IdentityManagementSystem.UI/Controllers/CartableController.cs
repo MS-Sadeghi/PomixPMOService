@@ -457,7 +457,7 @@ namespace IdentityManagementSystem.UI.Controllers
             {
                 url += $"&search={System.Web.HttpUtility.UrlEncode(search)}";
             }
-
+             
             try
             {
                 var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;

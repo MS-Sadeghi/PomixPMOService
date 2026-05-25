@@ -13,6 +13,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 using IdentityManagementSystem.UI.Helpers;
+using IdentityManagementSystem.Shared.DTO;
 
 namespace IdentityManagementSystem.UI.Controllers
 {

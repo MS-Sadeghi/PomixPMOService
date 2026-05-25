@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
-using IdentityManagementSystem.API.Controllers;
 using IdentityManagementSystem.UI.Filters;
 using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
@@ -203,7 +202,7 @@ namespace IdentityManagementSystem.UI.Controllers
         public async Task<IActionResult> SubmitRequest(CartableFormViewModel model)
         {
             // کدهای قبلی validation (کپچا و شرایط) بدون تغییر باقی می‌ماند
-            if (!_captchaValidatorService.HasRequestValidCaptchaEntry(Language.Persian, DisplayMode.ShowDigits))
+            if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
             {
                 ViewBag.ErrorMessage = "کد امنیتی اشتباه است.";
                 ViewBag.FormModel = model;

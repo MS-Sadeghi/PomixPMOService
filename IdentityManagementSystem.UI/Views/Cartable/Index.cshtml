@@ -8,75 +8,9 @@
     var showDocumentTab = ViewBag.ShowDocumentTab as bool? ?? false;
     var documentError = ViewBag.DocumentError as string ?? null;
 }
+
 <link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
-<style>
-    .modal-content {
-        background: #ffffff;
-    }
 
-    .modal-header .btn-close {
-        opacity: 0.6;
-        transition: opacity 0.2s;
-    }
-
-        .modal-header .btn-close:hover {
-            opacity: 1;
-        }
-
-    .form-control-sm {
-        font-size: 0.85rem;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #e0e4e8;
-        transition: all 0.2s;
-    }
-
-        .form-control-sm:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
-            outline: none;
-        }
-
-    .form-label {
-        font-size: 0.75rem;
-        letter-spacing: 0.3px;
-    }
-
-    .btn-sm {
-        font-size: 0.8rem;
-        padding: 0.4rem 1rem;
-        font-weight: 500;
-    }
-
-    .btn-light {
-        background-color: #f8f9fa;
-        border-color: #e0e4e8;
-        color: #4a5568;
-    }
-
-        .btn-light:hover {
-            background-color: #e9ecef;
-            border-color: #d0d4d8;
-        }
-
-    .btn-primary {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-    }
-
-        .btn-primary:hover {
-            background-color: #0b5ed7;
-            border-color: #0a58ca;
-        }
-
-    /* لینک‌ها و متن‌ها */
-    .text-muted {
-        color: #6c757d !important;
-    }
-
-    .border-top {
-        border-color: #e9ecef !important;
-    }
-</style>
 <div class="input-group mb-5">
     <form asp-action="Index" method="get" class="w-100">
         @{
@@ -95,7 +29,7 @@
                 </select>
 
                 <button type="submit" class="btn btn-primary">
-                <i class="fa fa-search" aria-hidden="true" style="color: whitesmoke;"></i>
+                    <i class="fa fa-search" aria-hidden="true" style="color: whitesmoke;"></i>
                 </button>
             </form>
         </div>
@@ -264,14 +198,14 @@
                                         <td class="text-center" style="width:120px;">
                                             <div class="btn-group btn-group-sm radiobtns" role="group" aria-label="Approval radio toggle button group" style="border-radius: 3px;">
                                                 <input type="radio" class="btn-check approval-radio" name="approval-@item.RequestId" id="approve-@item.RequestId" data-request-id="@item.RequestId" data-value="true"
-                                                @(item.ValidateByExpert.HasValue && item.ValidateByExpert.Value ? "checked" : "")>
+                                                       @(item.ValidateByExpert.HasValue && item.ValidateByExpert.Value ? "checked" : "")>
                                                 <label class="btn btn-outline-success" for="approve-@item.RequestId">
-                                                تایید                                                  
+                                                    تایید
                                                 </label>
                                                 <input type="radio" class="btn-check approval-radio" name="approval-@item.RequestId" id="reject-@item.RequestId" data-request-id="@item.RequestId" data-value="false"
-                                                @(item.ValidateByExpert.HasValue && !item.ValidateByExpert.Value ? "checked" : "")>
+                                                       @(item.ValidateByExpert.HasValue && !item.ValidateByExpert.Value ? "checked" : "")>
                                                 <label class="btn btn-outline-danger br-0" for="reject-@item.RequestId">
-                                                عدم تایید 
+                                                    عدم تایید
                                                 </label>
                                             </div>
                                         </td>
@@ -347,7 +281,7 @@
                     <div class="mb-4">
                         <label class="form-label fw-semibold mb-2">علت عدم تایید</label>
                         <select class="form-select rounded-2" id="predefinedReason" asp-items="@ViewBag.RejectReasons">
-                            <option value="" class="p-1">انتخاب کنید...</option>
+                            <option value="">انتخاب کنید</option>
                         </select>
                     </div>
 
@@ -372,20 +306,17 @@
 <div class="modal fade" id="scrollingmodal" tabindex="-1" aria-labelledby="scrollingmodalLabel" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content border-0 rounded-3">
-            <!-- Header مینیمال -->
             <div class="modal-header border-bottom pb-3 pt-4 px-4">
                 <h6 class="modal-title fw-semibold text-dark" id="scrollingmodalLabel">ایجاد درخواست جدید</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
-            <!-- Body با فرم -->
             <div class="modal-body px-4 py-4">
                 <form asp-action="ValidateSteps" method="post" id="needs-validation-form">
                     @Html.AntiForgeryToken()
 
                     <!-- فیلدهای مرحله اول -->
                     <div class="mb-4">
-                        <label class="form-label text-muted small fw-semibold mb-2">اطلاعات هویتی</label>
+                        <label class="form-label text-muted small fw-semibold mb-2">اطلاعات متقاضی</label>
                         <div class="row g-3">
                             <div class="col-12">
                                 <input type="text" class="form-control form-control-sm rounded-2"
@@ -403,7 +334,6 @@
                         </small>
                     </div>
 
-                    <!-- خط جداکننده ظریف -->
                     <div class="border-top my-3"></div>
 
                     <!-- فیلدهای مرحله دوم -->
@@ -463,37 +393,46 @@
                 $('#confirmDocument').data('request-id', requestId);
                 $('#documentModal').modal('show');
 
-                $.ajax({
-                    url: '/Cartable/GetDocumentText',
-                    type: 'GET',
-                    data: { requestId: requestId },
-                    dataType: 'json',
-                    success: function (res) {
-                        if (res && res.success && res.documentText && res.documentText.trim() !== "") {
-                            let text = res.documentText;
-                            let safe = $('<div/>').text(text).html();
+        $.ajax({
+            url: '/Cartable/GetDocumentText',
+            type: 'GET',
+            data: { requestId: requestId },
+            dataType: 'json',
+            success: function (res) {
+                if (res && res.success && res.documentText && res.documentText.trim() !== "") {
+                    let text = res.documentText;
+                    let safe = $('<div/>').text(text).html();
 
-                            // هایلایت مهلت اعتبار
-                            safe = safe.replace(
-                                /(مهلت اعتبار این وکالتنامه تا تاریخ\s*\d{4}\/\d{2}\/\d{2}\s*می باشد)/g,
-                                '<strong style="color:#d9534f; font-weight:bold;">$1</strong>'
-                            );
+                    safe = safe.replace(
+                        /(مهلت اعتبار این وکالتنامه تا تاریخ\s*\d{4}\/\d{2}\/\d{2}\s*می باشد)/g,
+                        '<strong style="color:#d9534f; font-weight:bold;">$1</strong>'
+                    );
 
-                            $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.7; font-size:0.95rem;">' + safe + '</pre>');
-                            $('#documentChecked').prop('checked', res.isRead === true);
-                        } else {
-                            $('#documentModalBody').html('<p class="text-danger fw-bold text-center my-4">رمز تصدیق یا شماره سند درست وارد نشده است.</p>');
-                            $('#documentChecked').prop('checked', false);
-                            toastr.error(res.message || 'رمز تصدیق یا شماره سند درست وارد نشده است.');
-                        }
-                    },
-                    error: function (xhr) {
-                        const msg = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
-                        $('#documentModalBody').html('<p class="text-danger text-center my-4">' + msg + '</p>');
-                        $('#documentChecked').prop('checked', false);
-                        toastr.error(msg);
-                    }
-                });
+                  $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.8; font-size:0.95rem; background: #f8f9fa; padding: 15px; border-radius: 8px; color: #212529;" class="document-content">' + safe + '</pre>');
+                    $('#documentChecked').prop('checked', res.isRead === true);
+                    $('#documentChecked').prop('disabled', false);
+                    $('#confirmDocument').prop('disabled', false);
+                } else {
+                    $('#documentModalBody').html('<p class="text-danger fw-bold text-center my-4">⚠️ رمز تصدیق یا شماره سند درست وارد نشده است.<br><small class="text-muted">جهت مشاهده متن سند، لطفاً اطلاعات صحیح را وارد کنید.</small></p>');
+
+                    $('#documentChecked').prop('checked', false);
+                    $('#documentChecked').prop('disabled', true);
+                    $('#confirmDocument').prop('disabled', true);
+
+                    toastr.error(res.message || 'رمز تصدیق یا شماره سند درست وارد نشده است.');
+                }
+            },
+            error: function (xhr) {
+                const msg = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
+                $('#documentModalBody').html('<p class="text-danger text-center my-4">❌ ' + msg + '</p>');
+
+                $('#documentChecked').prop('checked', false);
+                $('#documentChecked').prop('disabled', true);
+                $('#confirmDocument').prop('disabled', true);
+
+                toastr.error(msg);
+            }
+        });
             });
 
             // ==================== 3. تیک "سند مشاهده شد" ====================

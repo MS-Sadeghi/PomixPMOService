@@ -34,7 +34,7 @@ namespace IdentityManagementSystem.UI.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginPage(LoginViewModel model)
         {
-            if (!_captchaValidatorService.HasRequestValidCaptchaEntry(Language.Persian, DisplayMode.ShowDigits))
+            if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
 
                 if (!ModelState.IsValid)
             {

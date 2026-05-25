@@ -23,9 +23,27 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SameSite = SameSiteMode.Lax;
     });
 
+// خواندن تنظیمات از appsettings.json
+var apiUrl = builder.Configuration["ApiSettings:URL"];
+var apiKey = builder.Configuration["ApiSettings:ApiKey"];
+
 builder.Services.AddHttpClient("PomixApi", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5066/api/");
+    client.BaseAddress = new Uri($"{apiUrl}/api/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.DefaultRequestHeaders.Add("X-API-Key", apiKey); // اضافه کردن کلید API
+    client.DefaultRequestHeaders.ConnectionClose = true;
+}).ConfigurePrimaryHttpMessageHandler(() =>
+{
+    var handler = new HttpClientHandler();
+    handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
+    return handler;
+});
+
+
+builder.Services.AddHttpClient("PomixApiPublic", client =>
+{
+    client.BaseAddress = new Uri($"{apiUrl}/api/");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.DefaultRequestHeaders.ConnectionClose = true;
 }).ConfigurePrimaryHttpMessageHandler(() =>
@@ -34,6 +52,7 @@ builder.Services.AddHttpClient("PomixApi", client =>
     handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
     return handler;
 });
+
 
 builder.Services.AddDNTCaptcha(options =>
 {

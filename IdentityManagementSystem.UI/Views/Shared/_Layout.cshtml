@@ -35,7 +35,7 @@
             overflow-x: hidden;
         }
 
-        .header-left-icons { 
+        .header-left-icons {
             margin-right: auto;
             float: left;
             position: absolute;
@@ -47,6 +47,34 @@
             float: left;
             position: absolute;
             left: 2%;
+        }
+
+        /* مخفی کردن سایدبار و توگل */
+        .app-sidebar,
+        .app-sidebar__overlay,
+        .app-sidebar__toggle {
+            display: none !important;
+        }
+
+        .app.sidebar-mini .main-content.app-content {
+            margin-right: 0 !important;
+        }
+
+        .side-app {
+            margin-right: 0 !important;
+        }
+
+        .main-header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-horizontal {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
         }
     </style>
 
@@ -65,14 +93,13 @@
             <!-- app-Header -->
             <div class="app-header header sticky" style="height: 75px;">
                 <div class="container-fluid main-container">
-                    <div class="d-flex">
+                    <div class="">
                         <!-- LOGO -->
-                        <div class="main-header-center ms-1 d-none d-lg-block">
-                            @* <h5>سامانه استعلام مدارک</h5> *@
+                        <div class="main-header-right ms-1 d-none d-lg-block" style="position: absolute; right: 35px;">
                             <a aria-label="Hide Sidebar" class="app-sidebar__toggle" data-bs-toggle="sidebar" href="javascript:void(0)"></a>
                             <!-- sidebar-toggle-->
-                            <a class="logo-horizontal " asp-controller="Cartable" asp-action="Index">
-                                <img src="~/assets/images/brand/Logo-pmo.png" class="header-brand-img light-logo" alt="logo"><h5>سامانه استعلام مدارک</h5>
+                            <a class="logo-horizontal" asp-controller="Cartable" asp-action="Index" id="main-logo">
+                                <img src="~/assets/images/brand/logo-7.png" id="logo-image" />
                             </a>
                         </div>
                         <div class="d-flex header-left-icons">
@@ -81,6 +108,8 @@
                                 <div class="collapse navbar-collapse" id="navbarSupportedContent-4">
                                     <div class="d-flex align-items-center">
                                         <div class="d-flex">
+                                              div>
+                                            }
                                             <!-- THEME SWITCH -->
                                             @* <div class="d-flex country">
                                                 <a class="nav-link icon theme-layout nav-link-bg layout-setting">
@@ -125,83 +154,6 @@
                             </div>
                         </div>
 
-                    </div>
-                </div>
-            </div>
-
-            <!-- app-Menu -->
-            <div class="sticky">
-                <div class="app-sidebar__overlay" data-bs-toggle="sidebar"></div>
-                <div class="app-sidebar">
-                    <!-- LOGO -->
-                    <div class="side-header">
-                        <a class="header-brand1" href="index.html">
-                            <img src="~/assets/images/brand/logo-9.png" class="header-brand-img desktop-logo" alt="logo">
-                            <img src="~/assets/images/brand/Logo-pmo.png" class="header-brand-img toggle-logo" alt="logo">
-                            <img src="~/assets/images/brand/Logo-pmo.png" class="header-brand-img light-logo" alt="logo">
-                            <img src="~/assets/images/brand/logo-7.png" class="header-brand-img light-logo1" alt="logo">
-                        </a>
-                    </div>
-
-                    <div class="main-sidemenu">
-                        <ul class="side-menu">
-                            <li class="slide">
-                                <a class="side-menu__item has-link" data-bs-toggle="slide" asp-controller="Cartable" asp-action="Index">
-                                    <i class="side-menu__icon fe fe-home"></i>
-                                    <span class="side-menu__label">صفحه اصلی</span>
-                                </a>
-                            </li>
-
-                            @* <li class="slide">
-                                <a class="side-menu__item has-link" data-bs-toggle="slide" asp-controller="Cartable" asp-action="Shahkar">
-                                    <i class="side-menu__icon fe fe-cpu"></i>
-                                    <span class="side-menu__label">سیستم شاهکار</span>
-                                </a>
-                            </li>
-                            
-                            <li class="slide">
-                                <a class="side-menu__item has-link" data-bs-toggle="slide" asp-controller="Cartable" asp-action="VerifyDocument">
-                                    <i class="side-menu__icon fe fe-cpu"></i>
-                                    <span class="side-menu__label">سیستم احراز سند</span>
-                                </a>
-                            </li> *@
-
-                            <!-- =================================== -->
-                            <!-- 1. منوی مدیریت کاربران (جدا) -->
-                            <!-- =================================== -->
-                            <li class="slide">
-                                <a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
-                                    <i class="side-menu__icon fe fe-users"></i>
-                                    <span class="side-menu__label">مدیریت کاربران</span>
-                                    <i class="angle fe fe-chevron-right"></i>
-                                </a>
-                                <ul class="slide-menu">
-                                    <li class="side-menu-label1"><a href="javascript:void(0);">کاربران سیستم</a></li>
-                                    <li>
-                                        <a asp-controller="Home" asp-action="Users" class="slide-item">لیست کاربران</a>
-                                    </li>
-                                </ul>
-                            </li>
-                              
-                            <!-- =================================== -->
-                            <!-- 2. منوی گزارش‌گیری (کاملاً جدا) -->
-                            <!-- =================================== -->
-                            @* <li class="slide">
-                                <a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
-                                    <i class="side-menu__icon fe fe-pie-chart"></i>
-                                    <span class="side-menu__label">گزارش‌گیری</span>
-                                    <i class="angle fe fe-chevron-right"></i>
-                                </a>
-                                <ul class="slide-menu">
-                                    <li class="side-menu-label1"><a href="javascript:void(0);">آمار و تحلیل</a></li>
-                                    <li>
-                                        <a asp-controller="Reports" asp-action="Index" class="slide-item">
-                                            <i class="fe fe-bar-chart-2"></i> داشبورد گزارش‌ها
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li> *@
-                        </ul>
                     </div>
                 </div>
             </div>
@@ -358,7 +310,7 @@
         toastr.options = {
             "closeButton": true,
             "progressBar": true,
-            "positionClass": "toast-top-left", 
+            "positionClass": "toast-top-left",
             "showDuration": "300",
             "hideDuration": "1000",
             "timeOut": "5000",

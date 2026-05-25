@@ -49,7 +49,7 @@ namespace IdentityManagementSystem.UI.ViewModels
 
         public string? MobileNumber { get; set; }
     }
-    
+
     public class RoleViewModel
     {
         public int roleId { get; set; }
@@ -58,14 +58,15 @@ namespace IdentityManagementSystem.UI.ViewModels
 
     public class LoginViewModel
     {
-        [Required]
-        [StringLength(50)]
+        [Required(ErrorMessage = "فیلد {0} الزامی است")]
+        [Display(Name = "نام کاربری")]
         public string? Username { get; set; }
 
-        [Required]
-        [StringLength(255)]
+        [Required(ErrorMessage = "فیلد {0} الزامی است")]
+        [Display(Name = "رمز عبور")]
         public string? Password { get; set; }
     }
+
     public class GrantAccessViewModel
     {
         public long UserId { get; set; }

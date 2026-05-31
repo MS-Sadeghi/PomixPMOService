@@ -23,20 +23,28 @@ namespace IdentityManagementSystem.UI.Controllers
             _captchaValidatorService = captchaValidatorService ?? throw new ArgumentNullException(nameof(captchaValidatorService));
         }
 
-        #region Login
+        #region Login   
         [HttpGet]
         public IActionResult LoginPage()
         {
             return View(new LoginViewModel());
-        }
+        }  
 
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginPage(LoginViewModel model)
         {
-            if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
 
-                if (!ModelState.IsValid)
+            Console.WriteLine("STEP 1");
+
+            if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
+            {
+                ViewBag.ErrorMessage = "کد امنیتی صحیح نیست.";
+                return View(model);
+            }
+
+            if (!ModelState.IsValid)    
             {
                 ViewBag.ErrorMessage = "لطفاً همه فیلدها را وارد کنید.";
                 return View(model);
@@ -54,20 +62,17 @@ namespace IdentityManagementSystem.UI.Controllers
                     {
                         HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
                         HttpContext.Session.SetString("RefreshToken", loginResponse.Tokens.RefreshToken ?? "");
+
                         return RedirectToAction("Index", "Cartable");
                     }
-                    else
-                    {
-                        ViewBag.ErrorMessage = "خطا: توکن دریافت نشد.";
-                        return View(model);
-                    }
-                }
-                else
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    ViewBag.ErrorMessage = "خطا در ورود: " + error;
+
+                    ViewBag.ErrorMessage = "خطا: توکن دریافت نشد.";
                     return View(model);
                 }
+
+                var error = await response.Content.ReadAsStringAsync();
+                ViewBag.ErrorMessage = "خطا در ورود: " + error;
+                return View(model);
             }
             catch (Exception ex)
             {
@@ -75,6 +80,7 @@ namespace IdentityManagementSystem.UI.Controllers
                 return View(model);
             }
         }
+        
         #endregion
 
         #region Logout

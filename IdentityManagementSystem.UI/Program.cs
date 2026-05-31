@@ -109,30 +109,36 @@ app.UseAuthorization();
 app.Use(async (context, next) =>
 {
     // رد کردن مسیرهای مربوط به فایل‌های استاتیک و ورود
-    if (context.Request.Path.StartsWithSegments("/Home/LoginPage") ||
-    context.Request.Path.StartsWithSegments("/css") ||
-    context.Request.Path.StartsWithSegments("/js") ||
-    context.Request.Path.StartsWithSegments("/lib") ||
-    context.Request.Path.StartsWithSegments("/assets") ||
-    context.Request.Path.StartsWithSegments("/DNTCaptcha") ||  // موجود
-    context.Request.Path.StartsWithSegments("/DNTCaptchaImage") ||  // اضافه کنید
-    context.Request.Path.Value.Contains("captcha"))  // برای ایمنی بیشتر
+    var path = context.Request.Path.Value?.ToLower();
+
+    // مسیرهایی که نباید چک بشن (API + Static + Login)
+    if (path.StartsWith("/home/loginpage") ||
+        path.StartsWith("/api") ||
+        path.StartsWith("/swagger") ||
+        path.StartsWith("/css") ||
+        path.StartsWith("/js") ||
+        path.StartsWith("/lib") ||
+        path.StartsWith("/assets") ||
+        path.Contains("captcha"))
     {
         await next();
         return;
     }
 
-    // بررسی session برای JwtToken
-    if (!context.Session.TryGetValue("JwtToken", out _) || string.IsNullOrEmpty(context.Session.GetString("JwtToken")))
+    // فقط برای صفحات UI اصلی (MVC)
+    var hasToken = context.Session.GetString("JwtToken");
+
+    if (string.IsNullOrEmpty(hasToken))
     {
-        if (context.User.Identity.IsAuthenticated)
+        // فقط اگر کاربر واقعاً در حال Browse UI هست
+        if (context.Request.Headers["Accept"].ToString().Contains("text/html"))
         {
-            await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            context.Session.Clear();
-            Console.WriteLine("Session timeout detected, user signed out.");
+            context.Response.Redirect("/Home/LoginPage");
+            return;
         }
 
-        context.Response.Redirect("/Home/LoginPage");
+        // برای API یا Ajax → 401 بده، نه redirect
+        context.Response.StatusCode = 401;
         return;
     }
 

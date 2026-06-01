@@ -1,12 +1,13 @@
 ﻿using DNTCaptcha.Core;
+using IdentityManagementSystem.UI.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using IdentityManagementSystem.UI.ViewModels;
 using System.Net.Http.Headers;
 using System.Reflection.Metadata.Ecma335;
+using System.Security.Claims;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
@@ -28,14 +29,13 @@ namespace IdentityManagementSystem.UI.Controllers
         public IActionResult LoginPage()
         {
             return View(new LoginViewModel());
-        }  
+        }
 
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginPage(LoginViewModel model)
         {
-
             Console.WriteLine("STEP 1");
 
             if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
@@ -44,7 +44,7 @@ namespace IdentityManagementSystem.UI.Controllers
                 return View(model);
             }
 
-            if (!ModelState.IsValid)    
+            if (!ModelState.IsValid)
             {
                 ViewBag.ErrorMessage = "لطفاً همه فیلدها را وارد کنید.";
                 return View(model);
@@ -60,14 +60,19 @@ namespace IdentityManagementSystem.UI.Controllers
 
                     if (loginResponse?.Tokens?.AccessToken != null)
                     {
+                        // Force Session Commit
                         HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
                         HttpContext.Session.SetString("RefreshToken", loginResponse.Tokens.RefreshToken ?? "");
 
+                        await HttpContext.Session.CommitAsync(); // ← این خط خیلی مهمه
+
+                        // Sign in with Cookie هم (برای هماهنگی)
+                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                            new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, model.Username) },
+                                CookieAuthenticationDefaults.AuthenticationScheme)));
+
                         return RedirectToAction("Index", "Cartable");
                     }
-
-                    ViewBag.ErrorMessage = "خطا: توکن دریافت نشد.";
-                    return View(model);
                 }
 
                 var error = await response.Content.ReadAsStringAsync();
@@ -80,7 +85,7 @@ namespace IdentityManagementSystem.UI.Controllers
                 return View(model);
             }
         }
-        
+
         #endregion
 
         #region Logout

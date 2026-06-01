@@ -95,7 +95,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -113,22 +113,20 @@ app.UseAuthorization();
 
 
 // ================= FIXED AUTH MIDDLEWARE =================
+// ================= FIXED AUTH MIDDLEWARE =================
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value?.ToLower() ?? "";
 
-    // مسیرهای آزاد (بدون چک)
-    var isPublic =
-        path.StartsWith("/home/loginpage") ||
+    // مسیرهای آزاد
+    if (path.StartsWith("/home/loginpage") ||
         path.StartsWith("/api") ||
         path.StartsWith("/swagger") ||
+        path.Contains("captcha") ||
         path.StartsWith("/css") ||
         path.StartsWith("/js") ||
         path.StartsWith("/lib") ||
-        path.StartsWith("/assets") ||
-        path.Contains("captcha");
-
-    if (isPublic)
+        path.StartsWith("/assets"))
     {
         await next();
         return;
@@ -138,16 +136,13 @@ app.Use(async (context, next) =>
 
     if (string.IsNullOrEmpty(token))
     {
-        // فقط صفحات HTML redirect شوند
-        var accept = context.Request.Headers["Accept"].ToString();
-
+        var accept = context.Request.Headers["Accept"].ToString().ToLower();
         if (accept.Contains("text/html"))
         {
-            context.Response.Redirect("/Home/LoginPage");
+            context.Response.Redirect("/Home/LoginPage?returnUrl=" + context.Request.Path);
             return;
         }
 
-        // API/Ajax → 401
         context.Response.StatusCode = 401;
         return;
     }

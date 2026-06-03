@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.IO;
 using System.Net.Http.Headers;
 using System.Reflection.Metadata.Ecma335;
-using System.Security.Claims;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
@@ -24,26 +24,16 @@ namespace IdentityManagementSystem.UI.Controllers
             _captchaValidatorService = captchaValidatorService ?? throw new ArgumentNullException(nameof(captchaValidatorService));
         }
 
-        #region Login   
+        #region Login
         [HttpGet]
         public IActionResult LoginPage()
         {
             return View(new LoginViewModel());
         }
-
         [HttpPost]
-        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginPage(LoginViewModel model)
         {
-            Console.WriteLine("STEP 1");
-
-            if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
-            {
-                ViewBag.ErrorMessage = "کد امنیتی صحیح نیست.";
-                return View(model);
-            }
-
             if (!ModelState.IsValid)
             {
                 ViewBag.ErrorMessage = "لطفاً همه فیلدها را وارد کنید.";
@@ -53,31 +43,40 @@ namespace IdentityManagementSystem.UI.Controllers
             try
             {
                 var response = await _client.PostAsJsonAsync("auth/login", model);
-
                 if (response.IsSuccessStatusCode)
                 {
                     var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
 
                     if (loginResponse?.Tokens?.AccessToken != null)
                     {
-                        // Force Session Commit
                         HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
                         HttpContext.Session.SetString("RefreshToken", loginResponse.Tokens.RefreshToken ?? "");
 
-                        await HttpContext.Session.CommitAsync(); // ← این خط خیلی مهمه
+                        // ذخیره اطلاعات نقش کاربر در Session - دسترسی مستقیم به properties
+                        var roleName = loginResponse.Role?.RoleName ?? "";
+                        var roleId = loginResponse.Role?.RoleId.ToString() ?? "0";
 
-                        // Sign in with Cookie هم (برای هماهنگی)
-                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-                            new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, model.Username) },
-                                CookieAuthenticationDefaults.AuthenticationScheme)));
+                        HttpContext.Session.SetString("UserRole", roleName);
+                        HttpContext.Session.SetString("UserRoleId", roleId);
+                        HttpContext.Session.SetString("UserName", loginResponse.Name ?? "");
+                        HttpContext.Session.SetString("UserLastName", loginResponse.LastName ?? "");
+                        HttpContext.Session.SetString("UserId", loginResponse.UserId.ToString());
+                        HttpContext.Session.SetString("Username", loginResponse.Username ?? "");
 
                         return RedirectToAction("Index", "Cartable");
                     }
+                    else
+                    {
+                        ViewBag.ErrorMessage = "خطا: توکن دریافت نشد.";
+                        return View(model);
+                    }
                 }
-
-                var error = await response.Content.ReadAsStringAsync();
-                ViewBag.ErrorMessage = "خطا در ورود: " + error;
-                return View(model);
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    ViewBag.ErrorMessage = "خطا در ورود: " + error;
+                    return View(model);
+                }
             }
             catch (Exception ex)
             {
@@ -85,7 +84,6 @@ namespace IdentityManagementSystem.UI.Controllers
                 return View(model);
             }
         }
-
         #endregion
 
         #region Logout
@@ -459,26 +457,24 @@ namespace IdentityManagementSystem.UI.Controllers
             return Json(new { success = false, message = errorObj?.message ?? $"خطا در تغییر رمز عبور: {error}" });
         }
 
-
+        [HttpGet]
         public async Task<IActionResult> EditProfile()
         {
-            var token = HttpContext.Session.GetString("JwtToken");
-            if (string.IsNullOrEmpty(token))
+            var userInfo = new UserInfo
+            {
+                UserId = long.Parse(HttpContext.Session.GetString("UserId") ?? "0"),
+                Username = HttpContext.Session.GetString("Username") ?? "",
+                Name = HttpContext.Session.GetString("UserName") ?? "",
+                LastName = HttpContext.Session.GetString("UserLastName") ?? "",
+                Role = HttpContext.Session.GetString("UserRole") ?? "بدون نقش"
+            };
+
+            if (userInfo.UserId == 0)
             {
                 ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
                 return RedirectToAction("LoginPage");
             }
 
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            var response = await _client.GetAsync("Auth/GetCurrentUser");
-            if (!response.IsSuccessStatusCode)
-            {
-                ViewBag.ErrorMessage = "دریافت اطلاعات کاربر ناموفق بود.";
-                return View(new UserInfo());
-            }
-
-            var userInfo = await response.Content.ReadFromJsonAsync<UserInfo>();
             return View(userInfo);
         }
 
@@ -500,10 +496,19 @@ namespace IdentityManagementSystem.UI.Controllers
         public string Role { get; set; }
     }
 
+    public class RoleInfo
+    {
+        public int RoleId { get; set; }
+        public string RoleName { get; set; }
+    }
+
     public class LoginResponse
     {
-        public string Message { get; set; }
-        public UserInfo User { get; set; }
+        public long UserId { get; set; }
+        public string Username { get; set; }
+        public string Name { get; set; }
+        public string LastName { get; set; }
+        public RoleInfo Role { get; set; }
         public TokenInfo Tokens { get; set; }
     }
 
@@ -513,7 +518,7 @@ namespace IdentityManagementSystem.UI.Controllers
         public string Username { get; set; }
         public string Name { get; set; }
         public string LastName { get; set; }
-        public string Role { get; set; }
+        public string Role { get; set; }  
     }
 
     public class RoleViewModel

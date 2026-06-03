@@ -25,58 +25,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/toastr.min.css" />
     <!-- SITE CUSTOM CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    @* <link rel="stylesheet" href="~/ServiceUIPMO.styles.css" asp-append-version="true" /> *@
 
-    <style>
-        body {
-            /* font-family: 'FarNazanin', sans-serif; */
-            direction: rtl;
-            text-align: right;
-            overflow-x: hidden;
-        }
-
-        .header-left-icons {
-            margin-right: auto;
-            float: left;
-            position: absolute;
-            left: 2%;
-        }
-
-        .left-btn {
-            margin-right: auto;
-            float: left;
-            position: absolute;
-            left: 2%;
-        }
-
-        /* مخفی کردن سایدبار و توگل */
-        .app-sidebar,
-        .app-sidebar__overlay,
-        .app-sidebar__toggle {
-            display: none !important;
-        }
-
-        .app.sidebar-mini .main-content.app-content {
-            margin-right: 0 !important;
-        }
-
-        .side-app {
-            margin-right: 0 !important;
-        }
-
-        .main-header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-horizontal {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-    </style>
 
     @RenderSection("Styles", required: false)
 </head>
@@ -90,84 +39,68 @@
     <!-- PAGE -->
     <div class="page">
         <div class="page-main">
-            <!-- app-Header -->
-            <div class="app-header header sticky" style="height: 75px;">
-                <div class="container-fluid main-container">
-                    <div class="">
-                        <!-- LOGO -->
-                        <div class="main-header-right ms-1 d-none d-lg-block" style="position: absolute; right: 35px;">
-                            <a aria-label="Hide Sidebar" class="app-sidebar__toggle" data-bs-toggle="sidebar" href="javascript:void(0)"></a>
-                            <!-- sidebar-toggle-->
-                            <a class="logo-horizontal" asp-controller="Cartable" asp-action="Index" id="main-logo">
-                                <img src="~/assets/images/brand/logo-7.png" id="logo-image" />
+            <header class="app-header">
+                <div class="header-container">
+                    <div class="header-left">
+                        <a class="logo-horizontal" asp-controller="Cartable" asp-action="Index" id="main-logo">
+                            <img src="~/assets/images/brand/logo-7.png" id="logo-image" alt="Logo" />
+                        </a>
+                    </div>
+
+                    <div class="header-center"></div>
+
+                    <div class="header-right">
+                        <!-- دکمه مدیریت کاربران -->
+                        @{
+                            var userRole = Context.Session.GetString("UserRole");
+                            var userRoleId = Context.Session.GetString("UserRoleId");
+                            var isAdmin = (userRole == "ادمین" || userRoleId == "3");
+                        }
+                        @if (isAdmin)
+                        {
+                            <a class="btn btn-outline-primary btn-sm" asp-controller="Home" asp-action="Users">
+                                <i class="fe fe-users"></i>
+                                <span>مدیریت کاربران</span>
                             </a>
-                        </div>
-                        <div class="d-flex header-left-icons">
-                            <!-- NAVBAR CONTENT -->
-                            <div class="navbar navbar-collapse responsive-navbar p-0">
-                                <div class="collapse navbar-collapse" id="navbarSupportedContent-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="d-flex">
-                                              div>
-                                            }
-                                            <!-- THEME SWITCH -->
-                                            @* <div class="d-flex country">
-                                                <a class="nav-link icon theme-layout nav-link-bg layout-setting">
-                                                    <span class="dark-layout"><i class="fe fe-moon"></i></span>
-                                                    <span class="light-layout"><i class="fe fe-sun"></i></span>
-                                                </a>
-                                            </div> *@
-                                            <!-- FULL SCREEN -->
-                                            <div class="dropdown d-flex">
-                                                <a class="nav-link icon full-screen-link nav-link-bg">
-                                                    <i class="fe fe-minimize fullscreen-button"></i>
-                                                </a>
-                                            </div>
-                                            <!-- USER PROFILE -->
-                                            <div class="dropdown d-flex profile-1">
-                                                <a href="javascript:void(0)" data-bs-toggle="dropdown" class="nav-link leading-none d-flex">
-                                                    <img src="~/assets/images/users/22.jfif" alt="profile-user"
-                                                         class="avatar profile-user brround cover-image">
-                                                </a>
-                                                <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                                                    @* <div class="drop-heading">
-                                                        <div class="text-center">
-                                                            <h5 id="user-name" class="text-dark mb-0 fs-14 fw-semibold"></h5>
-                                                            <small id="user-role" class="text-muted"></small>
-                                                        </div>
-                                                    </div> *@
-                                                    <div class="dropdown-divider m-0"></div>
-                                                    <a class="dropdown-item" asp-controller="Home" asp-action="EditProfile">
-                                                        پروفایل <i class="dropdown-icon fe fe-user" style="float:right"></i>
-                                                    </a>
-                                                    <form id="logout-form" asp-controller="Home" asp-action="Logout" method="post" style="display: none;">
-                                                        @Html.AntiForgeryToken()
-                                                    </form>
-                                                    <a class="dropdown-item" href="javascript:void(0);" onclick="document.getElementById('logout-form').submit();">
-                                                        خروج <i class="dropdown-icon fe fe-alert-circle" style="float:right"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        }
+                        <a class="full-screen-link" href="javascript:void(0)" id="fullScreenBtn">
+                            <i class="fe fe-maximize" id="fullScreenIcon"></i>
+                        </a>
+                        <div class="profile-dropdown" id="profileDropdown">
+                            <a href="javascript:void(0)" class="profile-trigger" id="profileTrigger">
+                                <img src="~/assets/images/users/22.jfif" alt="profile-user" class="profile-avatar" id="profileAvatar">
+                            </a>
+                            <div class="dropdown-menu-custom">
+                                <a class="dropdown-item-custom" asp-controller="Home" asp-action="EditProfile">
+                                    پروفایل
+                                    <i class="fe fe-user"></i>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <form id="logout-form" asp-controller="Home" asp-action="Logout" method="post" style="display: none;">
+                                    @Html.AntiForgeryToken()
+                                </form>
+                                <a class="dropdown-item-custom" href="javascript:void(0);" onclick="document.getElementById('logout-form').submit();">
+                                    خروج
+                                    <i class="fe fe-log-out"></i>
+                                </a>
                             </div>
                         </div>
-
                     </div>
                 </div>
-            </div>
+            </header>
 
-            <div class="main-content app-content mt-8">
+            <!-- محتوای اصلی -->
+            <div class="main-content mt-5 hor-content">
                 <div class="side-app">
                     <!-- CONTAINER -->
-                    <div class="main-container container-fluid">
+                    <div class="main-container container">
                         @RenderBody()
                     </div>
                 </div>
             </div>
-            <!-- FOOTER -->
-            <footer class="footer mt-5 pt-4 border-top bg-light">
+
+            <!-- فوتر -->
+            <footer class="footer">
                 <div class="container">
                     <div class="row align-items-center flex-row-reverse">
                         <div class="col-md-12 text-center small text-muted">
@@ -179,98 +112,45 @@
                     </div>
                 </div>
             </footer>
-
-            <script>
-                // برای بروزرسانی خودکار سال
-                document.getElementById("year").textContent = new Date().toLocaleDateString("fa-IR", { year: "numeric" });
-            </script>
-
         </div>
     </div>
 
     <!-- BACK-TO-TOP -->
     <a href="#top" id="back-to-top"><i class="fa fa-angle-up"></i></a>
 
-    <!-- JQUERY JS -->
+    <!-- SCRIPTS -->
     <script src="~/assets/js/jquery.min.js"></script>
-
-    <!-- BOOTSTRAP JS -->
     <script src="~/assets/plugins/bootstrap/js/popper.min.js"></script>
     <script src="~/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
-
-    <!-- SPARKLINE JS-->
     <script src="~/assets/js/jquery.sparkline.min.js"></script>
-
-    <!-- Sticky js -->
     <script src="~/assets/js/sticky.js"></script>
-
-    <!-- SIDEBAR JS -->
     <script src="~/assets/plugins/sidebar/sidebar.js"></script>
-
-    <!-- Perfect SCROLLBAR JS-->
     <script src="~/assets/plugins/p-scroll/perfect-scrollbar.js"></script>
     <script src="~/assets/plugins/p-scroll/pscroll.js"></script>
     <script src="~/assets/plugins/p-scroll/pscroll-1.js"></script>
-
-    <!-- INTERNAL SELECT2 JS -->
     <script src="~/assets/plugins/select2/select2.full.min.js"></script>
-
-    <!-- INTERNAL Data tables js-->
     <script src="~/assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
     <script src="~/assets/plugins/datatable/js/dataTables.bootstrap5.js"></script>
     <script src="~/assets/plugins/datatable/dataTables.responsive.min.js"></script>
-
-    <!-- INTERNAL Flot JS -->
     <script src="~/assets/plugins/flot/jquery.flot.js"></script>
     <script src="~/assets/plugins/flot/jquery.flot.fillbetween.js"></script>
     <script src="~/assets/plugins/flot/chart.flot.sampledata.js"></script>
     <script src="~/assets/plugins/flot/dashboard.sampledata.js"></script>
-
-    <!-- INTERNAL Vector js -->
     <script src="~/assets/plugins/jvectormap/jquery-jvectormap-2.0.2.min.js"></script>
     <script src="~/assets/plugins/jvectormap/jquery-jvectormap-world-mill-en.js"></script>
-
-    <!-- SIDE-MENU JS-->
     <script src="~/assets/plugins/sidemenu/sidemenu.js"></script>
-
-    <!-- TypeHead js -->
     <script src="~/assets/plugins/bootstrap5-typehead/autocomplete.js"></script>
     <script src="~/assets/js/typehead.js"></script>
-
-    <!-- INTERNAL INDEX JS -->
     <script src="~/assets/js/index1.js"></script>
-
-    <!-- Color Theme js -->
     <script src="~/assets/js/themeColors.js"></script>
-
-    <!-- CUSTOM JS -->
     <script src="~/assets/js/custom.js"></script>
-
-    <!-- SHOW PASSWORD JS -->
     <script src="~/assets/js/show-password.min.js"></script>
-
-    <!-- GENERATE OTP JS -->
     <script src="~/assets/js/generate-otp.js"></script>
-
-    <!-- INPUT MASK JS-->
     <script src="~/assets/plugins/input-mask/jquery.mask.min.js"></script>
-
-    <!-- FORM WIZARD JS-->
     <script src="~/assets/plugins/formwizard/jquery.smartWizard.js"></script>
     <script src="~/assets/plugins/formwizard/fromwizard.js"></script>
-
-    <!-- Perfect SCROLLBAR JS-->
-    <script src="~/assets/plugins/p-scroll/perfect-scrollbar.js"></script>
-    <script src="~/assets/plugins/p-scroll/pscroll.js"></script>
-    <script src="~/assets/plugins/p-scroll/pscroll-1.js"></script>
-
-    <!-- INTERNAL Accordion-Wizard-Form js-->
     <script src="~/assets/plugins/accordion-Wizard-Form/jquery.accordion-wizard.min.js"></script>
     <script src="~/assets/js/form-wizard.js"></script>
-
-    <!-- DATA TABLE JS-->
-    <script src="~/assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/dataTables.bootstrap5.js"></script>
     <script src="~/assets/plugins/datatable/js/dataTables.buttons.min.js"></script>
     <script src="~/assets/plugins/datatable/js/buttons.bootstrap5.min.js"></script>
     <script src="~/assets/plugins/datatable/js/jszip.min.js"></script>
@@ -283,43 +163,103 @@
     <script src="~/assets/plugins/datatable/responsive.bootstrap5.min.js"></script>
     <script src="~/assets/js/table-data.js"></script>
     <script src="~/lib/bootstrap/dist/js/toastr.min.js"></script>
-    <!-- INTERNAL Edit-Table JS -->
     <script src="~/assets/plugins/edit-table/bst-edittable.js"></script>
     <script src="~/assets/plugins/edit-table/edit-table.js"></script>
 
-    <!-- SIDEBAR JS -->
-    <script src="~/assets/plugins/sidebar/sidebar.js"></script>
+    <script>
+        $(document).ready(function () {
+            // دریافت اطلاعات کاربر
+            $.get('/Home/GetUserProfile', function (data) {
+                if (data && data.success !== false) {
+                    $('#user-name').text(data.name + ' ' + data.lastName);
+                    $('#user-role').text(data.role);
+                    $('#userNameDisplay').text(data.name || 'کاربر');
+                } else {
+                    console.warn(data.message || 'User info not found.');
+                }
+            });
+
+            // پیکربندی Toastr
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-left",
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            };
+        });
+
+        // ============================================
+        // عملکرد دکمه Full Screen (تغییر سایز صفحه)
+        // ============================================
+        const fullScreenBtn = document.getElementById('fullScreenBtn');
+        const fullScreenIcon = document.getElementById('fullScreenIcon');
+
+        if (fullScreenBtn) {
+            fullScreenBtn.addEventListener('click', function () {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().then(() => {
+                        updateFullScreenIcon(true);
+                    }).catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen().then(() => {
+                        updateFullScreenIcon(false);
+                    }).catch(err => {
+                        console.error(`Error attempting to exit full-screen mode: ${err.message}`);
+                    });
+                }
+            });
+
+            //监听 fullscreenchange 事件
+            document.addEventListener('fullscreenchange', function () {
+                updateFullScreenIcon(!!document.fullscreenElement);
+            });
+        }
+
+        function updateFullScreenIcon(isFullScreen) {
+            if (fullScreenIcon) {
+                if (isFullScreen) {
+                    fullScreenIcon.className = 'fe fe-minimize';
+                } else {
+                    fullScreenIcon.className = 'fe fe-maximize';
+                }
+            }
+        }
+
+        // ============================================
+        // منوی کشویی پروفایل
+        // ============================================
+        const profileTrigger = document.getElementById('profileTrigger');
+        const profileDropdown = document.getElementById('profileDropdown');
+
+        if (profileTrigger && profileDropdown) {
+            profileTrigger.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                profileDropdown.classList.toggle('open');
+            });
+
+            // بستن منو با کلیک بیرون
+            document.addEventListener('click', function (e) {
+                if (!profileDropdown.contains(e.target)) {
+                    profileDropdown.classList.remove('open');
+                }
+            });
+        }
+
+        // بروزرسانی سال شمسی
+        document.getElementById("year").textContent = new Date().toLocaleDateString("fa-IR", { year: "numeric" });
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 
 </html>
-
-<script>
-    $(document).ready(function () {
-        $.get('/Home/GetUserProfile', function (data) {
-            if (data && data.success !== false) {
-                $('#user-name').text(data.name + ' ' + data.lastName);
-                $('#user-role').text(data.role);
-            } else {
-                console.warn(data.message || 'User info not found.');
-            }
-        });
-    });
-        // پیکربندی Toastr
-        toastr.options = {
-            "closeButton": true,
-            "progressBar": true,
-            "positionClass": "toast-top-left",
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "timeOut": "5000",
-            "extendedTimeOut": "1000",
-            "showEasing": "swing",
-            "hideEasing": "linear",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-        };
-</script>
-
-

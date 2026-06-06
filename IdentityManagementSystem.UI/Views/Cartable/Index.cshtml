@@ -207,6 +207,18 @@
                                                 <label class="btn btn-outline-danger br-0" for="reject-@item.RequestId">
                                                     عدم تایید
                                                 </label>
+                                                @if (item.ValidateByExpert == false && !string.IsNullOrEmpty(item.RejectReasonDisplay))
+                                                {
+                                                    <div class="mt-1">
+                                                        <a href="javascript:void(0)"
+                                                           class="text-danger text-decoration-none show-reject-reason"
+                                                           data-reason="@item.RejectReasonDisplay"
+                                                           data-bs-toggle="tooltip"
+                                                           title="نمایش دلیل عدم تایید">
+                                                            <i class="fa fa-exclamation-circle text-danger" style="font-size: 14px;"></i>
+                                                        </a>
+                                                    </div>
+                                                }
                                             </div>
                                         </td>
                                     </tr>
@@ -237,6 +249,26 @@
                         </li>
                     </ul>
                 </nav>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal نمایش دلیل عدم تایید -->
+<div class="modal fade" id="rejectReasonModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 rounded-3">
+            <div class="modal-header text-white py-2">
+                <h6 class="modal-title fw-semibold">
+                    <i class="fa fa-exclamation-circle me-1"></i>
+                    دلیل عدم تایید
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body py-3">
+                <p id="rejectReasonText" class="mb-0 text-dark" style="font-size: 0.9rem; line-height: 1.5;"></p>
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">بستن</button>
             </div>
         </div>
     </div>
@@ -525,58 +557,78 @@
             });
 
             // ==================== 7. تابع اصلی ارسال (بدون هیچ چک منطقی!) ====================
-            function submitValidation(requestId, validateByExpert, description) {
-                const row = $(`tr[data-request-id="${requestId}"]`);
-                const token = $('input[name="__RequestVerificationToken"]').val();
+        // تابع اصلی ارسال
+        function submitValidation(requestId, validateByExpert, description) {
+            const row = $(`tr[data-request-id="${requestId}"]`);
+            const token = $('input[name="__RequestVerificationToken"]').val();
 
-                fetch('/Cartable/UpdateValidationStatus', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': token
-                    },
-                    body: JSON.stringify({
-                        RequestId: requestId,
-                        ValidateByExpert: validateByExpert,
-                        Description: description
-                    })
+            fetch('/Cartable/UpdateValidationStatus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({
+                    RequestId: requestId,
+                    ValidateByExpert: validateByExpert,
+                    Description: description
                 })
-                .then(res => {
-                    if (!res.ok) {
-                        return res.json().then(err => { throw err; });
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        toastr.success(data.message || "وضعیت با موفقیت به‌روز شد");
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(err => { throw err; });
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    toastr.success(data.message || "وضعیت با موفقیت به‌روز شد");
 
-                        // آپدیت رادیوها
-                        if (validateByExpert === true) {
-                            row.find(`#approve-${requestId}`).prop('checked', true);
-                            row.find(`#reject-${requestId}`).prop('checked', false);
-                            row.find('.reject-reason').hide().text('');
-                        } else if (validateByExpert === false) {
-                            row.find(`#approve-${requestId}`).prop('checked', false);
-                            row.find(`#reject-${requestId}`).prop('checked', true);
-                            if (description) {
-                                row.find('.reject-reason').text(description).show();
-                            }
-                        } else {
-                            row.find(`.approval-radio`).prop('checked', false);
-                            row.find('.reject-reason').hide().text('');
+                    // آپدیت رادیوها
+                    if (validateByExpert === true) {
+                        row.find(`#approve-${requestId}`).prop('checked', true);
+                        row.find(`#reject-${requestId}`).prop('checked', false);
+                        // حذف نمایش دلیل رد
+                        row.find('.show-reject-reason').parent().remove();
+                    } else if (validateByExpert === false) {
+                        row.find(`#approve-${requestId}`).prop('checked', false);
+                        row.find(`#reject-${requestId}`).prop('checked', true);
+
+                        // اضافه کردن نمایش دلیل رد اگر وجود داشته باشد
+                        const td = row.find('td:last-child');
+                        if (description) {
+                            // اگر قبلاً نمایشی وجود دارد حذف کن
+                            td.find('.show-reject-reason').parent().remove();
+                            // اضافه کردن نمایش جدید
+                            td.find('.btn-group').after(`
+                                <div class="mt-1">
+                                    <a href="javascript:void(0)"
+                                       class="text-danger text-decoration-none show-reject-reason"
+                                       data-reason="${description.replace(/"/g, '&quot;')}"
+                                       data-bs-toggle="tooltip"
+                                       title="نمایش دلیل عدم تایید">
+                                        <i class="fa fa-exclamation-circle text-danger" style="font-size: 14px;"></i>
+                                        <small class="text-muted me-1">دلیل رد</small>
+                                    </a>
+                                </div>
+                            `);
+                            // راه‌اندازی مجدد tooltip
+                            $('[data-bs-toggle="tooltip"]').tooltip();
                         }
                     } else {
-                        // فقط پیام سرور رو نشون بده
-                        toastr.error(data.message || "خطا در به‌روزرسانی وضعیت");
                         row.find(`.approval-radio`).prop('checked', false);
+                        row.find('.show-reject-reason').parent().remove();
                     }
-                })
-                .catch(err => {
-                    toastr.error(err.message || "خطا در ارتباط با سرور");
+                } else {
+                    toastr.error(data.message || "خطا در به‌روزرسانی وضعیت");
                     row.find(`.approval-radio`).prop('checked', false);
-                });
-            }
+                }
+            })
+            .catch(err => {
+                toastr.error(err.message || "خطا در ارتباط با سرور");
+                row.find(`.approval-radio`).prop('checked', false);
+            });
+        }
 
             // ==================== 8. لغو مودال رد (اگر تأیید نکرد) ====================
             $('#rejectModal').on('hidden.bs.modal', function () {
@@ -620,6 +672,13 @@
                 });
             });
 
+        });
+                // نمایش دلیل عدم تایید با مدال
+        $(document).on('click', '.show-reject-reason', function(e) {
+            e.preventDefault();
+            var reason = $(this).data('reason');
+            $('#rejectReasonText').text(reason || 'دلیلی ثبت نشده است.');
+            $('#rejectReasonModal').modal('show');
         });
     </script>
 }

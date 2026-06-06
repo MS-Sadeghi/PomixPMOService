@@ -448,6 +448,7 @@ namespace IdentityManagementSystem.UI.Controllers
                 return Json(new { success = false, message = $"خطا در دریافت متن سند: {ex.Message}" });
             }
         }
+
         [HttpGet]
         private async Task<PaginatedCartableViewModel> GetCartableData(int page, string search)
         {
@@ -457,7 +458,7 @@ namespace IdentityManagementSystem.UI.Controllers
             {
                 url += $"&search={System.Web.HttpUtility.UrlEncode(search)}";
             }
-             
+
             try
             {
                 var token = HttpContext.Session.GetString("JwtToken") ?? ViewBag.JwtToken;
@@ -470,6 +471,19 @@ namespace IdentityManagementSystem.UI.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var data = await response.Content.ReadFromJsonAsync<PaginatedResponse<CartableItemViewModel>>();
+
+                    // اضافه کردن این بخش برای تنظیم RejectReasonDisplay
+                    if (data?.Items != null)
+                    {
+                        foreach (var item in data.Items)
+                        {
+                            if (item.ValidateByExpert == false && !string.IsNullOrEmpty(item.Description))
+                            {
+                                item.RejectReasonDisplay = item.Description;
+                            }
+                        }
+                    }
+
                     return new PaginatedCartableViewModel
                     {
                         Items = data?.Items ?? new List<CartableItemViewModel>(),
@@ -694,6 +708,7 @@ namespace IdentityManagementSystem.UI.Controllers
         public DateTime CreatedAt { get; set; }
         public string CreatedBy { get; set; } = string.Empty;
         public bool IsRead { get; set; } // اضافه شده برای وضعیت خوانده شدن سند
+        public string RejectReasonDisplay { get; set; } = string.Empty;
     }
 
 

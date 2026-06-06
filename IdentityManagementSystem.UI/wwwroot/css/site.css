@@ -259,3 +259,6 @@ body {
     position: absolute;
     left: 2%;
 }
+@font-face {
+    font-display: swap;
+}

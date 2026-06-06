@@ -7,51 +7,63 @@
 
 <div class="card">
     <div class="card-header">
-        <div class="card-title">پروفایل کاربری</div>
+        <div class="card-title">ویرایش پروفایل</div>
     </div>
     <div class="card-body">
+        @if (ViewBag.ErrorMessage != null)
+        {
+            <script>
+                toastr.error('@ViewBag.ErrorMessage');
+            </script>
+        }
+        @if (ViewBag.SuccessMessage != null)
+        {
+            <script>
+                toastr.success('@ViewBag.SuccessMessage');
+            </script>
+        }
         <div class="text-center chat-image mb-5">
             <div class="avatar avatar-xxl chat-profile mb-3 brround">
-                <img src="~/assets/images/users/22.jfif" alt="profile-user" class="brround">
+                <a class="" href="#"><img src="~/assets/images/users/22.jfif" alt="profile-user" class="brround"></a>
             </div>
             <div class="main-chat-msg-name">
-                <h5 class="mb-1 text-dark fw-semibold">@Model.Name @Model.LastName</h5>
-                <p class="text-muted mt-0 mb-0 pt-0 fs-13">@Model.Role</p>
+                <a href="#">
+                    <h5 class="mb-1 text-dark fw-semibold">@(Model?.Name ?? "نام کاربر") @(Model?.LastName ?? "")</h5>
+                </a>
+                <p class="text-muted mt-0 mb-0 pt-0 fs-13">@(Model?.Role ?? "بدون نقش")</p>
             </div>
         </div>
-
-        <form id="changePasswordForm" method="post">
-            @Html.AntiForgeryToken()
+        <form id="changePasswordForm" asp-action="ChangePassword" method="post">
             <div class="form-group">
                 <label class="form-label">رمز عبور فعلی</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white">
-                        <i class="zmdi zmdi-eye text-muted" id="toggleCurrentPwd" style="cursor:pointer"></i>
-                    </span>
-                    <input class="form-control" type="password" name="CurrentPassword" id="CurrentPassword">
+                <div class="wrap-input100 validate-input input-group" id="Password-toggle">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
+                    </a>
+                    <input class="input100 form-control" type="password" name="CurrentPassword" autocomplete="current-password">
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">رمز عبور جدید</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white">
-                        <i class="zmdi zmdi-eye text-muted" id="toggleNewPwd" style="cursor:pointer"></i>
-                    </span>
-                    <input class="form-control" type="password" name="NewPassword" id="NewPassword">
+                <div class="wrap-input100 validate-input input-group" id="Password-toggle1">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
+                    </a>
+                    <input class="input100 form-control" type="password" name="NewPassword" autocomplete="new-password">
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">تایید رمز عبور</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white">
-                        <i class="zmdi zmdi-eye text-muted" id="toggleConfirmPwd" style="cursor:pointer"></i>
-                    </span>
-                    <input class="form-control" type="password" name="ConfirmNewPassword" id="ConfirmNewPassword">
+                <div class="wrap-input100 validate-input input-group" id="Password-toggle2">
+                    <a href="javascript:void(0)" class="input-group-text bg-white text-muted">
+                        <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
+                    </a>
+                    <input class="input100 form-control" type="password" name="ConfirmNewPassword" autocomplete="new-password">
                 </div>
             </div>
             <div class="card-footer text-end">
-                <button type="submit" class="btn btn-primary">تغییر رمز عبور</button>
-                <a href="@Url.Action("Index", "Cartable")" class="btn btn-danger">بازگشت</a>
+                <button type="submit" class="btn btn-primary">ثبت</button>
+                <a href="javascript:void(0)" class="btn btn-danger">انصراف</a>
             </div>
         </form>
     </div>
@@ -60,39 +72,14 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Toggle password visibility
-            $("#toggleCurrentPwd").click(function() {
-                var input = $("#CurrentPassword");
-                input.attr("type", input.attr("type") === "password" ? "text" : "password");
-                $(this).toggleClass("zmdi-eye zmdi-eye-off");
-            });
-
-            $("#toggleNewPwd").click(function() {
-                var input = $("#NewPassword");
-                input.attr("type", input.attr("type") === "password" ? "text" : "password");
-                $(this).toggleClass("zmdi-eye zmdi-eye-off");
-            });
-
-            $("#toggleConfirmPwd").click(function() {
-                var input = $("#ConfirmNewPassword");
-                input.attr("type", input.attr("type") === "password" ? "text" : "password");
-                $(this).toggleClass("zmdi-eye zmdi-eye-off");
-            });
-
             $("#changePasswordForm").submit(function (e) {
                 e.preventDefault();
-
-                var formData = {
-                    CurrentPassword: $("#CurrentPassword").val(),
-                    NewPassword: $("#NewPassword").val(),
-                    ConfirmNewPassword: $("#ConfirmNewPassword").val()
-                };
+                var formData = $(this).serialize();
 
                 $.ajax({
                     url: '@Url.Action("ChangePassword", "Home")',
                     type: 'POST',
-                    data: JSON.stringify(formData),
-                    contentType: 'application/json',
+                    data: formData,
                     headers: {
                         'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
                     },
@@ -105,7 +92,8 @@
                         }
                     },
                     error: function (xhr) {
-                        toastr.error(xhr.responseJSON?.message || 'خطایی رخ داد.');
+                        var errorMessage = xhr.responseJSON?.message || 'خطایی رخ داد.';
+                        toastr.error(errorMessage);
                     }
                 });
             });

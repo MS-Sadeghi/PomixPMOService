@@ -39,61 +39,55 @@
     <!-- PAGE -->
     <div class="page">
         <div class="page-main">
-            <!-- app-Header -->
-            <div class="app-header header sticky" style="height: 75px;">
-                <div class="container-fluid main-container">
-                    <div class="d-flex align-items-center justify-content-between w-100">
+            <header class="app-header">
+                <div class="header-container">
+                    <div class="header-left">
+                        <a class="logo-horizontal" asp-controller="Cartable" asp-action="Index" id="main-logo">
+                            <img src="~/assets/images/brand/logo-7.png" id="logo-image" alt="Logo" />
+                        </a>
+                    </div>
 
-                        <div>
-                            <a class="logo-horizontal" asp-controller="Cartable" asp-action="Index" id="main-logo">
-                                <img src="~/assets/images/brand/logo-7.png" id="logo-image"
-                                     style="max-height: 48px; width:auto;" alt="Logo" />
+                    <div class="header-center"></div>
+
+                    <div class="header-right">
+                        <!-- دکمه مدیریت کاربران -->
+                        @{
+                            var userRole = Context.Session.GetString("UserRole");
+                            var userRoleId = Context.Session.GetString("UserRoleId");
+                            var isAdmin = (userRole == "ادمین" || userRoleId == "3");
+                        }
+                        @if (isAdmin)
+                        {
+                            <a class="btn btn-outline-primary btn-sm" asp-controller="Home" asp-action="Users">
+                                <i class="fe fe-users"></i>
+                                <span>مدیریت کاربران</span>
                             </a>
-                        </div>
-
-                        <div class="d-flex align-items-center gap-3">
-
-                            <!-- مدیریت کاربران -->
-                            <div>
-                                @{
-                                    var userRole = Context.Session.GetString("UserRole");
-                                    var userRoleId = Context.Session.GetString("UserRoleId");
-                                    var isAdmin = (userRole == "ادمین" || userRoleId == "3");
-                                }
-                                @if (isAdmin)
-                                {
-                                    <a class="btn btn-outline-primary btn-sm" asp-controller="Home" asp-action="Users">
-                                        <i class="fe fe-users"></i> مدیریت کاربران
-                                    </a>
-                                }
-                            </div>
-
-                            <!-- FULL SCREEN -->
-                            <a class="nav-link icon full-screen-link" href="javascript:void(0)">
-                                <i class="fe fe-minimize fullscreen-button"></i>
+                        }
+                        <a class="full-screen-link" href="javascript:void(0)" id="fullScreenBtn">
+                            <i class="fe fe-maximize" id="fullScreenIcon"></i>
+                        </a>
+                        <div class="profile-dropdown" id="profileDropdown">
+                            <a href="javascript:void(0)" class="profile-trigger" id="profileTrigger">
+                                <img src="~/assets/images/users/22.jfif" alt="profile-user" class="profile-avatar" id="profileAvatar">
                             </a>
-
-                            <!-- USER PROFILE -->
-                            <div class="dropdown profile-1">
-                                <a href="javascript:void(0)" data-bs-toggle="dropdown" class="nav-link leading-none d-flex">
-                                    <img src="~/assets/images/users/22.jfif" alt="profile-user"
-                                         class="avatar profile-user brround cover-image">
+                            <div class="dropdown-menu-custom">
+                                <a class="dropdown-item-custom" asp-controller="Home" asp-action="EditProfile">
+                                    پروفایل
+                                    <i class="fe fe-user"></i>
                                 </a>
-                                <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                                    <div class="dropdown-divider m-0"></div>
-                                    <a class="dropdown-item" asp-controller="Home" asp-action="EditProfile">
-                                        پروفایل <i class="dropdown-icon fe fe-user" style="float:right"></i>
-                                    </a>
-                                    <form id="logout-form" asp-controller="Home" asp-action="Logout" method="post" style="display: none;">
-                                        @Html.AntiForgeryToken()
-                                    </form>
-                                    <a class="dropdown-item" href="javascript:void(0);" onclick="document.getElementById('logout-form').submit();">
-                                        خروج <i class="dropdown-icon fe fe-alert-circle" style="float:right"></i>
-                                    </a>
-                                </div>
+                                <div class="dropdown-divider"></div>
+                                <form id="logout-form" asp-controller="Home" asp-action="Logout" method="post" style="display: none;">
+                                    @Html.AntiForgeryToken()
+                                </form>
+                                <a class="dropdown-item-custom" href="javascript:void(0);" onclick="document.getElementById('logout-form').submit();">
+                                    خروج
+                                    <i class="fe fe-log-out"></i>
+                                </a>
                             </div>
-
                         </div>
+                    </div>
+                </div>
+            </header>
 
             <!-- محتوای اصلی -->
             <div class="main-content mt-5 hor-content">

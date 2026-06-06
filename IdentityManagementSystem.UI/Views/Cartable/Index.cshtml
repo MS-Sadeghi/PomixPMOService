@@ -12,29 +12,37 @@
 <link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
 
 <div class="input-group mb-5">
-    <form asp-action="Index" method="get" class="w-100">
-        @{
-            var currentSearch = Context.Request.Query["search"].ToString();
-            var currentFilter = ViewBag.FilterStatus as string ?? "";
-        }
-        <div class="input-group mb-3">
-            <form asp-action="Index" method="get" class="w-100 d-flex align-items-center">
-                <input type="text" class="form-control" name="search" value="@currentSearch" placeholder="جستجو..." />
+    @{
+        var currentSearch = Context.Request.Query["search"].ToString();
+        var currentFilter = ViewBag.FilterStatus as string ?? "";
+    }
 
-                <select name="filterStatus" class="form-select mx-2" style="max-width:200px; font-size:13px;">
-                    <option value="" selected="@string.IsNullOrEmpty(currentFilter)">همه درخواست‌ها</option>
-                    <option value="approved" selected="@(currentFilter == "approved")">تایید شده</option>
-                    <option value="rejected" selected="@(currentFilter == "rejected")">رد شده</option>
-                    <option value="pending" selected="@(currentFilter == "pending")">در انتظار بررسی</option>
-                </select>
+    <div class="input-group mb-5">
+        <form asp-action="Index" method="get" class="w-100 d-flex align-items-center">
 
-                <button type="submit" class="btn btn-primary">
-                    <i class="fa fa-search" aria-hidden="true" style="color: whitesmoke;"></i>
-                </button>
-            </form>
-        </div>
+            <input type="text"
+                   class="form-control"
+                   name="search"
+                   value="@currentSearch"
+                   placeholder="جستجو..." />
 
-    </form>
+            <select name="filterStatus"
+                    class="form-select mx-2"
+                    style="max-width:200px; font-size:13px;">
+
+                <option value="">همه درخواست‌ها</option>
+                <option value="approved" selected="@(currentFilter == "approved")">تایید شده</option>
+                <option value="rejected" selected="@(currentFilter == "rejected")">رد شده</option>
+                <option value="pending" selected="@(currentFilter == "pending")">در انتظار بررسی</option>
+
+            </select>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fa fa-search" aria-hidden="true" style="color:whitesmoke;"></i>
+            </button>
+
+        </form>
+    </div>
 </div>
 <div class="card">
     <div class="card-header">
@@ -194,32 +202,36 @@
                                                 </i>
                                             </button>
                                         </td>
-                                        <!-- تایید -->
-                                        <td class="text-center" style="width:120px;">
-                                            <div class="btn-group btn-group-sm radiobtns" role="group" aria-label="Approval radio toggle button group" style="border-radius: 3px;">
-                                                <input type="radio" class="btn-check approval-radio" name="approval-@item.RequestId" id="approve-@item.RequestId" data-request-id="@item.RequestId" data-value="true"
-                                                       @(item.ValidateByExpert.HasValue && item.ValidateByExpert.Value ? "checked" : "")>
-                                                <label class="btn btn-outline-success" for="approve-@item.RequestId">
+                                        <!-- تایید درخواست -->
+                                        <td class="text-center">
+                                            <div class="btn-group w-100 mb-1" role="group">
+                                                <button type="button"
+                                                        class="btn btn-sm @(item.ValidateByExpert == true ? "btn-success active" : "btn-outline-success") approve-btn flex-fill"
+                                                        data-request-id="@item.RequestId">
                                                     تایید
-                                                </label>
-                                                <input type="radio" class="btn-check approval-radio" name="approval-@item.RequestId" id="reject-@item.RequestId" data-request-id="@item.RequestId" data-value="false"
-                                                       @(item.ValidateByExpert.HasValue && !item.ValidateByExpert.Value ? "checked" : "")>
-                                                <label class="btn btn-outline-danger br-0" for="reject-@item.RequestId">
-                                                    عدم تایید
-                                                </label>
-                                                @if (item.ValidateByExpert == false && !string.IsNullOrEmpty(item.RejectReasonDisplay))
-                                                {
-                                                    <div class="mt-1">
-                                                        <a href="javascript:void(0)"
-                                                           class="text-danger text-decoration-none show-reject-reason"
-                                                           data-reason="@item.RejectReasonDisplay"
-                                                           data-bs-toggle="tooltip"
-                                                           title="نمایش دلیل عدم تایید">
-                                                            <i class="fa fa-exclamation-circle text-danger" style="font-size: 14px;"></i>
-                                                        </a>
-                                                    </div>
-                                                }
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-sm @(item.ValidateByExpert == false ? "btn-danger active" : "btn-outline-danger") reject-btn flex-fill"
+                                                        data-request-id="@item.RequestId">
+                                                    رد
+                                                </button>
                                             </div>
+
+                                            @if (item.ValidateByExpert == false && !string.IsNullOrEmpty(item.RejectReasonDisplay))
+                                            {
+                                                <div class="mt-1">
+                                                    <small class="text-danger d-flex align-items-center justify-content-center gap-1">
+                                                        <i class="fa fa-exclamation-circle"></i>
+                                                        <span class="reject-reason-text"
+                                                              style="cursor: pointer; text-decoration: underline dotted;"
+                                                              data-reason="@item.RejectReasonDisplay"
+                                                              data-bs-toggle="tooltip"
+                                                              title="@item.RejectReasonDisplay">
+                                                            @(item.RejectReasonDisplay.Length > 45 ? item.RejectReasonDisplay.Substring(0, 45) + "..." : item.RejectReasonDisplay)
+                                                        </span>
+                                                    </small>
+                                                </div>
+                                            }
                                         </td>
                                     </tr>
                                 }
@@ -407,18 +419,16 @@
             // ==================== 1. ابزارهای کمکی ====================
             $('[data-bs-toggle="tooltip"]').tooltip();
 
-            let pendingReject = null; // برای رد موقت
+            let pendingReject = null;
 
             // ریست فرم مودال
             $('#scrollingmodal').on('hidden.bs.modal', function () {
                 $('#needs-validation-form')[0].reset();
-                $('.form-text').text('');
             });
 
             // ==================== 2. نمایش متن سند ====================
             $(document).on('click', '.btn-view-doc', function () {
                 const requestId = $(this).data('request-id');
-                const row = $(`tr[data-request-id="${requestId}"]`);
 
                 $('#documentModalLabel').text('متن سند درخواست ' + requestId);
                 $('#documentModalBody').html('<div class="d-flex justify-content-center my-5"><div class="spinner-border" role="status"></div><span class="ms-2">در حال بارگذاری...</span></div>');
@@ -426,46 +436,42 @@
                 $('#confirmDocument').data('request-id', requestId);
                 $('#documentModal').modal('show');
 
-        $.ajax({
-            url: '/Cartable/GetDocumentText',
-            type: 'GET',
-            data: { requestId: requestId },
-            dataType: 'json',
-            success: function (res) {
-                if (res && res.success && res.documentText && res.documentText.trim() !== "") {
-                    let text = res.documentText;
-                    let safe = $('<div/>').text(text).html();
+                $.ajax({
+                    url: '/Cartable/GetDocumentText',
+                    type: 'GET',
+                    data: { requestId: requestId },
+                    dataType: 'json',
+                    success: function (res) {
+                        if (res && res.success && res.documentText && res.documentText.trim() !== "") {
+                            let text = res.documentText;
+                            let safe = $('<div/>').text(text).html();
 
-                    safe = safe.replace(
-                        /(مهلت اعتبار این وکالتنامه تا تاریخ\s*\d{4}\/\d{2}\/\d{2}\s*می باشد)/g,
-                        '<strong style="color:#d9534f; font-weight:bold;">$1</strong>'
-                    );
+                            safe = safe.replace(
+                                /(مهلت اعتبار این وکالتنامه تا تاریخ\s*\d{4}\/\d{2}\/\d{2}\s*می باشد)/g,
+                                '<strong style="color:#d9534f; font-weight:bold;">$1</strong>'
+                            );
 
-                  $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.8; font-size:0.95rem; background: #f8f9fa; padding: 15px; border-radius: 8px; color: #212529;" class="document-content">' + safe + '</pre>');
-                    $('#documentChecked').prop('checked', res.isRead === true);
-                    $('#documentChecked').prop('disabled', false);
-                    $('#confirmDocument').prop('disabled', false);
-                } else {
-                    $('#documentModalBody').html('<p class="text-danger fw-bold text-center my-4">⚠️ رمز تصدیق یا شماره سند درست وارد نشده است.<br><small class="text-muted">جهت مشاهده متن سند، لطفاً اطلاعات صحیح را وارد کنید.</small></p>');
-
-                    $('#documentChecked').prop('checked', false);
-                    $('#documentChecked').prop('disabled', true);
-                    $('#confirmDocument').prop('disabled', true);
-
-                    toastr.error(res.message || 'رمز تصدیق یا شماره سند درست وارد نشده است.');
-                }
-            },
-            error: function (xhr) {
-                const msg = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
-                $('#documentModalBody').html('<p class="text-danger text-center my-4">❌ ' + msg + '</p>');
-
-                $('#documentChecked').prop('checked', false);
-                $('#documentChecked').prop('disabled', true);
-                $('#confirmDocument').prop('disabled', true);
-
-                toastr.error(msg);
-            }
-        });
+                            $('#documentModalBody').html('<pre style="white-space: pre-wrap; line-height:1.8; font-size:0.95rem; background: #f8f9fa; padding: 15px; border-radius: 8px; color: #212529;" class="document-content">' + safe + '</pre>');
+                            $('#documentChecked').prop('checked', res.isRead === true);
+                            $('#documentChecked').prop('disabled', false);
+                            $('#confirmDocument').prop('disabled', false);
+                        } else {
+                            $('#documentModalBody').html('<p class="text-danger fw-bold text-center my-4">⚠️ رمز تصدیق یا شماره سند درست وارد نشده است.<br><small class="text-muted">جهت مشاهده متن سند، لطفاً اطلاعات صحیح را وارد کنید.</small></p>');
+                            $('#documentChecked').prop('checked', false);
+                            $('#documentChecked').prop('disabled', true);
+                            $('#confirmDocument').prop('disabled', true);
+                            toastr.error(res.message || 'رمز تصدیق یا شماره سند درست وارد نشده است.');
+                        }
+                    },
+                    error: function (xhr) {
+                        const msg = xhr.responseJSON?.message || 'خطا در دریافت اطلاعات سند.';
+                        $('#documentModalBody').html('<p class="text-danger text-center my-4">❌ ' + msg + '</p>');
+                        $('#documentChecked').prop('checked', false);
+                        $('#documentChecked').prop('disabled', true);
+                        $('#confirmDocument').prop('disabled', true);
+                        toastr.error(msg);
+                    }
+                });
             });
 
             // ==================== 3. تیک "سند مشاهده شد" ====================
@@ -476,7 +482,6 @@
                 }
 
                 const requestId = $(this).data('request-id');
-                const row = $(`tr[data-request-id="${requestId}"]`);
                 const token = $('input[name="__RequestVerificationToken"]').val();
 
                 $.ajax({
@@ -489,12 +494,6 @@
                         if (res.success) {
                             toastr.success('سند با موفقیت به عنوان خوانده شده علامت‌گذاری شد ✓');
                             $('#documentModal').modal('hide');
-
-                            // آپدیت آیکون و data
-                            row.data('is-read', true);
-                            row.find('.btn-view-doc i')
-                                .removeClass('text-muted').addClass('text-success')
-                                .attr('title', 'سند خوانده شده');
                         } else {
                             toastr.error(res.message || 'خطا در ثبت خواندن سند.');
                         }
@@ -505,27 +504,32 @@
                 });
             });
 
-            // ==================== 4. تغییر رادیو (تأیید / رد) ====================
-            $(document).on('change', '.approval-radio', function () {
-                const radio = $(this);
-                const requestId = radio.data('request-id');
-                const isApprove = radio.attr('id').startsWith('approve');
+            // ==================== 4. دکمه‌های تایید و رد (جدید) ====================
 
-                if (isApprove) {
-                    // تأیید فوری — فقط بفرست، سرور چک می‌کنه
-                    submitValidation(requestId, true, null);
-                } else {
-                    // رد → باز کردن مودال
-                    pendingReject = { radio, requestId };
-                    $('#rejectRequestId').val(requestId);
-                    $('#predefinedReason').val('');
-                    $('#customDescription').val('');
-                    $('#rejectModal').modal('show');
-                    radio.prop('checked', false); // منتظر تأیید کاربر
-                }
+            // کلیک روی دکمه تایید
+            $(document).on('click', '.approve-btn', function () { 
+                const requestId = $(this).data('request-id');
+                submitValidation(requestId, true, null);
             });
 
-            // ==================== 5. تأیید رد در مودال ====================
+            // کلیک روی دکمه رد
+            $(document).on('click', '.reject-btn', function () {
+                const requestId = $(this).data('request-id');
+                pendingReject = { requestId };
+                $('#rejectRequestId').val(requestId);
+                $('#predefinedReason').val('');
+                $('#customDescription').val('');
+                $('#rejectModal').modal('show');
+            });
+
+            // نمایش دلیل عدم تایید با کلیک روی متن دلیل
+            $(document).on('click', '.reject-reason-text', function () {
+                const reason = $(this).data('reason');
+                $('#rejectReasonText').text(reason || 'دلیلی ثبت نشده است.');
+                $('#rejectReasonModal').modal('show');
+            });
+
+            // ==================== 5. تایید رد در مودال ====================
             $('#confirmReject').click(function () {
                 if (!pendingReject) return;
 
@@ -533,113 +537,62 @@
                 const reason = $('#predefinedReason option:selected').text().trim();
                 const custom = $('#customDescription').val()?.trim();
 
-                if (reason && reason !== "----") description += reason;
+                if (reason && reason !== "---") description += reason;
                 if (custom) {
                     if (description) description += " - ";
                     description += custom;
                 }
 
-                // حتی اگه خالی باشه بفرست — سرور می‌گه خطاست
                 submitValidation(pendingReject.requestId, false, description || null);
                 $('#rejectModal').modal('hide');
-                pendingReject.radio.prop('checked', true);
                 pendingReject = null;
             });
 
-            // ==================== 6. لغو انتخاب با کلیک روی لیبل انتخاب‌شده ====================
-            $(document).on('click', '.btn-group .btn-check:checked + label', function () {
-                const label = $(this);
-                const radioId = label.attr('for');
-                const radio = $('#' + radioId);
-                const requestId = radio.data('request-id');
+            // ==================== 6. تابع اصلی ارسال وضعیت ====================
+            function submitValidation(requestId, validateByExpert, description) {
+                const row = $(`tr[data-request-id="${requestId}"]`);
+                const token = $('input[name="__RequestVerificationToken"]').val();
 
-                radio.prop('checked', false);
-                submitValidation(requestId, null, null); // وضعیت خنثی
-            });
-
-            // ==================== 7. تابع اصلی ارسال (بدون هیچ چک منطقی!) ====================
-        // تابع اصلی ارسال
-        function submitValidation(requestId, validateByExpert, description) {
-            const row = $(`tr[data-request-id="${requestId}"]`);
-            const token = $('input[name="__RequestVerificationToken"]').val();
-
-            fetch('/Cartable/UpdateValidationStatus', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify({
-                    RequestId: requestId,
-                    ValidateByExpert: validateByExpert,
-                    Description: description
+                fetch('/Cartable/UpdateValidationStatus', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        RequestId: requestId,
+                        ValidateByExpert: validateByExpert,
+                        Description: description
+                    })
                 })
-            })
-            .then(res => {
-                if (!res.ok) {
-                    return res.json().then(err => { throw err; });
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    toastr.success(data.message || "وضعیت با موفقیت به‌روز شد");
+                .then(res => {
+                    if (!res.ok) {
+                        return res.json().then(err => { throw err; });
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        toastr.success(data.message || "وضعیت با موفقیت به‌روز شد");
 
-                    // آپدیت رادیوها
-                    if (validateByExpert === true) {
-                        row.find(`#approve-${requestId}`).prop('checked', true);
-                        row.find(`#reject-${requestId}`).prop('checked', false);
-                        // حذف نمایش دلیل رد
-                        row.find('.show-reject-reason').parent().remove();
-                    } else if (validateByExpert === false) {
-                        row.find(`#approve-${requestId}`).prop('checked', false);
-                        row.find(`#reject-${requestId}`).prop('checked', true);
-
-                        // اضافه کردن نمایش دلیل رد اگر وجود داشته باشد
-                        const td = row.find('td:last-child');
-                        if (description) {
-                            // اگر قبلاً نمایشی وجود دارد حذف کن
-                            td.find('.show-reject-reason').parent().remove();
-                            // اضافه کردن نمایش جدید
-                            td.find('.btn-group').after(`
-                                <div class="mt-1">
-                                    <a href="javascript:void(0)"
-                                       class="text-danger text-decoration-none show-reject-reason"
-                                       data-reason="${description.replace(/"/g, '&quot;')}"
-                                       data-bs-toggle="tooltip"
-                                       title="نمایش دلیل عدم تایید">
-                                        <i class="fa fa-exclamation-circle text-danger" style="font-size: 14px;"></i>
-                                        <small class="text-muted me-1">دلیل رد</small>
-                                    </a>
-                                </div>
-                            `);
-                            // راه‌اندازی مجدد tooltip
-                            $('[data-bs-toggle="tooltip"]').tooltip();
+                        // آپدیت UI بعد از موفقیت
+                        if (validateByExpert === true) {
+                            row.find('.approve-btn').addClass('active btn-success').removeClass('btn-outline-success');
+                            row.find('.reject-btn').removeClass('active btn-danger').addClass('btn-outline-danger');
+                        } else if (validateByExpert === false) {
+                            row.find('.reject-btn').addClass('active btn-danger').removeClass('btn-outline-danger');
+                            row.find('.approve-btn').removeClass('active btn-success').addClass('btn-outline-success');
                         }
                     } else {
-                        row.find(`.approval-radio`).prop('checked', false);
-                        row.find('.show-reject-reason').parent().remove();
+                        toastr.error(data.message || "خطا در به‌روزرسانی وضعیت");
                     }
-                } else {
-                    toastr.error(data.message || "خطا در به‌روزرسانی وضعیت");
-                    row.find(`.approval-radio`).prop('checked', false);
-                }
-            })
-            .catch(err => {
-                toastr.error(err.message || "خطا در ارتباط با سرور");
-                row.find(`.approval-radio`).prop('checked', false);
-            });
-        }
+                })
+                .catch(err => {
+                    toastr.error(err.message || "خطا در ارتباط با سرور");
+                });
+            }
 
-            // ==================== 8. لغو مودال رد (اگر تأیید نکرد) ====================
-            $('#rejectModal').on('hidden.bs.modal', function () {
-                if (pendingReject) {
-                    pendingReject.radio.prop('checked', false);
-                    pendingReject = null;
-                }
-            });
-
-            // ==================== 9. فرم ارسال درخواست جدید ====================
+            // ==================== 7. فرم ارسال درخواست جدید ====================
             $('#needs-validation-form').on('submit', function (e) {
                 e.preventDefault();
                 const form = $(this);
@@ -662,7 +615,7 @@
                     success: function () {
                         toastr.success('درخواست با موفقیت ارسال شد');
                         $('#scrollingmodal').modal('hide');
-                        $('#cartableBody').load(location.href + ' #cartableBody > *');
+                        location.reload(); // یا load فقط بخش جدول
                     },
                     error: function () {
                         toastr.error('خطا در ارسال درخواست');
@@ -673,13 +626,11 @@
                 });
             });
 
-        });
-                // نمایش دلیل عدم تایید با مدال
-        $(document).on('click', '.show-reject-reason', function(e) {
-            e.preventDefault();
-            var reason = $(this).data('reason');
-            $('#rejectReasonText').text(reason || 'دلیلی ثبت نشده است.');
-            $('#rejectReasonModal').modal('show');
+            // بستن مودال رد
+            $('#rejectModal').on('hidden.bs.modal', function () {
+                pendingReject = null;
+            });
+
         });
     </script>
 }

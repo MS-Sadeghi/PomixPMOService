@@ -67,19 +67,16 @@
         direction: rtl !important;
     }
 
-    /* استایل برای تصویر کپچا */
     .captcha-container img {
         margin-left: 10px !important;
         margin-right: 0 !important;
     }
 
-    /* استایل برای دکمه رفرش */
     .captcha-refresh-btn {
         margin-left: 10px !important;
         margin-right: 0 !important;
     }
 
-    /* استایل برای گروه کپچا */
     .captcha-group {
         direction: rtl !important;
         text-align: right !important;
@@ -220,5 +217,26 @@
             localStorage.setItem('jwtToken', jwtToken);
             window.location.href = '/Cartable/Index';
         }
+
+            document.addEventListener('DOMContentLoaded', function () {
+            const toggle = document.getElementById('Password-toggle');
+            const icon = toggle.querySelector('i');
+            const input = toggle.querySelector('input');
+
+            toggle.addEventListener('click', function (e) {
+                // فقط روی آیکون کلیک کند
+                if (e.target.closest('span.input-group-text')) {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('zmdi-eye');
+                        icon.classList.add('zmdi-eye-off');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('zmdi-eye-off');
+                        icon.classList.add('zmdi-eye');
+                    }
+                }
+            });
+        });
     </script>
 }

@@ -168,17 +168,21 @@
 
     <script>
         $(document).ready(function () {
-            // دریافت اطلاعات کاربر
-            $.get('/Home/GetUserProfile', function (data) {
-                if (data && data.success !== false) {
-                    $('#user-name').text(data.name + ' ' + data.lastName);
-                    $('#user-role').text(data.role);
-                    $('#userNameDisplay').text(data.name || 'کاربر');
-                } else {
-                    console.warn(data.message || 'User info not found.');
-                }
-            });
-
+             if ('@User.Identity.IsAuthenticated' === 'True') {
+                 $.get('/Home/GetUserProfile')
+                     .done(function (data) {
+                         if (data && data.success !== false) {
+                             $('#user-name').text(data.name + ' ' + data.lastName);
+                             $('#user-role').text(data.role);
+                             $('#userNameDisplay').text(data.name || 'کاربر');
+                         }
+                     })
+                     .fail(function (xhr) {
+                         if (xhr.status === 401) {
+                             console.warn('Unauthorized - User may not be logged in.');
+                         }
+                     });
+             }
             // پیکربندی Toastr
             toastr.options = {
                 "closeButton": true,

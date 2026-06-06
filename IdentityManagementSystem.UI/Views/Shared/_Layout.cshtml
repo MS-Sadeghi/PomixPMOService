@@ -199,9 +199,6 @@
             };
         });
 
-        // ============================================
-        // عملکرد دکمه Full Screen (تغییر سایز صفحه)
-        // ============================================
         const fullScreenBtn = document.getElementById('fullScreenBtn');
         const fullScreenIcon = document.getElementById('fullScreenIcon');
 
@@ -222,7 +219,6 @@
                 }
             });
 
-            //监听 fullscreenchange 事件
             document.addEventListener('fullscreenchange', function () {
                 updateFullScreenIcon(!!document.fullscreenElement);
             });
@@ -238,9 +234,6 @@
             }
         }
 
-        // ============================================
-        // منوی کشویی پروفایل
-        // ============================================
         const profileTrigger = document.getElementById('profileTrigger');
         const profileDropdown = document.getElementById('profileDropdown');
 
@@ -251,7 +244,6 @@
                 profileDropdown.classList.toggle('open');
             });
 
-            // بستن منو با کلیک بیرون
             document.addEventListener('click', function (e) {
                 if (!profileDropdown.contains(e.target)) {
                     profileDropdown.classList.remove('open');

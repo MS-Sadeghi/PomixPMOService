@@ -455,9 +455,7 @@ namespace IdentityManagementSystem.UI.Controllers
             var pageSize = 10;
             var url = $"Request?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search))
-            {
                 url += $"&search={System.Web.HttpUtility.UrlEncode(search)}";
-            }
 
             try
             {

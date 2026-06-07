@@ -8,67 +8,92 @@ namespace IdentityManagementSystem.API.Models
     {
         [Key]
         public long UserId { get; set; }
-        public string NationalId { get; set; } = string.Empty;
+
+        // فیلدهای رمزنگاری شده جدید
+        public string NationalIdEnc { get; set; } = string.Empty;
+        public string NationalIdHash { get; set; } = string.Empty;   // برای جستجو
+
         public string Username { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
+
         public string Name { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
 
-        // فقط foreign key
         public int RoleId { get; set; }
-
-        // navigation property
         public Role Role { get; set; } = null!;
-        public string? MobileNumber { get; set; }
 
+        public string? MobileNumberEnc { get; set; }
+        public string? MobileNumberHash { get; set; }   // برای جستجو
 
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLogin { get; set; }
         public bool IsActive { get; set; } = true;
+
+        // فیلدهای قدیمی (برای مهاجرت تدریجی - بعداً می‌تونی حذف کنی)
+        [Obsolete("Use NationalIdEnc instead")]
+        public string NationalId { get; set; } = string.Empty;
+
+        [Obsolete("Use MobileNumberEnc instead")]
+        public string? MobileNumber { get; set; }
     }
 
-        public class RoleViewModel
+    public class RoleViewModel
         {
             public int RoleId { get; set; }
             public string RoleName { get; set; } = string.Empty;
         }
-    
+
 
     public class Request
     {
         [Key]
         public long RequestId { get; set; }
 
-      
         [StringLength(10)]
-        public string? NationalId { get; set; }     // کد ملی
-    
+        public string? NationalIdEnc { get; set; }
+
+        public string? NationalIdHash { get; set; }        // برای جستجوی سریع
 
         [StringLength(20)]
-        public string? MobileNumber { get; set; }   // شماره همراه
+        public string? MobileNumberEnc { get; set; }
+
+        public string? MobileNumberHash { get; set; }
 
         [StringLength(50)]
-        public string? DocumentNumber { get; set; } // شناسه سند
+        public string? DocumentNumberEnc { get; set; }
 
         [StringLength(50)]
-        public string? VerificationCode { get; set; } // رمز تصدیق
-        public bool? ValidateByExpert { get; set; } // اضافه شده
+        public string? VerificationCodeEnc { get; set; }
+
+        public string? RequestCode { get; set; } = string.Empty;   // این را هم می‌توانی encrypt کنی اگر حساس باشد
+
+        public bool? ValidateByExpert { get; set; }
         public string? Description { get; set; }
-        public bool? IsMatch { get; set; }              // وضعیت احراز هویت
-        public bool? IsExist { get; set; }              // وجود سند
-        public bool? IsNationalIdInResponse { get; set; } 
-        public bool? IsNationalIdInLawyers { get; set; } 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public bool? IsMatch { get; set; }
+        public bool? IsExist { get; set; }
+        public bool? IsNationalIdInResponse { get; set; }
+        public bool? IsNationalIdInLawyers { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         [StringLength(100)]
         public string? CreatedBy { get; set; }
-
         public DateTime? UpdatedAt { get; set; }
-
-
         [StringLength(100)]
         public string? UpdatedBy { get; set; }
-        public string RequestCode { get; set; } = string.Empty;
+
+        // فیلدهای قدیمی (برای مهاجرت)
+        [Obsolete("Use NationalIdEnc instead")]
+        public string? NationalId { get; set; }
+
+        [Obsolete("Use MobileNumberEnc instead")]
+        public string? MobileNumber { get; set; }
+
+        [Obsolete("Use DocumentNumberEnc instead")]
+        public string? DocumentNumber { get; set; }
+
+        [Obsolete("Use VerificationCodeEnc instead")]
+        public string? VerificationCode { get; set; }
     }
 
     public class Cartable

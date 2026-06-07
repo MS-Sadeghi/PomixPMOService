@@ -146,7 +146,11 @@
                         <span class="input-group-text bg-white text-muted">
                             <i class="zmdi zmdi-account text-muted" aria-hidden="true"></i>
                         </span>
-                        <input asp-for="Username" class="form-control" placeholder="نام کاربری" required />
+                        <input asp-for="Username"
+                               class="form-control"
+                               placeholder="نام کاربری"
+                               autocomplete="username"
+                               required />
                     </div>
                     <span asp-validation-for="Username" class="text-danger d-block mt-1"></span>
                 </div>
@@ -157,7 +161,12 @@
                         <span class="input-group-text bg-white text-muted">
                             <i class="zmdi zmdi-eye" aria-hidden="true"></i>
                         </span>
-                        <input asp-for="Password" type="password" class="form-control" placeholder="رمز عبور" required />
+                        <input asp-for="Password"
+                               type="password"
+                               class="form-control"
+                               placeholder="رمز عبور"
+                               autocomplete="current-password"
+                               required />
                     </div>
                     <span asp-validation-for="Password" class="text-danger d-block mt-1"></span>
                 </div>

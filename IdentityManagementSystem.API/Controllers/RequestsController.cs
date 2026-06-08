@@ -29,7 +29,11 @@ namespace IdentityManagementSystem.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<PaginatedResponse<RequestViewModel>>> GetAll(int page = 1, int pageSize = 10, string search = "")
+        public async Task<ActionResult<PaginatedResponse<RequestViewModel>>> GetAll(
+            int page = 1,
+            int pageSize = 10,
+            string search = "",
+            string filterStatus = "")
         {
             var username = User.Identity?.Name;
 
@@ -52,11 +56,33 @@ namespace IdentityManagementSystem.API.Controllers
                     r.CreatedBy == currentUser.UserId.ToString());
             }
 
-            if (!string.IsNullOrEmpty(search))
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                query = query.Where(r => r.NationalId.Contains(search) ||
-                                         r.MobileNumber.Contains(search) ||
-                                         r.DocumentNumber.Contains(search));
+                query = query.Where(r =>
+                    r.NationalId.Contains(search) ||
+                    r.MobileNumber.Contains(search) ||
+                    r.DocumentNumber.Contains(search) ||
+                    r.VerificationCode.Contains(search) ||
+                    r.RequestCode.Contains(search) ||
+                    r.RequestId.ToString().Contains(search));
+            }
+
+            if (!string.IsNullOrEmpty(filterStatus))
+            {
+                switch (filterStatus.ToLower())
+                {
+                    case "approved":
+                        query = query.Where(r => r.ValidateByExpert == true);
+                        break;
+
+                    case "rejected":
+                        query = query.Where(r => r.ValidateByExpert == false);
+                        break;
+
+                    case "pending":
+                        query = query.Where(r => r.ValidateByExpert == null);
+                        break;
+                }
             }
 
             query = query.OrderByDescending(r => r.CreatedAt);

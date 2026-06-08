@@ -40,24 +40,10 @@ namespace IdentityManagementSystem.UI.Controllers
         public async Task<IActionResult> Index(int page = 1, string search = "", string filterStatus = "")
         {
             // گرفتن داده‌ها از API
-            var model = await GetCartableData(page, search);
-
-            // اعمال فیلتر بر اساس وضعیت
-            if (!string.IsNullOrEmpty(filterStatus))
-            {
-                switch (filterStatus.ToLower())
-                {
-                    case "approved":
-                        model.Items = model.Items.Where(x => x.ValidateByExpert == true).ToList();
-                        break;
-                    case "rejected":
-                        model.Items = model.Items.Where(x => x.ValidateByExpert == false).ToList();
-                        break;
-                    case "pending":
-                        model.Items = model.Items.Where(x => x.ValidateByExpert == null).ToList();
-                        break;
-                }
-            }
+            var model = await GetCartableData(
+            page,
+            search,
+            filterStatus);
 
             // بررسی خوانده شدن سندها
             foreach (var item in model.Items)
@@ -193,7 +179,7 @@ namespace IdentityManagementSystem.UI.Controllers
             }
 
             ViewBag.FormModel = model;
-            return View("Index", await GetCartableData(1, ""));
+            return View("Index", await GetCartableData(1, "", ""));
         }
 
 
@@ -207,14 +193,14 @@ namespace IdentityManagementSystem.UI.Controllers
             {
                 ViewBag.ErrorMessage = "کد امنیتی اشتباه است.";
                 ViewBag.FormModel = model;
-                return View("Index", await GetCartableData(1, ""));
+                return View("Index", await GetCartableData(1, "", ""));
             }
 
             if (!model.AgreeToTerms)
             {
                 ViewBag.ErrorMessage = "لطفاً با شرایط موافقت کنید.";
                 ViewBag.FormModel = model;
-                return View("Index", await GetCartableData(1, ""));
+                return View("Index", await GetCartableData(1, "", ""));
             }
 
             try
@@ -249,21 +235,21 @@ namespace IdentityManagementSystem.UI.Controllers
                     ViewBag.FormModel = new CartableFormViewModel();
 
                     // رفرش کردن داده‌های کارتابل
-                    return View("Index", await GetCartableData(1, ""));
+                    return View("Index", await GetCartableData(1, "", ""));
                 }
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
                     ViewBag.ErrorMessage = $"خطا در ثبت درخواست: {error}";
                     ViewBag.FormModel = model;
-                    return View("Index", await GetCartableData(1, ""));
+                    return View("Index", await GetCartableData(1, "", ""));
                 }
             }
             catch (Exception ex)
             {
                 ViewBag.ErrorMessage = $"خطا در ارتباط با سرور: {ex.Message}";
                 ViewBag.FormModel = model;
-                return View("Index", await GetCartableData(1, ""));
+                return View("Index", await GetCartableData(1, "", ""));
             }
         }
 
@@ -450,12 +436,22 @@ namespace IdentityManagementSystem.UI.Controllers
         }
 
         [HttpGet]
-        private async Task<PaginatedCartableViewModel> GetCartableData(int page, string search)
+        private async Task<PaginatedCartableViewModel> GetCartableData(
+    int page,
+    string search,
+    string filterStatus)
         {
             var pageSize = 10;
-            var url = $"Request?page={page}&pageSize={pageSize}";
-            if (!string.IsNullOrEmpty(search))
-                url += $"&search={System.Web.HttpUtility.UrlEncode(search)}";
+            var url =$"Request?page={page}&pageSize={pageSize}";
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                url += $"&search={Uri.EscapeDataString(search)}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(filterStatus))
+            {
+                url += $"&filterStatus={filterStatus}";
+            }
 
             try
             {
@@ -585,30 +581,44 @@ namespace IdentityManagementSystem.UI.Controllers
     #region Helper
     public static class PersianDateHelper
     {
+        // برای DateTime (غیر nullable)
         public static string ToPersianDate(this DateTime date)
         {
-            try
-            {
-                var persianCalendar = new System.Globalization.PersianCalendar();
-                return $"{persianCalendar.GetYear(date)}/{persianCalendar.GetMonth(date):D2}/{persianCalendar.GetDayOfMonth(date):D2}";
-            }
-            catch
-            {
-                return "نامعتبر";
-            }
+            var pc = new System.Globalization.PersianCalendar();
+            return $"{pc.GetYear(date)}/{pc.GetMonth(date):00}/{pc.GetDayOfMonth(date):00}";
         }
 
         public static string ToPersianTime(this DateTime date)
         {
             try
             {
-                var TehranTime = date.AddHours(3.5);
-                return TehranTime.ToString("HH:mm:ss");
+                var iranTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Iran Standard Time");
+
+                var utcDate = date.Kind == DateTimeKind.Utc
+                    ? date
+                    : DateTime.SpecifyKind(date, DateTimeKind.Utc);
+
+                var iranTime = TimeZoneInfo.ConvertTimeFromUtc(utcDate, iranTimeZone);
+
+                return iranTime.ToString("HH:mm:ss");
             }
             catch
             {
-                return "نامعتبر";
+                return date.ToString("HH:mm:ss");
             }
+        }
+
+        // برای DateTime? (nullable)
+        public static string ToPersianDate(this DateTime? date)
+        {
+            if (!date.HasValue) return "-";
+            return date.Value.ToPersianDate();
+        }
+
+        public static string ToPersianTime(this DateTime? date)
+        {
+            if (!date.HasValue) return "-";
+            return date.Value.ToPersianTime();
         }
     }
     #endregion

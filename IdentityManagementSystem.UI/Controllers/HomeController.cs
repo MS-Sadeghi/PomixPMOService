@@ -63,7 +63,7 @@ namespace IdentityManagementSystem.UI.Controllers
                         HttpContext.Session.SetString("UserId", loginResponse.UserId.ToString());
                         HttpContext.Session.SetString("Username", loginResponse.Username ?? "");
 
-                        return RedirectToAction("Index", "Cartable");
+                        return RedirectToAction("Index", "AccessReport");
                     }
                     else
                     {

@@ -1,9 +1,18 @@
-﻿@model IdentityManagementSystem.UI.Controllers.AccessReportViewModel
+﻿@model IdentityManagementSystem.UI.ViewModels.AccessReportPageViewModel
 
 @{
     ViewData["Title"] = "گزارشات تردد";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
+<link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
+
+<div class="input-group mb-4">
+    <form asp-action="Index" method="get" class="w-100 d-flex align-items-center">
+        <input type="text" name="search" class="form-control" placeholder="جستجو..." value="@Context.Request.Query["search"]" />
+        <button type="submit" class="btn btn-primary ms-2"><i class="fe fe-search"></i></button>
+    </form>
+</div>
 
 <div class="card">
     <div class="card-header">
@@ -12,106 +21,124 @@
         <div class="card-options">
             <button type="submit"
                     form="reportForm"
-                    class="btn btn-primary">
-                بروزرسانی گزارش
+                    class="btn btn-outline-primary">
+                <i class="fe fe-refresh-cw"></i>
             </button>
         </div>
     </div>
 
     <div class="card-body">
 
-        <form asp-action="Index" method="post">
+        <form asp-action="Index" asp-controller="AccessReport" method="post">
 
-            <div class="row mb-4">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label asp-for="Filter.StartDate" class="form-label">از تاریخ </label>
+                    <div class="input-group">
+                        <div class="input-group-text">
+                            <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
+                        </div><input asp-for="Filter.StartDate" class=" form-control fc-datepicker hasDatepicker" placeholder="MM/DD/YYYY" type="text" id="dp1782027313277">
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label asp-for="Filter.StartDate" class="form-label">تا تاریخ </label>
+                    <div class="input-group">
+                        <div class="input-group-text">
+                            <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
+                        </div><input asp-for="Filter.EndDate" class=" form-control fc-datepicker hasDatepicker" placeholder="MM/DD/YYYY" type="text" id="dp1782027313277">
+                    </div>
+                </div>
 
-                <div class="col-md-3">
-                    <label class="form-label">از تاریخ</label>
-                    <input name="StartDate"
+                <div class="col-md-2 mb-3">
+                    <label asp-for="Filter.StartTime" class="form-label">
+                        از ساعت
+                    </label>
+
+                    <input asp-for="Filter.StartTime"
                            class="form-control"
-                           placeholder="1405/03/01" />
+                           type="time" />
                 </div>
 
-                <div class="col-md-3">
-                    <label class="form-label">تا تاریخ</label>
-                    <input name="EndDate"
+                <div class="col-md-2 mb-3">
+                    <label asp-for="Filter.EndTime" class="form-label">
+                        تا ساعت
+                    </label>
+
+                    <input asp-for="Filter.EndTime"
                            class="form-control"
-                           placeholder="1405/03/10" />
+                           type="time" />
                 </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">از ساعت</label>
-                    <input name="StartTime"
-                           class="form-control"
-                           value="00:00" />
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">نوع تردد</label>
+                    <select name="country" class="form-control form-select" data-bs-placeholder="Select Country">
+                        <option value="1">درب شرقی ورود مسیر 1</option>
+                        <option value="2">درب شرقی ورود مسیر 2</option>
+                        <option value="3">درب شرقی ورود مسیر 3</option>
+                        <option value="4">درب غربی خروج</option>
+                        <option value="5">درب غربی ورود</option>
+                    </select>
                 </div>
-
-                <div class="col-md-2">
-                    <label class="form-label">تا ساعت</label>
-                    <input name="EndTime"
-                           class="form-control"
-                           value="23:59" />
+                <div class="col-md-12 text-end">
+                    <button type="submit" class="btn btn-primary"><i class="fe fe-search"></i>دریافت گزارش </button>
                 </div>
-
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit"
-                            class="btn btn-primary w-100">
-                        دریافت گزارش
-                    </button>
-                </div>
-
             </div>
 
         </form>
-
+        <hr />
         <div class="table-responsive">
-
-            <table class="table table-bordered text-nowrap border-bottom">
-
-                <thead>
+            @* <div class="dt-buttons btn-group text-end mb-1">
+                <button class="btn btn-outline-info buttons-excel buttons-html5" type="button"><span>اکسل</span></button>
+                <button class="btn btn-outline-info buttons-pdf buttons-html5" type="button"><span>PDF</span></button>
+                <button class="btn btn-outline-info buttons-print buttons-html5" type="button"><span>پرینت</span></button>
+            </div> *@
+            <table id="accessReportTable" class="table table-bordered table-hover text-nowrap">
+                <thead class="table-light">
                     <tr>
                         <th>ردیف</th>
-                        <th>تاریخ</th>
+                        <th>تاریخ گزارش</th>
                         <th>نوع تردد</th>
-                        <th>تعداد</th>
+                        <th>تعداد تردد</th>
                     </tr>
                 </thead>
-
                 <tbody>
-
-                    @if (Model != null && Model.Any())
+                    @if (Model?.Reports?.Any() == true)
                     {
-                        int row = 1;
-
-                        foreach (var item in Model)
+                        int rowNumber = 1;
+                        foreach (var item in Model.Reports)
                         {
                             <tr>
-                                <td>@row</td>
+                                <td>@rowNumber</td>
                                 <td>@item.ReportDate</td>
                                 <td>@item.EntranceType</td>
-                                <td>
-                                    <span class="badge bg-success">
-                                        @item.RecordCount
-                                    </span>
-                                </td>
+                                <td><span class="badge bg-success">@item.RecordCount</span></td>
                             </tr>
-
-                            row++;
+                            rowNumber++;
                         }
                     }
                     else
                     {
-                        <tr>
-                            <td colspan="4" class="text-center">
-                                اطلاعاتی یافت نشد
-                            </td>
-                        </tr>
+                        <tr><td colspan="4" class="text-center">هیچ اطلاعاتی وجود ندارد</td></tr>
                     }
-
                 </tbody>
-
             </table>
-
         </div>
-
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <!-- DATA TABLE JS-->
+@*     <script src="~/assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/dataTables.bootstrap5.js"></script>
+    <script src="~/assets/plugins/datatable/js/dataTables.buttons.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.bootstrap5.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/jszip.min.js"></script>
+    <script src="~/assets/plugins/datatable/pdfmake/pdfmake.min.js"></script>
+    <script src="~/assets/plugins/datatable/pdfmake/vfs_fonts.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.html5.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.print.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.colVis.min.js"></script>
+    <script src="~/assets/plugins/datatable/dataTables.responsive.min.js"></script>
+    <script src="~/assets/plugins/datatable/responsive.bootstrap5.min.js"></script>
+    <script src="~/assets/js/table-data.js"></script> *@
+}

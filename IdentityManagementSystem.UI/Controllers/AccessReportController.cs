@@ -8,8 +8,25 @@ namespace IdentityManagementSystem.UI.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return View();
+            return View(new AccessReportPageViewModel());
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Index(AccessReportPageViewModel model)
+        {
+            // اینجا API صدا زده میشه
+
+            model.Reports = new List<AccessReportViewModel>
+            {
+                new AccessReportViewModel
+                {
+                    ReportDate = "1405-03-09",
+                    EntranceType = "درب شرقی ورود مسیر 1",
+                    RecordCount = 491
+                }
+            };
+
+            return View(model);
+        }
     }
 }

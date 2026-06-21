@@ -1,5 +1,117 @@
-﻿@{
-    ViewData["Title"] = "کارتابل";
+﻿@model IdentityManagementSystem.UI.Controllers.AccessReportViewModel
+
+@{
+    ViewData["Title"] = "گزارشات تردد";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">گزارشات تردد</h5>
+
+        <div class="card-options">
+            <button type="submit"
+                    form="reportForm"
+                    class="btn btn-primary">
+                بروزرسانی گزارش
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body">
+
+        <form asp-action="Index" method="post">
+
+            <div class="row mb-4">
+
+                <div class="col-md-3">
+                    <label class="form-label">از تاریخ</label>
+                    <input name="StartDate"
+                           class="form-control"
+                           placeholder="1405/03/01" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">تا تاریخ</label>
+                    <input name="EndDate"
+                           class="form-control"
+                           placeholder="1405/03/10" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">از ساعت</label>
+                    <input name="StartTime"
+                           class="form-control"
+                           value="00:00" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">تا ساعت</label>
+                    <input name="EndTime"
+                           class="form-control"
+                           value="23:59" />
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+                        دریافت گزارش
+                    </button>
+                </div>
+
+            </div>
+
+        </form>
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered text-nowrap border-bottom">
+
+                <thead>
+                    <tr>
+                        <th>ردیف</th>
+                        <th>تاریخ</th>
+                        <th>نوع تردد</th>
+                        <th>تعداد</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model != null && Model.Any())
+                    {
+                        int row = 1;
+
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@row</td>
+                                <td>@item.ReportDate</td>
+                                <td>@item.EntranceType</td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        @item.RecordCount
+                                    </span>
+                                </td>
+                            </tr>
+
+                            row++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center">
+                                اطلاعاتی یافت نشد
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+</div>

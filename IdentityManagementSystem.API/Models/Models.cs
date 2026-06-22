@@ -10,8 +10,8 @@ namespace IdentityManagementSystem.API.Models
         public long UserId { get; set; }
 
         // فیلدهای رمزنگاری شده جدید
-        public string NationalIdEnc { get; set; } = string.Empty;
-        public string NationalIdHash { get; set; } = string.Empty;   // برای جستجو
+        
+        public string NationalId { get; set; } = string.Empty;   // برای جستجو
 
         public string Username { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
@@ -22,19 +22,13 @@ namespace IdentityManagementSystem.API.Models
         public int RoleId { get; set; }
         public Role Role { get; set; } = null!;
 
-        public string? MobileNumberEnc { get; set; }
-        public string? MobileNumberHash { get; set; }   // برای جستجو
+        public string? MobileNumber { get; set; }
 
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLogin { get; set; }
         public bool IsActive { get; set; } = true;
 
-        // فیلدهای قدیمی (برای مهاجرت تدریجی - بعداً می‌تونی حذف کنی)
-        [Obsolete("Use NationalIdEnc instead")]
-        public string NationalId { get; set; } = string.Empty;
-
-        [Obsolete("Use MobileNumberEnc instead")]
-        public string? MobileNumber { get; set; }
+        
     }
 
     public class RoleViewModel

@@ -1,0 +1,168 @@
+﻿@model IdentityManagementSystem.UI.ViewModels.TrafficByPlatesPageViewModel
+
+@{
+    ViewData["Title"] = "گزارش تردد بر اساس پلاک";
+    Layout = "~/Views/Shared/_LayoutAccessReport.cshtml";
+}
+
+<link rel="stylesheet"
+      href="~/css/IndexStyle.css"
+      asp-append-version="true" />
+
+<div class="card">
+
+    <div class="card-header">
+        <h5 class="card-title">
+            گزارش تردد بر اساس پلاک
+        </h5>
+
+        <div class="card-options">
+            <button type="submit"
+                    form="reportForm"
+                    class="btn btn-outline-primary">
+                <i class="fe fe-refresh-cw"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body">
+
+        <form id="reportForm"
+              asp-action="TrafficByPlatesReport"
+              asp-controller="AccessReport"
+              method="post">
+
+            <div class="row">
+
+                <div class="col-md-3 mb-3">
+                    <label asp-for="Filter.StartDate" class="form-label">
+                        از تاریخ
+                    </label>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+
+                        <input asp-for="Filter.StartDate"
+                               class="form-control fc-datepicker"
+                               autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label asp-for="Filter.EndDate" class="form-label">
+                        تا تاریخ
+                    </label>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+
+                        <input asp-for="Filter.EndDate"
+                               class="form-control fc-datepicker"
+                               autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label asp-for="Filter.StartTime" class="form-label">
+                        از ساعت
+                    </label>
+
+                    <input asp-for="Filter.StartTime"
+                           type="time"
+                           class="form-control" />
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label asp-for="Filter.EndTime" class="form-label">
+                        تا ساعت
+                    </label>
+
+                    <input asp-for="Filter.EndTime"
+                           type="time"
+                           class="form-control" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-1">
+                        <input asp-for="Filter.P1" />
+                    </div>
+
+                    <div class="col-md-1">
+                        <input asp-for="Filter.P2" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <input asp-for="Filter.P3" />
+                    </div>
+
+                    <div class="col-md-1">
+                        <input asp-for="Filter.P4" />
+                    </div>
+                </div>
+                <div class="col-md-12 text-end mb-3">
+                    <button type="submit" class="btn btn-primary"><i class="fe fe-search"></i>دریافت گزارش </button>
+                </div>
+            </div>
+
+        </form>
+        <div class="btn-group mb-2" role="group" >
+            <button type="button" class="btn btn-outline-primary">پرینت</button>
+            <button type="button" class="btn btn-outline-primary">اکسل</button>
+            <button type="button" class="btn btn-outline-primary">PDF</button>
+        </div>
+
+        <div class="table-responsive">
+
+            <table id="trafficByPlatesTable"
+                   class="table table-bordered table-hover text-nowrap">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>ردیف</th>
+                        <th>پلاک</th>
+                        <th>تاریخ و ساعت تردد</th>
+                        <th>نوع تردد</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model?.Reports?.Any() == true)
+                    {
+                        foreach (var item in Model.Reports)
+                        {
+                            <tr>
+                                <td>@item.RowNumber</td>
+                                <td>@item.PlateNumber</td>
+                                <td>@item.LogDateTime</td>
+                                <td>@item.EntranceType</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center">
+                                هیچ اطلاعاتی وجود ندارد
+                            </td>
+                        </tr>
+                    }
+                                                                                                            
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}

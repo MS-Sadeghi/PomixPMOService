@@ -85,24 +85,38 @@
                            type="time"
                            class="form-control" />
                 </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">پلاک وسیله نقلیه</label>
 
-                <div class="row">
-                    <div class="col-md-1">
-                        <input asp-for="Filter.P1" />
+                    <div class="d-flex align-items-center gap-2">
+
+                        <input asp-for="Filter.P1"
+                               class="form-control text-center"
+                               maxlength="2"
+                               style="max-width:70px;" />
+
+                        <input asp-for="Filter.P2"
+                               class="form-control text-center"
+                               maxlength="1"
+                               placeholder="مثال: ج"
+                               style="max-width:70px;" />
+
+                        <input asp-for="Filter.P3"
+                               class="form-control text-center"
+                               maxlength="3"
+                               style="max-width:90px;" />
+
+                        <span class="fw-bold">ایران</span>
+
+                        <input asp-for="Filter.P4"
+                               class="form-control text-center"
+                               maxlength="2"
+                               style="max-width:70px;" />
+
                     </div>
 
-                    <div class="col-md-1">
-                        <input asp-for="Filter.P2" />
-                    </div>
-
-                    <div class="col-md-2">
-                        <input asp-for="Filter.P3" />
-                    </div>
-
-                    <div class="col-md-1">
-                        <input asp-for="Filter.P4" />
-                    </div>
                 </div>
+           
                 <div class="col-md-12 text-end mb-3">
                     <button type="submit" class="btn btn-primary"><i class="fe fe-search"></i>دریافت گزارش </button>
                 </div>

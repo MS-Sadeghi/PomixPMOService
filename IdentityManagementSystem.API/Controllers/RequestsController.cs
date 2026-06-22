@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using IdentityManagementSystem.API.Data;
+using IdentityManagementSystem.API.Helpers;
+using IdentityManagementSystem.API.Models;
+using IdentityManagementSystem.API.Models.ViewModels;
+using IdentityManagementSystem.API.Services.Logging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using IdentityManagementSystem.API.Models.ViewModels;
-using IdentityManagementSystem.API.Data;
-using IdentityManagementSystem.API.Models;
-using IdentityManagementSystem.API.Services.Logging;
 using System.Security.Claims;
 
 namespace IdentityManagementSystem.API.Controllers
@@ -14,18 +15,21 @@ namespace IdentityManagementSystem.API.Controllers
     [Authorize]
     public class RequestController : ControllerBase
     {
-        private readonly IdentityManagementSystemContext _context;
-        private readonly ILogger<RequestController> _logger;
-        private readonly UserActionLogger _actionLogger;
+            private readonly IdentityManagementSystemContext _context;
+            private readonly ILogger<RequestController> _logger;
+            private readonly UserActionLogger _actionLogger;
+            private readonly EncryptionHelper _encryptionHelper;
 
         public RequestController(
-            IdentityManagementSystemContext context,
-            ILogger<RequestController> logger,
-            UserActionLogger actionLogger)
-        {
-            _context = context;
-            _logger = logger;
-            _actionLogger = actionLogger;
+                IdentityManagementSystemContext context,
+                ILogger<RequestController> logger,
+                UserActionLogger actionLogger,
+                EncryptionHelper encryptionHelper)
+            {
+                _context = context;
+                _logger = logger;
+                _actionLogger = actionLogger;
+                _encryptionHelper = encryptionHelper;
         }
 
         [HttpGet]
@@ -97,7 +101,7 @@ namespace IdentityManagementSystem.API.Controllers
                     NationalId = r.NationalId,
                     MobileNumber = r.MobileNumber,
                     DocumentNumber = r.DocumentNumber,
-                    VerificationCode = r.VerificationCode,
+                    VerificationCode = _encryptionHelper.Decrypt(r.VerificationCode),
                     IsMatch = r.IsMatch ?? false,
                     IsExist = r.IsExist ?? false,
                     IsNationalIdInResponse = r.IsNationalIdInResponse ?? false,
@@ -139,7 +143,7 @@ namespace IdentityManagementSystem.API.Controllers
                     NationalId = model.NationalId,
                     MobileNumber = model.MobileNumber,
                     DocumentNumber = model.DocumentNumber,
-                    VerificationCode = model.VerificationCode,
+                    VerificationCode = _encryptionHelper.Encrypt(model.VerificationCode),
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = User.Identity?.Name ?? "Unknown",
                     ValidateByExpert = null
@@ -162,7 +166,7 @@ namespace IdentityManagementSystem.API.Controllers
                 var verifyLog = new VerifyDocLog
                 {
                     DocumentNumber = model.DocumentNumber,
-                    VerificationCode = model.VerificationCode,
+                    VerificationCode = _encryptionHelper.Encrypt(model.VerificationCode),
                     ResponseText = "",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = userId.ToString(),

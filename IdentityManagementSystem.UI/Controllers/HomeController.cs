@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.IO;
 using System.Net.Http.Headers;
-using System.Reflection.Metadata.Ecma335;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
@@ -518,7 +516,7 @@ namespace IdentityManagementSystem.UI.Controllers
         public string Username { get; set; }
         public string Name { get; set; }
         public string LastName { get; set; }
-        public string Role { get; set; }  
+        public string Role { get; set; }
     }
 
     public class RoleViewModel

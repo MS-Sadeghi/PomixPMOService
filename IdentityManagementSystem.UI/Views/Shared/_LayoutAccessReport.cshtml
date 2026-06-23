@@ -1,0 +1,255 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ServiceUIPMO</title>
+
+    <!-- BOOTSTRAP RTL CSS -->
+    <link href="~/assets/plugins/bootstrap/css/bootstrap.rtl.min.css" rel="stylesheet" />
+
+    <!-- STYLE CSS -->
+    <link href="~/assets/css/style.css" rel="stylesheet" />@*
+    <link href="~/assets/css/dark-style.css" rel="stylesheet" />
+    <link href="~/assets/css/transparent-style.css" rel="stylesheet" />
+    <link href="~/assets/css/skin-modes.css" rel="stylesheet" /> *@
+
+    <!-- FONT-ICONS CSS -->
+    <link href="~/assets/css/icons.css" rel="stylesheet" />
+    <link href="~/assets/iconfonts/bootstrapicons/bootstrap-icons.css" rel="stylesheet" />
+    <link href="~/assets/iconfonts/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/assets/iconfonts/ionicons/ionicons.css" rel="stylesheet" />
+    <link rel="preload" href="~/assets/iconfonts/feather/fonts/feather-webfont.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="~/assets/iconfonts/font-awesome/fonts/fontawesome-webfont.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="~/assets/iconfonts/materialdesignicons/fonts/Material-Design-Iconic-Font.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- COLOR SKIN CSS -->
+    <link id="theme" rel="stylesheet" type="text/css" media="all" href="~/assets/colors/color1.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/toastr.min.css" />
+    <!-- SITE CUSTOM CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" /> 
+
+    @RenderSection("Styles", required: false)
+</head>
+
+<body class="app sidebar-mini rtl">
+
+    <!-- PAGE -->
+    <div class="page">
+        <div class="page-main">
+
+            <!-- app-Header -->
+            <div class="app-header header sticky">
+                <div class="container-fluid main-container">
+                    <div class="d-flex">
+                        <a aria-label="Hide Sidebar" class="app-sidebar__toggle" data-bs-toggle="sidebar" href="javascript:void(0)"></a>
+                        <!-- sidebar-toggle-->
+                        <a class="logo-horizontal ">
+                            <img src="~/assets/images/brand/logo.png" class="header-brand-img desktop-logo" alt="logo">
+                            <img src="~/assets/images/brand/logotaradod.png" class="header-brand-img light-logo1" alt="logo">
+                        </a>
+                        <!-- LOGO -->
+                        <div class="d-flex order-lg-2 ms-auto header-right-icons">
+                            <div class="navbar navbar-collapse responsive-navbar p-0">
+                                <div class="collapse navbar-collapse" id="navbarSupportedContent-4">
+                                    <div class="d-flex order-lg-2">
+                                        <div class="dropdown d-flex">
+                                            <a class="nav-link icon full-screen-link nav-link-bg">
+                                                <i class="fe fe-minimize fullscreen-button"></i>
+                                            </a>
+                                        </div>
+                                        <!-- FULL-SCREEN -->
+                                        <div class="dropdown d-flex profile-1">
+                                            <a href="javascript:void(0)" data-bs-toggle="dropdown" class="nav-link leading-none d-flex">
+                                                <img src="~/assets/images/users/22.jfif" alt="profile-user" class="avatar  profile-user brround cover-image">
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                                                <div class="dropdown-divider m-0"></div>
+                                                <a class="dropdown-item" asp-controller="Home" asp-action="EditProfile">
+                                                    <i class="dropdown-icon fe fe-user"></i> پروفایل
+                                                </a>
+                                                <a class="dropdown-item" href="javascript:void(0);" onclick="document.getElementById('logout-form').submit();">
+                                                    <i class="dropdown-icon fe  fe-log-out"></i> خروج
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /app-Header -->
+            <!--APP-SIDEBAR-->
+            <div class="sticky">
+                <div class="app-sidebar__overlay" data-bs-toggle="sidebar"></div>
+                <div class="app-sidebar">
+                    <div class="side-header">
+                        <a class="header-brand1" asp-controller="AccessReport" asp-action="GetDataReport">
+                            <img src="~/assets/images/brand/logo.png" class="header-brand-img desktop-logo" alt="logo">
+                            <img src="~/assets/images/brand/Logo1.png" class="header-brand-img toggle-logo" alt="logo">
+                            <img src="~/assets/images/brand/Logo2.png" class="header-brand-img light-logo" alt="logo">
+                            <img src="~/assets/images/brand/logotaradod.png" class="header-brand-img light-logo1" alt="logo">
+                        </a>
+                    </div>
+                    <div class="main-sidemenu">
+                        <!-- Slide arrows -->
+                        <div class="slide-left disabled" id="slide-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24">
+                                <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z" />
+                            </svg>
+                        </div>
+
+                        <ul class="side-menu">
+                            <li class="sub-category">
+                                <h3>گزارش‌ها</h3>
+                            </li>
+
+                            <!-- گزارش خلاصه تردد -->
+                            <li class="slide">
+                                <a class="side-menu__item" asp-controller="AccessReport" asp-action="GetDataReport">
+                                    <i class="side-menu__icon fe fe-home"></i>
+                                    <span class="side-menu__label">گزارش خلاصه تردد</span>
+                                </a>
+                            </li>
+
+                            <!-- گزارش مجموع تردد -->
+                            <li class="slide">
+                                <a class="side-menu__item" asp-controller="AccessReport" asp-action="GetSumReport">
+                                    <i class="side-menu__icon fe fe-bar-chart-2"></i>
+                                    <span class="side-menu__label">گزارش مجموع تردد</span>
+                                </a>
+                            </li>
+
+                            <!-- گزارش تردد بر اساس نوع -->
+                            <li class="slide">
+                                <a class="side-menu__item" asp-controller="AccessReport" asp-action="TrafficByTypeReport">
+                                    <i class="side-menu__icon fe fe-filter"></i>
+                                    <span class="side-menu__label">گزارش تردد بر اساس نوع</span>
+                                </a>
+                            </li>
+
+                            <!-- گزارش بر اساس پلاک -->
+                            <li class="slide">
+                                <a class="side-menu__item" asp-controller="AccessReport" asp-action="TrafficByPlatesReport">
+                                    <i class="side-menu__icon fe fe-credit-card"></i>
+                                    <span class="side-menu__label">گزارش بر اساس پلاک</span>
+                                </a>
+                            </li>
+
+                            <!-- گزارش بر اساس کد ملی -->
+                            <li class="slide">
+                                <a class="side-menu__item" asp-controller="AccessReport" asp-action="TrafficByNationalIDReport">
+                                    <i class="side-menu__icon fe fe-users"></i>
+                                    <span class="side-menu__label">گزارش بر اساس کد ملی</span>
+                                </a>
+                            </li>
+
+                            <li class="sub-category">
+                                <h3>مدیریت</h3>
+                            </li>
+
+                            <!-- مدیریت کاربران (فقط ادمین) -->
+                            @{
+                                var userRole = Context.Session.GetString("UserRole");
+                                var userRoleId = Context.Session.GetString("UserRoleId");
+                                var isAdmin = (userRole == "ادمین" || userRoleId == "3");
+                            }
+                            @if (isAdmin)
+                            {
+                                <li class="slide">
+                                    <a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
+                                        <i class="side-menu__icon fe fe-users"></i>
+                                        <span class="side-menu__label">مدیریت کاربران</span>
+                                        <i class="angle fe fe-chevron-right"></i>
+                                    </a>
+                                    <ul class="slide-menu">
+                                        <li class="side-menu-label1"><a href="javascript:void(0);">کاربران سیستم</a></li>
+                                        <li>
+                                            <a asp-controller="Home" asp-action="Users" class="slide-item">لیست کاربران</a>
+                                        </li>
+                                        <li>
+                                            <a asp-controller="Home" asp-action="EditProfile" class="slide-item">پروفایل</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            }
+                        </ul>
+
+                        <!-- Slide Right -->
+                        <div class="slide-right" id="slide-right">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24">
+                                <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--/APP-SIDEBAR-->
+        </div>
+        <div class="main-content app-content mt-8">
+            <div class="side-app">
+                <div class="main-container container-fluid">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    <!-- FOOTER -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row align-items-center flex-row-reverse">
+                    <div class="col-md-12 text-center small text-muted">
+                        © <span id="year">۱۴۰۴</span>
+                        <a href="javascript:void(0)" class="text-dark fw-semibold">اداره کل بنادر و دریانوردی هرمزگان</a> —
+                        طراحی و توسعه توسط
+                        <a href="javascript:void(0)" class="text-primary fw-semibold">تیم فناوری اطلاعات</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    <!-- FOOTER CLOSED -->
+</div>
+
+<!-- BACK-TO-TOP -->
+<a href="#top" id="back-to-top"><i class="fa fa-angle-up"></i></a>
+
+<!-- JQUERY JS -->
+<script src="~/assets/js/jquery.min.js"></script>
+
+<!-- BOOTSTRAP JS -->
+<script src="~/assets/plugins/bootstrap/js/popper.min.js"></script>
+<script src="~/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
+    <script src="~/assets/plugins/select2/select2.full.min.js"></script>
+<!-- SIDE-MENU JS -->
+<script src="~/assets/plugins/sidemenu/sidemenu.js"></script>
+    
+    <!-- DATA TABLE JS-->
+    <script src="~/assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/dataTables.bootstrap5.js"></script>
+    <script src="~/assets/plugins/datatable/js/dataTables.buttons.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.bootstrap5.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/jszip.min.js"></script>
+    <script src="~/assets/plugins/datatable/pdfmake/pdfmake.min.js"></script>
+    <script src="~/assets/plugins/datatable/pdfmake/vfs_fonts.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.html5.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.print.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.colVis.min.js"></script>
+    <script src="~/assets/plugins/datatable/dataTables.responsive.min.js"></script>
+    <script src="~/assets/plugins/datatable/responsive.bootstrap5.min.js"></script>
+    <script src="~/assets/js/table-data.js"></script>
+
+<!-- SIDEBAR JS -->
+<script src="~/assets/plugins/sidebar/sidebar.js"></script>
+
+<!-- Color Theme js -->
+<script src="~/assets/js/themeColors.js"></script>
+
+<!-- Sticky js -->
+<script src="~/assets/js/sticky.js"></script>
+
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

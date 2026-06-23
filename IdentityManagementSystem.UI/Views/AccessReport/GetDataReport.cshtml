@@ -1,22 +1,15 @@
-﻿@model IdentityManagementSystem.UI.ViewModels.AccessReportPageViewModel
+﻿@model IdentityManagementSystem.UI.ViewModels.GetDataReportPageViewModel
 
 @{
-    ViewData["Title"] = "گزارشات تردد";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "گزارش خلاصه تردد";
+    Layout = "~/Views/Shared/_LayoutAccessReport.cshtml";
 }
 
 <link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
 
-<div class="input-group mb-4">
-    <form asp-action="Index" method="get" class="w-100 d-flex align-items-center">
-        <input type="text" name="search" class="form-control" placeholder="جستجو..." value="@Context.Request.Query["search"]" />
-        <button type="submit" class="btn btn-primary ms-2"><i class="fe fe-search"></i></button>
-    </form>
-</div>
-
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title">گزارشات تردد</h5>
+        <h5 class="card-title">گزارش خلاصه ترددها</h5>
 
         <div class="card-options">
             <button type="submit"
@@ -70,7 +63,8 @@
                 </div>
                 <div class="col-md-2 mb-3">
                     <label class="form-label">نوع تردد</label>
-                    <select name="country" class="form-control form-select" data-bs-placeholder="Select Country">
+                    <select class="form-control form-select" placeholder="انتخاب کنید">
+                        <option value="0">انتخاب کنید</option>
                         <option value="1">درب شرقی ورود مسیر 1</option>
                         <option value="2">درب شرقی ورود مسیر 2</option>
                         <option value="3">درب شرقی ورود مسیر 3</option>
@@ -78,19 +72,18 @@
                         <option value="5">درب غربی ورود</option>
                     </select>
                 </div>
-                <div class="col-md-12 text-end">
+                <div class="col-md-12 text-end mb-3">
                     <button type="submit" class="btn btn-primary"><i class="fe fe-search"></i>دریافت گزارش </button>
                 </div>
             </div>
 
         </form>
-        <hr />
+        <div class="btn-group mb-2" role="group">
+            <button type="button" class="btn btn-outline-primary">پرینت</button>
+            <button type="button" class="btn btn-outline-primary">اکسل</button>
+            <button type="button" class="btn btn-outline-primary">PDF</button>
+        </div>
         <div class="table-responsive">
-            @* <div class="dt-buttons btn-group text-end mb-1">
-                <button class="btn btn-outline-info buttons-excel buttons-html5" type="button"><span>اکسل</span></button>
-                <button class="btn btn-outline-info buttons-pdf buttons-html5" type="button"><span>PDF</span></button>
-                <button class="btn btn-outline-info buttons-print buttons-html5" type="button"><span>پرینت</span></button>
-            </div> *@
             <table id="accessReportTable" class="table table-bordered table-hover text-nowrap">
                 <thead class="table-light">
                     <tr>
@@ -127,18 +120,4 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <!-- DATA TABLE JS-->
-@*     <script src="~/assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/dataTables.bootstrap5.js"></script>
-    <script src="~/assets/plugins/datatable/js/dataTables.buttons.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/buttons.bootstrap5.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/jszip.min.js"></script>
-    <script src="~/assets/plugins/datatable/pdfmake/pdfmake.min.js"></script>
-    <script src="~/assets/plugins/datatable/pdfmake/vfs_fonts.js"></script>
-    <script src="~/assets/plugins/datatable/js/buttons.html5.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/buttons.print.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/buttons.colVis.min.js"></script>
-    <script src="~/assets/plugins/datatable/dataTables.responsive.min.js"></script>
-    <script src="~/assets/plugins/datatable/responsive.bootstrap5.min.js"></script>
-    <script src="~/assets/js/table-data.js"></script> *@
 }

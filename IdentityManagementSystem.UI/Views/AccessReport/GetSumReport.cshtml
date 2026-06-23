@@ -1,0 +1,165 @@
+﻿@model IdentityManagementSystem.UI.ViewModels.GetSumReportPageViewModel
+
+@{
+    ViewData["Title"] = "گزارش مجموع تردد";
+    Layout = "~/Views/Shared/_LayoutAccessReport.cshtml";
+}
+
+<link rel="stylesheet"
+      href="~/css/IndexStyle.css"
+      asp-append-version="true" />
+
+<div class="card">
+
+    <div class="card-header">
+        <h5 class="card-title">
+            گزارش مجموع تردد
+        </h5>
+
+        <div class="card-options">
+            <button type="submit"
+                    form="reportForm"
+                    class="btn btn-outline-primary">
+                <i class="fe fe-refresh-cw"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body">
+
+        <form id="reportForm"
+              asp-action="GetSumReport"
+              asp-controller="AccessReport"
+              method="post">
+
+            <div class="row">
+
+                <div class="col-md-3 mb-3">
+                    <label asp-for="Filter.StartDate" class="form-label">
+                        از تاریخ
+                    </label>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+
+                        <input asp-for="Filter.StartDate"
+                               class="form-control fc-datepicker"
+                               autocomplete="off" />
+                    </div>
+
+                    <span asp-validation-for="Filter.StartDate"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label asp-for="Filter.EndDate" class="form-label">
+                        تا تاریخ
+                    </label>
+
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+
+                        <input asp-for="Filter.EndDate"
+                               class="form-control fc-datepicker"
+                               autocomplete="off" />
+                    </div>
+
+                    <span asp-validation-for="Filter.EndDate"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label asp-for="Filter.StartTime" class="form-label">
+                        از ساعت
+                    </label>
+
+                    <input asp-for="Filter.StartTime"
+                           type="time"
+                           class="form-control" />
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label asp-for="Filter.EndTime" class="form-label">
+                        تا ساعت
+                    </label>
+
+                    <input asp-for="Filter.EndTime"
+                           type="time"
+                           class="form-control" />
+                </div>
+
+                <div class="col-md-12 text-end mb-3">
+                    <button type="submit" class="btn btn-primary"><i class="fe fe-search"></i>دریافت گزارش </button>
+                </div>
+            </div>
+
+        </form>
+        <div class="btn-group mb-2" role="group" >
+            <button type="button" class="btn btn-outline-primary">پرینت</button>
+            <button type="button" class="btn btn-outline-primary">اکسل</button>
+            <button type="button" class="btn btn-outline-primary">PDF</button>
+        </div>
+
+        <div class="table-responsive">
+
+            <table id="getSumReportTable"
+                   class="table table-bordered table-hover align-middle">
+
+                <thead class="table-light">
+                    <tr>
+                        <th width="70">ردیف</th>
+                        <th>تاریخ گزارش</th>
+                        <th>نوع تردد</th>
+                        <th width="150">تعداد تردد</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model?.Reports?.Any() == true)
+                    {
+                        int rowNumber = 1;
+
+                        foreach (var item in Model.Reports)
+                        {
+                            <tr>
+                                <td>@rowNumber</td>
+                                <td>@item.ReportDate</td>
+                                <td>@item.EntranceType</td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        @item.RecordCount
+                                    </span>
+                                </td>
+                            </tr>
+
+                            rowNumber++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center">
+                                هیچ اطلاعاتی برای نمایش وجود ندارد
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+}

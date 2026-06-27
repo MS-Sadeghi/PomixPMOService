@@ -6,6 +6,9 @@
     <title>@ViewData["Title"] - ServiceUIPMO</title>
 
     <!-- BOOTSTRAP RTL CSS -->
+    <a href="~/assets/plugins/bootstrap/css/bootstrap.rtl.css.map"></a>
+    <link href="~/assets/plugins/bootstrap/css/bootstrap.rtl.min.css" rel="stylesheet" />
+    <link href="~/assets/plugins/bootstrap/css/bootstrap.rtl.css" rel="stylesheet" />
     <link href="~/assets/plugins/bootstrap/css/bootstrap.rtl.min.css" rel="stylesheet" />
 
     <!-- STYLE CSS -->
@@ -53,11 +56,9 @@
                             <div class="navbar navbar-collapse responsive-navbar p-0">
                                 <div class="collapse navbar-collapse" id="navbarSupportedContent-4">
                                     <div class="d-flex order-lg-2">
-                                        <div class="dropdown d-flex">
-                                            <a class="nav-link icon full-screen-link nav-link-bg">
-                                                <i class="fe fe-minimize fullscreen-button"></i>
-                                            </a>
-                                        </div>
+                                        <a class="nav-link icon full-screen-link nav-link-bg">
+                                            <i class="fe fe-minimize fullscreen-button"></i>
+                                        </a>
                                         <!-- FULL-SCREEN -->
                                         <div class="dropdown d-flex profile-1">
                                             <a href="javascript:void(0)" data-bs-toggle="dropdown" class="nav-link leading-none d-flex">
@@ -86,7 +87,7 @@
                 <div class="app-sidebar__overlay" data-bs-toggle="sidebar"></div>
                 <div class="app-sidebar">
                     <div class="side-header">
-                        <a class="header-brand1" asp-controller="AccessReport" asp-action="GetDataReport">
+                        <a class="header-brand1" asp-controller="AccessReport" asp-action="Index">
                             <img src="~/assets/images/brand/logo.png" class="header-brand-img desktop-logo" alt="logo">
                             <img src="~/assets/images/brand/Logo1.png" class="header-brand-img toggle-logo" alt="logo">
                             <img src="~/assets/images/brand/Logo2.png" class="header-brand-img light-logo" alt="logo">
@@ -100,6 +101,19 @@
                                 <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z" />
                             </svg>
                         </div>
+                        <ul class="side-menu">
+                            <li class="sub-category">
+                                <h3>داشبورد</h3>
+                            </li>
+
+                            <!-- Dashboard -->
+                            <li class="slide">
+                                <a class="side-menu__item" asp-controller="AccessReport" asp-action="Index">
+                                    <i class="side-menu__icon fe fe-home"></i>
+                                    <span class="side-menu__label">داشبورد </span>
+                                </a>
+                            </li>
+                        </ul>
 
                         <ul class="side-menu">
                             <li class="sub-category">

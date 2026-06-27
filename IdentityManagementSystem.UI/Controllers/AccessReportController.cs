@@ -1,5 +1,6 @@
 ﻿using IdentityManagementSystem.UI.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
@@ -94,5 +95,11 @@ namespace IdentityManagementSystem.UI.Controllers
         }
 
         #endregion
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return View();
+        }
     }
 }

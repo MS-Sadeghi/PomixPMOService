@@ -26,11 +26,3 @@ body {
     position: absolute;
     left: 2%;
 }
-
-.sidebar-mini .page-main {
-    margin-right: 280px !important; /* عرض سایدبار */
-}
-
-.sidebar-mini.sidenav-toggled .page-main {
-    margin-right: 0 !important;
-}

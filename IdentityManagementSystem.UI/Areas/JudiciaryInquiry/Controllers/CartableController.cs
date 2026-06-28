@@ -1,23 +1,20 @@
 ﻿using DNTCaptcha.Core;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Newtonsoft.Json;
-using IdentityManagementSystem.UI.Filters;
-using System.ComponentModel.DataAnnotations;
-using System.Dynamic;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Text;
+using IdentityManagementSystem.Shared.DTO;
 using IdentityManagementSystem.UI.Enums;
+using IdentityManagementSystem.UI.Filters;
+using IdentityManagementSystem.UI.Helpers;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using JsonSerializer = System.Text.Json.JsonSerializer;
-using IdentityManagementSystem.UI.Helpers;
-using IdentityManagementSystem.Shared.DTO;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
     [NoCacheFilter]
+    [Area("JudiciaryInquiry")]
     public class CartableController : Controller
     {
         private readonly HttpClient _client;
@@ -209,7 +206,7 @@ namespace IdentityManagementSystem.UI.Controllers
                 if (string.IsNullOrEmpty(token))
                 {
                     ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
-                    return RedirectToAction("LoginPage", "Home");
+                    return RedirectToAction("LoginPage", "Home", new { area = "" });
                 }
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
@@ -258,7 +255,7 @@ namespace IdentityManagementSystem.UI.Controllers
         {
             public long RequestId { get; set; }
             public bool ValidateByExpert { get; set; }
-            public string? Description { get; set; } 
+            public string? Description { get; set; }
         }
 
         [HttpPost]
@@ -442,7 +439,7 @@ namespace IdentityManagementSystem.UI.Controllers
     string filterStatus)
         {
             var pageSize = 10;
-            var url =$"Request?page={page}&pageSize={pageSize}";
+            var url = $"Request?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrWhiteSpace(search))
             {
                 url += $"&search={Uri.EscapeDataString(search)}";

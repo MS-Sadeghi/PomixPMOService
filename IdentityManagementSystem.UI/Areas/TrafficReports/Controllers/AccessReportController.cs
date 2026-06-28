@@ -1,9 +1,9 @@
 ﻿using IdentityManagementSystem.UI.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
+    [Area("TrafficReports")]
     public class AccessReportController : Controller
     {
         #region GetData

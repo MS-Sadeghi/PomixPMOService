@@ -1,7 +1,7 @@
-﻿@model IdentityManagementSystem.UI.ViewModels.TrafficByTypePageViewModel
+﻿@model IdentityManagementSystem.UI.ViewModels.TrafficByNationalIdPageViewModel
 
 @{
-    ViewData["Title"] = "گزارش تردد بر اساس نوع";
+    ViewData["Title"] = "گزارش تردد بر اساس کد ملی";
     Layout = "~/Views/Shared/_LayoutAccessReport.cshtml";
 }
 
@@ -13,7 +13,7 @@
 
     <div class="card-header">
         <h5 class="card-title">
-            گزارش تردد بر اساس نوع
+            گزارش تردد بر اساس کد ملی
         </h5>
 
         <div class="card-options">
@@ -28,7 +28,8 @@
     <div class="card-body">
 
         <form id="reportForm"
-              asp-action="TrafficByTypeReport"
+              asp-action="TrafficByNationalIDReport"
+              asp-area="TrafficReports"
               asp-controller="AccessReport"
               method="post">
 
@@ -87,14 +88,13 @@
                 </div>
 
                 <div class="col-md-2 mb-3">
-                    <label class="form-label">مسیر تردد</label>
-                    <select class="form-control form-select" placeholder="انتخاب کنید">
-                        <option value="0">انتخاب کنید</option>
-                        <option value="1"> تمام ترددها</option>
-                        <option value="2"> سواری رو</option>
-                        <option value="3">کامیون رو</option>
-                        <option value="4">نفر رو</option>
-                    </select>
+                    <label asp-for="Filter.NationalId" class="form-label">
+                        کد ملی
+                    </label>
+
+                    <input asp-for="Filter.NationalId"
+                           class="form-control"
+                           maxlength="10" />
                 </div>
 
                 <div class="col-md-12 text-end mb-3">
@@ -111,15 +111,16 @@
 
         <div class="table-responsive">
 
-            <table id="trafficByTypeTable"
+            <table id="trafficByNationalIdTable"
                    class="table table-bordered table-hover text-nowrap">
 
                 <thead class="table-light">
                     <tr>
                         <th>ردیف</th>
-                        <th>تاریخ گزارش</th>
-                        <th>مسیر تردد</th>
-                        <th>تعداد تردد</th>
+                        <th>نام و نام خانوادگی</th>
+                        <th>کد ملی</th>
+                        <th>تاریخ و ساعت تردد</th>
+                        <th>نوع تردد</th>
                     </tr>
                 </thead>
 
@@ -127,29 +128,21 @@
 
                     @if (Model?.Reports?.Any() == true)
                     {
-                        int rowNumber = 1;
-
                         foreach (var item in Model.Reports)
                         {
                             <tr>
-                                <td>@rowNumber</td>
-                                <td>@item.ReportDate</td>
+                                <td>@item.RowNumber</td>
+                                <td>@item.FullName</td>
+                                <td>@item.NationalId</td>
+                                <td>@item.LogDateTimePersian</td>
                                 <td>@item.EntranceType</td>
-                                <td>
-                                    <span class="badge bg-success">
-                                        @item.RecordCount
-                                    </span>
-                                </td>
                             </tr>
-
-                            rowNumber++;
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="4"
-                                class="text-center">
+                            <td colspan="5" class="text-center">
                                 هیچ اطلاعاتی وجود ندارد
                             </td>
                         </tr>

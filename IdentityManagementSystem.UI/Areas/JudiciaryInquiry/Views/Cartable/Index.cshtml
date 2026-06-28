@@ -456,7 +456,7 @@
                 $('#documentModal').modal('show');
 
                 $.ajax({
-                    url: '/Cartable/GetDocumentText',
+                    url: '/JudiciaryInquiry/Cartable/GetDocumentText',
                     type: 'GET',
                     data: { requestId: requestId },
                     dataType: 'json',
@@ -504,7 +504,7 @@
                 const token = $('input[name="__RequestVerificationToken"]').val();
 
                 $.ajax({
-                    url: '/Cartable/MarkDocumentAsRead',
+                    url: '/JudiciaryInquiry/Cartable/MarkDocumentAsRead',
                     type: 'POST',
                     data: { requestId: requestId },
                     headers: { 'X-CSRF-TOKEN': token },
@@ -572,7 +572,7 @@
                 const row = $(`tr[data-request-id="${requestId}"]`);
                 const token = $('input[name="__RequestVerificationToken"]').val();
 
-                fetch('/Cartable/UpdateValidationStatus', {
+                fetch('/JudiciaryInquiry/Cartable/UpdateValidationStatus', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

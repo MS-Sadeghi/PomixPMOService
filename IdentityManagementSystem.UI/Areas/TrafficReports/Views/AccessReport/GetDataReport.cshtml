@@ -22,7 +22,7 @@
 
     <div class="card-body">
 
-        <form asp-action="Index" asp-controller="AccessReport" method="post">
+        <form asp-area="TrafficReports" asp-action="GetDataReport" asp-controller="AccessReport" method="post">
 
             <div class="row">
                 <div class="col-md-3 mb-3">
@@ -30,7 +30,7 @@
                     <div class="input-group">
                         <div class="input-group-text">
                             <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
-                        </div><input asp-for="Filter.StartDate" class=" form-control fc-datepicker hasDatepicker" placeholder="MM/DD/YYYY" type="text" id="dp1782027313277">
+                        </div><input asp-for="Filter.StartDate" class=" form-control fc-datepicker hasDatepicker" placeholder="MM/DD/YYYY" type="text" >
                     </div>
                 </div>
                 <div class="col-md-3 mb-3">
@@ -38,7 +38,7 @@
                     <div class="input-group">
                         <div class="input-group-text">
                             <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
-                        </div><input asp-for="Filter.EndDate" class=" form-control fc-datepicker hasDatepicker" placeholder="MM/DD/YYYY" type="text" id="dp1782027313277">
+                        </div><input asp-for="Filter.EndDate" class=" form-control fc-datepicker hasDatepicker" placeholder="MM/DD/YYYY" type="text" >
                     </div>
                 </div>
 

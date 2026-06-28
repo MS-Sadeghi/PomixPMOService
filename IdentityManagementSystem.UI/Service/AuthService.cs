@@ -1,33 +1,28 @@
-﻿namespace IdentityManagementSystem.Service
+﻿public class AuthService
 {
-    public class AuthService
+    private readonly HttpClient _httpClient;
+
+    public AuthService(HttpClient httpClient)
     {
-        public HttpClient HttpClient { get; }
+        _httpClient = httpClient;
+    }
 
-        public AuthService(HttpClient client)
+    public async Task<bool> ValidateUserAsync(string username, string password)
+    {
+        var loginModel = new
         {
-            HttpClient = client ?? throw new ArgumentNullException(nameof(client));
-            HttpClient.BaseAddress = new Uri("https://localhost:5066/api/");
-            HttpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-        }
+            Username = username,
+            Password = password
+        };
 
-        public async Task<bool> ValidateUserAsync(string username, string password)
-        {
-            var loginModel = new { Username = username, Password = password };
-            var response = await HttpClient.PostAsJsonAsync("Auth/login", loginModel);
+        var response = await _httpClient.PostAsJsonAsync("Auth/login", loginModel);
 
-            if (response.IsSuccessStatusCode)
-            {
-                return true;
-            }
+        if (!response.IsSuccessStatusCode)
             return false;
-        }
 
-        public bool ValidateUserTest(string username, string password)
-        {
-            if (username == "admin" && password == "1234")
-                return true;
-            return false;
-        }
+        var token = await response.Content.ReadAsStringAsync();
+
+        // اینجا باید session ذخیره شود (در controller نه service بهتره)
+        return true;
     }
 }

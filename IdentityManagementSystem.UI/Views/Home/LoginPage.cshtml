@@ -124,7 +124,7 @@
     <div class="row w-100" style="max-width: 400px;">
         <div class="login-right">
             <h3 class="text-center pb-3">سامانه استعلام سند</h3>
-            <form id="loginForm" asp-action="LoginPage" method="post" autocomplete="off">
+            <form id="loginForm"  method="post" autocomplete="off" action="/Home/LoginPage">
                 <!-- Username Input -->
                 <div class="form-group mb-3">
                     <div class="input-group">
@@ -204,7 +204,7 @@
         const jwtToken = '@ViewBag.JwtToken';
         if (jwtToken) {
             localStorage.setItem('jwtToken', jwtToken);
-            window.location.href = '/Cartable/Index';
+            window.location.href = '/JudiciaryInquiry/Cartable/Index';
         }
 
         document.addEventListener('DOMContentLoaded', function () {

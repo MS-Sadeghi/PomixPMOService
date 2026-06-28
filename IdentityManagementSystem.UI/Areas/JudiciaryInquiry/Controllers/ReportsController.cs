@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Web;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
+    [Area("JudiciaryInquiry")]
     public class ReportsController : Controller
     {
         private readonly HttpClient _client;
@@ -29,7 +28,7 @@ namespace IdentityManagementSystem.UI.Controllers
             if (string.IsNullOrEmpty(token))
             {
                 TempData["Error"] = "لطفاً ابتدا وارد شوید.";
-                return RedirectToAction("Login", "Home");
+                return RedirectToAction("LoginPage", "Home", new { area = "" });
             }
 
             try

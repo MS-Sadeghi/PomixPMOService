@@ -1,7 +1,7 @@
 ﻿using DNTCaptcha.Core;
+using IdentityManagementSystem.UI.Filters;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using IdentityManagementSystem.UI.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -153,6 +153,32 @@ app.Use(async (context, next) =>
 // ================= Routing =================
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Cartable}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=LoginPage}/{id?}");
+
+app.MapAreaControllerRoute(
+    name: "judiciary-inquiry-area",
+    areaName: "JudiciaryInquiry",
+    pattern: "JudiciaryInquiry/{controller=Cartable}/{action=Index}/{id?}");
+
+app.MapAreaControllerRoute(
+    name: "traffic-reports-area",
+    areaName: "TrafficReports",
+    pattern: "TrafficReports/{controller=AccessReport}/{action=Index}/{id?}");
+
+// Compatibility routes for existing links/bookmarks.
+app.MapControllerRoute(
+    name: "legacy-cartable",
+    pattern: "Cartable/{action=Index}/{id?}",
+    defaults: new { area = "JudiciaryInquiry", controller = "Cartable" });
+
+app.MapControllerRoute(
+    name: "legacy-reports",
+    pattern: "Reports/{action=Index}/{id?}",
+    defaults: new { area = "JudiciaryInquiry", controller = "Reports" });
+
+app.MapControllerRoute(
+    name: "legacy-access-report",
+    pattern: "AccessReport/{action=Index}/{id?}",
+    defaults: new { area = "TrafficReports", controller = "AccessReport" });
 
 app.Run();

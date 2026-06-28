@@ -1,7 +1,7 @@
-﻿@model IdentityManagementSystem.UI.ViewModels.GetSumReportPageViewModel
+﻿@model IdentityManagementSystem.UI.ViewModels.TrafficByTypePageViewModel
 
 @{
-    ViewData["Title"] = "گزارش مجموع تردد";
+    ViewData["Title"] = "گزارش تردد بر اساس نوع";
     Layout = "~/Views/Shared/_LayoutAccessReport.cshtml";
 }
 
@@ -13,7 +13,7 @@
 
     <div class="card-header">
         <h5 class="card-title">
-            گزارش مجموع تردد
+            گزارش تردد بر اساس نوع
         </h5>
 
         <div class="card-options">
@@ -28,7 +28,8 @@
     <div class="card-body">
 
         <form id="reportForm"
-              asp-action="GetSumReport"
+              asp-action="TrafficByTypeReport"
+              asp-area="TrafficReports"
               asp-controller="AccessReport"
               method="post">
 
@@ -48,9 +49,6 @@
                                class="form-control fc-datepicker"
                                autocomplete="off" />
                     </div>
-
-                    <span asp-validation-for="Filter.StartDate"
-                          class="text-danger"></span>
                 </div>
 
                 <div class="col-md-3 mb-3">
@@ -67,9 +65,6 @@
                                class="form-control fc-datepicker"
                                autocomplete="off" />
                     </div>
-
-                    <span asp-validation-for="Filter.EndDate"
-                          class="text-danger"></span>
                 </div>
 
                 <div class="col-md-2 mb-3">
@@ -92,6 +87,17 @@
                            class="form-control" />
                 </div>
 
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">مسیر تردد</label>
+                    <select class="form-control form-select" placeholder="انتخاب کنید">
+                        <option value="0">انتخاب کنید</option>
+                        <option value="1"> تمام ترددها</option>
+                        <option value="2"> سواری رو</option>
+                        <option value="3">کامیون رو</option>
+                        <option value="4">نفر رو</option>
+                    </select>
+                </div>
+
                 <div class="col-md-12 text-end mb-3">
                     <button type="submit" class="btn btn-primary"><i class="fe fe-search"></i>دریافت گزارش </button>
                 </div>
@@ -106,15 +112,15 @@
 
         <div class="table-responsive">
 
-            <table id="getSumReportTable"
-                   class="table table-bordered table-hover align-middle">
+            <table id="trafficByTypeTable"
+                   class="table table-bordered table-hover text-nowrap">
 
                 <thead class="table-light">
                     <tr>
-                        <th width="70">ردیف</th>
+                        <th>ردیف</th>
                         <th>تاریخ گزارش</th>
-                        <th>نوع تردد</th>
-                        <th width="150">تعداد تردد</th>
+                        <th>مسیر تردد</th>
+                        <th>تعداد تردد</th>
                     </tr>
                 </thead>
 
@@ -143,8 +149,9 @@
                     else
                     {
                         <tr>
-                            <td colspan="4" class="text-center">
-                                هیچ اطلاعاتی برای نمایش وجود ندارد
+                            <td colspan="4"
+                                class="text-center">
+                                هیچ اطلاعاتی وجود ندارد
                             </td>
                         </tr>
                     }

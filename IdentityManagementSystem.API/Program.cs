@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using IdentityManagementSystem.API.Controllers;
+﻿using IdentityManagementSystem.API.Controllers;
 using IdentityManagementSystem.API.Data;
 using IdentityManagementSystem.API.Services;
 using IdentityManagementSystem.API.Services.Logging;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -97,16 +97,6 @@ builder.Services.AddCors(options =>
 
     });
 });
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("AllowFrontend", policy =>
-//    {
-//        builder.WithOrigins("https://localhost:7031") 
-//               .AllowAnyMethod()
-//               .AllowAnyHeader()
-//               .AllowCredentials(); 
-//    });
-//});
 
 var app = builder.Build();
 

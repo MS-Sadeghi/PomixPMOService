@@ -35,7 +35,15 @@
 
                 <div class="col-md-3 mb-3">
                     <label>تا تاریخ</label>
-                    <input name="EndDate" class="form-control fc-datepicker" />
+                     <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+
+                        <input name="EndDate"
+                               class="form-control fc-datepicker"
+                               autocomplete="off" />
+                    </div>
                 </div>
 
                 <div class="col-md-2 mb-3">
@@ -50,7 +58,7 @@
 
                 <div class="col-md-2 mb-3">
                     <label>نوع تردد</label>
-                    <select name="EntranceType" class="form-control form-select">
+                    <select name="EntranceType" class="form-control form-select" multiple>
                         <option value="">انتخاب کنید</option>
                         <option value="1">درب شرقی ورود مسیر 1</option>
                         <option value="2">درب شرقی ورود مسیر 2</option>
@@ -132,7 +140,7 @@
                 EndDate: $("input[name='EndDate']").val(),
                 StartTime: $("input[name='StartTime']").val(),
                 EndTime: $("input[name='EndTime']").val(),
-                EntranceType: $("select[name='EntranceType']").val()
+                EntranceTypes: $("select[name='EntranceTypes']").val()
             };
 
             $.ajax({

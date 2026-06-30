@@ -101,11 +101,28 @@
 
 @section Scripts {
     <script>
-        $(function () {
-            $('.fc-datepicker').datepicker({
-                format: 'yyyy/mm/dd',
-                autoclose: true
+        $(document).ready(function () {
+
+            if (typeof $.fn.persianDatepicker === "undefined") {
+                console.error("Persian Datepicker is NOT loaded");
+                return;
+            }
+
+            $(".fc-datepicker").persianDatepicker({
+                format: "YYYY/MM/DD",
+                autoClose: true
             });
+
+            // ⬇️ تنظیم ساعت فعلی
+            var now = new Date();
+
+            var hours = String(now.getHours()).padStart(2, '0');
+            var minutes = String(now.getMinutes()).padStart(2, '0');
+
+            var currentTime = hours + ":" + minutes;
+
+            $("input[name='StartTime']").val("00:00");
+            $("input[name='EndTime']").val(currentTime);
         });
 
         $("#btnSearch").click(function () {

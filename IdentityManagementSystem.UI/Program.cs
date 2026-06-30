@@ -1,4 +1,5 @@
 ﻿using DNTCaptcha.Core;
+using IdentityManagementSystem.API.Services.AccessControlReports;
 using IdentityManagementSystem.UI.Filters;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -56,6 +57,14 @@ builder.Services.AddHttpClient("PomixApiPublic", client =>
             HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
     };
 });
+
+
+
+// ================= AccessControlReports =================
+builder.Services.AddScoped<IAccessControlReportService, AccessControlReportService>();
+
+
+
 
 // ================= Captcha =================
 builder.Services.AddDNTCaptcha(options =>

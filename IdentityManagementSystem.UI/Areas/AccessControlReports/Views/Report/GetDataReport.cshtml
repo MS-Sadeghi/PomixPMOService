@@ -8,63 +8,50 @@
 <link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
 
 <div class="card">
+
     <div class="card-header">
         <h5 class="card-title">گزارش خلاصه ترددها</h5>
-
-        <div class="card-options">
-            <button type="submit"
-                    form="reportForm"
-                    class="btn btn-outline-primary">
-                <i class="fe fe-refresh-cw"></i>
-            </button>
-        </div>
     </div>
 
     <div class="card-body">
 
-        <form asp-area="AccessControlReports" asp-action="GetDataReport" asp-controller="Report" method="post">
+        <!-- FILTER -->
+        <form id="reportForm">
 
             <div class="row">
+
                 <div class="col-md-3 mb-3">
-                    <label asp-for="Filter.StartDate" class="form-label">از تاریخ </label>
-                    <div class="input-group">
-                        <div class="input-group-text">
-                            <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
-                        </div><input asp-for="Filter.StartDate" class=" form-control fc-datepicker hasDatepicker" placeholder="MM/DD/YYYY" type="text" >
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label asp-for="Filter.StartDate" class="form-label">تا تاریخ </label>
-                    <div class="input-group">
-                        <div class="input-group-text">
-                            <i class="fa fa-calendar tx-16 lh-0 op-6"></i>
-                        </div><input asp-for="Filter.EndDate" class=" form-control fc-datepicker hasDatepicker" placeholder="MM/DD/YYYY" type="text" >
+                    <label>از تاریخ</label>
+                     <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+
+                        <input name="StartDate"
+                               class="form-control fc-datepicker"
+                               autocomplete="off" />
                     </div>
                 </div>
 
-                <div class="col-md-2 mb-3">
-                    <label asp-for="Filter.StartTime" class="form-label">
-                        از ساعت
-                    </label>
-
-                    <input asp-for="Filter.StartTime"
-                           class="form-control"
-                           type="time" />
+                <div class="col-md-3 mb-3">
+                    <label>تا تاریخ</label>
+                    <input name="EndDate" class="form-control fc-datepicker" />
                 </div>
 
                 <div class="col-md-2 mb-3">
-                    <label asp-for="Filter.EndTime" class="form-label">
-                        تا ساعت
-                    </label>
-
-                    <input asp-for="Filter.EndTime"
-                           class="form-control"
-                           type="time" />
+                    <label>از ساعت</label>
+                    <input name="StartTime" type="time" class="form-control" />
                 </div>
+
                 <div class="col-md-2 mb-3">
-                    <label class="form-label">نوع تردد</label>
-                    <select class="form-control form-select" placeholder="انتخاب کنید">
-                        <option value="0">انتخاب کنید</option>
+                    <label>تا ساعت</label>
+                    <input name="EndTime" type="time" class="form-control" />
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label>نوع تردد</label>
+                    <select name="EntranceType" class="form-control form-select">
+                        <option value="">انتخاب کنید</option>
                         <option value="1">درب شرقی ورود مسیر 1</option>
                         <option value="2">درب شرقی ورود مسیر 2</option>
                         <option value="3">درب شرقی ورود مسیر 3</option>
@@ -72,52 +59,91 @@
                         <option value="5">درب غربی ورود</option>
                     </select>
                 </div>
+
                 <div class="col-md-12 text-end mb-3">
-                    <button type="submit" class="btn btn-primary"><i class="fe fe-search"></i>دریافت گزارش </button>
+                    <button type="button" id="btnSearch" class="btn btn-primary">
+                        <i class="fe fe-search"></i> دریافت گزارش
+                    </button>
                 </div>
+
             </div>
 
         </form>
-        <div class="btn-group mb-2" role="group">
-            <button type="button" class="btn btn-outline-primary">پرینت</button>
-            <button type="button" class="btn btn-outline-primary">اکسل</button>
-            <button type="button" class="btn btn-outline-primary">PDF</button>
+
+        <!-- EXPORT -->
+        <div class="btn-group mb-3">
+            <button class="btn btn-outline-primary" id="btnPrint">پرینت</button>
+            <button class="btn btn-outline-primary" id="btnExcel">اکسل</button>
+            <button class="btn btn-outline-primary" id="btnPdf">PDF</button>
         </div>
+
+        <!-- TABLE -->
         <div class="table-responsive">
-            <table id="ReportTable" class="table table-bordered table-hover text-nowrap">
+            <table class="table table-bordered table-hover text-nowrap">
                 <thead class="table-light">
                     <tr>
                         <th>ردیف</th>
-                        <th>تاریخ گزارش</th>
+                        <th>تاریخ</th>
                         <th>نوع تردد</th>
-                        <th>تعداد تردد</th>
+                        <th>تعداد</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @if (Model?.Reports?.Any() == true)
-                    {
-                        int rowNumber = 1;
-                        foreach (var item in Model.Reports)
-                        {
-                            <tr>
-                                <td>@rowNumber</td>
-                                <td>@item.ReportDate</td>
-                                <td>@item.EntranceType</td>
-                                <td><span class="badge bg-success">@item.RecordCount</span></td>
-                            </tr>
-                            rowNumber++;
-                        }
-                    }
-                    else
-                    {
-                        <tr><td colspan="4" class="text-center">هیچ اطلاعاتی وجود ندارد</td></tr>
-                    }
+                <tbody id="reportBody">
+                    <tr>
+                        <td colspan="4" class="text-center">اطلاعاتی موجود نیست</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
+
     </div>
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(function () {
+            $('.fc-datepicker').datepicker({
+                format: 'yyyy/mm/dd',
+                autoclose: true
+            });
+        });
+
+        $("#btnSearch").click(function () {
+
+            var data = {
+                StartDate: $("input[name='StartDate']").val(),
+                EndDate: $("input[name='EndDate']").val(),
+                StartTime: $("input[name='StartTime']").val(),
+                EndTime: $("input[name='EndTime']").val(),
+                EntranceType: $("select[name='EntranceType']").val()
+            };
+
+            $.ajax({
+                url: '/AccessControlReports/Report/GetDataReportAjax',
+                type: 'POST',
+                data: data,
+                success: function (res) {
+
+                    var rows = "";
+
+                    if (res.length === 0) {
+                        rows = `<tr><td colspan="4" class="text-center">داده‌ای یافت نشد</td></tr>`;
+                    } else {
+                        $.each(res, function (i, item) {
+                            rows += `
+                                <tr>
+                                    <td>${i + 1}</td>
+                                    <td>${item.reportDate}</td>
+                                    <td>${item.entranceType}</td>
+                                    <td><span class="badge bg-success">${item.recordCount}</span></td>
+                                </tr>`;
+                        });
+                    }
+
+                    $("#reportBody").html(rows);
+                }
+            });
+
+        });
+    </script>
 }

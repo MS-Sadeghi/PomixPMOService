@@ -1,4 +1,5 @@
-﻿using IdentityManagementSystem.UI.ViewModels;
+﻿using IdentityManagementSystem.API.Services.AccessControlReports;
+using IdentityManagementSystem.UI.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityManagementSystem.UI.Controllers
@@ -6,6 +7,14 @@ namespace IdentityManagementSystem.UI.Controllers
     [Area("AccessControlReports")]
     public class ReportController : Controller
     {
+
+        private readonly IAccessControlReportService _service;
+
+        public ReportController(IAccessControlReportService service)
+        {
+            _service = service;
+        }
+
         #region GetData
 
         [HttpGet]
@@ -15,11 +24,11 @@ namespace IdentityManagementSystem.UI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetDataReport(GetDataReportPageViewModel model)
+        public async Task<IActionResult> GetDataReportAjax(GetDataFilterViewModel filter)
         {
-            // Call API : bsr-GetData
+            var result = await _service.GetDataAsync(filter);
 
-            return View(model);
+            return Json(result);
         }
 
         #endregion

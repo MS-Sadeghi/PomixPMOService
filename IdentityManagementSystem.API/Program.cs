@@ -1,5 +1,7 @@
 ﻿using IdentityManagementSystem.API.Controllers;
 using IdentityManagementSystem.API.Data;
+using IdentityManagementSystem.API.Modules.AccessControlReports;
+using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
 using IdentityManagementSystem.API.Services;
 using IdentityManagementSystem.API.Services.Logging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,6 +21,12 @@ builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<TokenService, TokenService>();
 builder.Services.Configure<ShahkarServiceOptions>(builder.Configuration.GetSection("Shahkar"));
+
+// --- AccessControlReports Modules ---
+builder.Services.Configure<PomixOptions>(
+    builder.Configuration.GetSection("Pomix"));
+builder.Services.AddAccessControlReports();
+
 
 // --- Authentication & Authorization ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");

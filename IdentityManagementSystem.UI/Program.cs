@@ -111,6 +111,10 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
 
 // ================= FIXED AUTH MIDDLEWARE =================
 // ================= FIXED AUTH MIDDLEWARE =================
@@ -162,8 +166,8 @@ app.MapAreaControllerRoute(
 
 app.MapAreaControllerRoute(
     name: "traffic-reports-area",
-    areaName: "TrafficReports",
-    pattern: "TrafficReports/{controller=AccessReport}/{action=Index}/{id?}");
+    areaName: "AccessControlReports",
+    pattern: "AccessControlReports/{controller=Report}/{action=Index}/{id?}");
 
 // Compatibility routes for existing links/bookmarks.
 app.MapControllerRoute(
@@ -178,7 +182,7 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "legacy-access-report",
-    pattern: "AccessReport/{action=Index}/{id?}",
-    defaults: new { area = "TrafficReports", controller = "AccessReport" });
+    pattern: "Report/{action=Index}/{id?}",
+    defaults: new { area = "AccessControlReports", controller = "Report" });
 
 app.Run();

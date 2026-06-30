@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
-    [Area("TrafficReports")]
-    public class AccessReportController : Controller
+    [Area("AccessControlReports")]
+    public class ReportController : Controller
     {
         #region GetData
 

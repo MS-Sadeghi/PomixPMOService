@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "گزارش تردد بر اساس پلاک";
-    Layout = "~/Views/Shared/_LayoutAccessReport.cshtml";
+    Layout = "~/Views/Shared/_LayoutReport.cshtml";
 }
 
 <link rel="stylesheet"
@@ -29,8 +29,8 @@
 
         <form id="reportForm"
               asp-action="TrafficByPlatesReport"
-              asp-area="TrafficReports"
-              asp-controller="AccessReport"
+              asp-area="AccessControlReports"
+              asp-controller="Report"
               method="post">
 
             <div class="row">

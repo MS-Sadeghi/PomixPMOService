@@ -32,6 +32,12 @@ namespace IdentityManagementSystem.UI.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginPage(LoginViewModel model)
         {
+            if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
+            {
+                ModelState.AddModelError("", "کد امنیتی اشتباه است.");
+                return View(model);
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.ErrorMessage = "لطفاً همه فیلدها را وارد کنید.";
@@ -61,7 +67,7 @@ namespace IdentityManagementSystem.UI.Controllers
                         HttpContext.Session.SetString("UserId", loginResponse.UserId.ToString());
                         HttpContext.Session.SetString("Username", loginResponse.Username ?? "");
 
-                        return RedirectToAction("Index", "AccessReport", new { area = "TrafficReports" });
+                        return RedirectToAction("Index", "Report", new { area = "AccessControlReports" });
                     }
                     else
                     {

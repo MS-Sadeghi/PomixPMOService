@@ -4,7 +4,7 @@ namespace IdentityManagementSystem.UI.ViewModels
 {
     #region Common Filter
 
-    public class BaseAccessReportFilterViewModel
+    public class BaseReportFilterViewModel
     {
         public string StartDate { get; set; }
 
@@ -19,7 +19,7 @@ namespace IdentityManagementSystem.UI.ViewModels
 
     #region GetData
 
-    public class GetDataFilterViewModel : BaseAccessReportFilterViewModel
+    public class GetDataFilterViewModel : BaseReportFilterViewModel
     {
         public List<string> EntranceTypes { get; set; } = new();
     }
@@ -55,7 +55,7 @@ namespace IdentityManagementSystem.UI.ViewModels
 
     public class GetSumReportPageViewModel
     {
-        public BaseAccessReportFilterViewModel Filter { get; set; } = new();
+        public BaseReportFilterViewModel Filter { get; set; } = new();
 
         public List<GetSumReportViewModel> Reports { get; set; } = new();
     }
@@ -64,7 +64,7 @@ namespace IdentityManagementSystem.UI.ViewModels
 
     #region TrafficByType
 
-    public class TrafficByTypeFilterViewModel : BaseAccessReportFilterViewModel
+    public class TrafficByTypeFilterViewModel : BaseReportFilterViewModel
     {
         public List<int> TrafficTypes { get; set; } = new();
     }
@@ -89,7 +89,7 @@ namespace IdentityManagementSystem.UI.ViewModels
 
     #region TrafficByPlates
 
-    public class TrafficByPlatesFilterViewModel : BaseAccessReportFilterViewModel
+    public class TrafficByPlatesFilterViewModel : BaseReportFilterViewModel
     {
         public string P1 { get; set; }
 
@@ -122,7 +122,7 @@ namespace IdentityManagementSystem.UI.ViewModels
 
     #region TrafficByNationalId
 
-    public class TrafficByNationalIdFilterViewModel : BaseAccessReportFilterViewModel
+    public class TrafficByNationalIdFilterViewModel : BaseReportFilterViewModel
     {
         public string NationalId { get; set; }
     }

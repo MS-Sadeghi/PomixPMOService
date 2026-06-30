@@ -159,25 +159,25 @@
                 </div>
 
                 <!-- Captcha Section -->
-                <div id="securitySection" class="form-group text-start mt-2" style="direction: rtl;">
+                @* <div id="securitySection" class="form-group text-start mt-2" style="direction: rtl;"> *@
                     <dnt-captcha asp-captcha-generator-max="9999"
                                  asp-captcha-generator-min="1000"
                                  asp-captcha-generator-language="English"
                                  asp-captcha-generator-display-mode="ShowDigits"
                                  asp-use-relative-urls="true"
                                  asp-placeholder="کد امنیتی را وارد کنید"
-                                 asp-validation-error-message="کد امنیتی صحیح نیست"
-                                 asp-too-many-requests-error-message="تعداد درخواست‌ها زیاد است، لطفاً چند لحظه صبر کنید"
+                                 asp-validation-error-message="کد امنیتی اشتباه است."
+                                 asp-too-many-requests-error-message="درخواست‌های زیاد! لطفاً یک دقیقه صبر کنید!"
                                  asp-font-name="Tahoma"
                                  asp-font-size="30"
                                  asp-fore-color="#333333"
                                  asp-back-color="#FCF6F5FF"
                                  asp-text-box-class="form-control captchaInput"
-                                 asp-text-box-template="<div class='form-group' style='direction: rtl; text-align: right;'>{0}</div>"
+                                 asp-text-box-template="<div class='form-group'>{0}</div>"
                                  asp-validation-message-class="text-danger"
-                                 asp-refresh-button-class="icon icon-refresh btn"
+                                 asp-refresh-button-class="bx bx-sync btn"
                                  asp-show-refresh-button="true" />
-                </div>
+                @* </div> *@
 
                 <!-- Submit Button -->
                 <div class="form-group mt-3">

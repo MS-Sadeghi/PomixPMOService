@@ -17,4 +17,8 @@
 	  <ProjectReference Include="..\IdentityManagementSystem.Shared\IdentityManagementSystem.Shared.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Areas\Security\" />
+	</ItemGroup>
+
 </Project>

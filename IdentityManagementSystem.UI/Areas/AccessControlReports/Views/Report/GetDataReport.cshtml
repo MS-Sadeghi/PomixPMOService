@@ -180,7 +180,7 @@ $(document).ready(function () {
        language: {
             url: "/assets/datatables/fa.json"
         },
-        dom: 'Bfrtip',
+        dom: 'frtip',
         buttons: [
             {
                 extend: 'excelHtml5',
@@ -200,9 +200,6 @@ $(document).ready(function () {
             }
         ]
     });
-
-    // مخفی کردن دکمه های اصلی DataTable
-    $(".dt-buttons").hide();
 
     // ساخت دکمه های سفارشی
     const customButtons = `

@@ -67,10 +67,23 @@
                                             <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                                                 <div class="dropdown-divider m-0"></div>
                                                 <a class="dropdown-item" asp-controller="Home" asp-action="EditProfile">
-                                                    <i class="dropdown-icon fe fe-user"></i> پروفایل
+                                                    <i class="dropdown-icon fe fe-user"></i>
+                                                    پروفایل
                                                 </a>
-                                                <a class="dropdown-item" href="javascript:void(0);" onclick="document.getElementById('logout-form').submit();">
-                                                    <i class="dropdown-icon fe  fe-log-out"></i> خروج
+
+                                                <form id="logout-form"
+                                                      asp-controller="Home"
+                                                      asp-action="Logout"
+                                                      method="post"
+                                                      class="d-none">
+                                                    @Html.AntiForgeryToken()
+                                                </form>
+
+                                                <a class="dropdown-item"
+                                                   href="javascript:void(0);"
+                                                   onclick="document.getElementById('logout-form').submit();">
+                                                    <i class="dropdown-icon fe fe-log-out"></i>
+                                                    خروج
                                                 </a>
                                             </div>
                                         </div>
@@ -261,15 +274,15 @@
 <script src="~/assets/plugins/sidebar/sidebar.js"></script>
 
 <!-- Color Theme js -->
-<script src="~/assets/js/themeColors.js"></script>
+	<script src="~/assets/js/themeColors.js"></script>
+	<script src="~/assets/js/custom.js"></script>
 
 <!-- Sticky js -->
 <script src="~/assets/js/sticky.js"></script>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/persian-datepicker/dist/css/persian-datepicker.min.css" />
-
-<script src="https://cdn.jsdelivr.net/npm/persian-date/dist/persian-date.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/persian-datepicker/dist/js/persian-datepicker.min.js"></script>
+	<link href="~/assets/js/persian-datepicker.min.css" rel="stylesheet" />
+	<script src="~/assets/js/persian-date.min.js"></script>
+	<script src="~/assets/js/persian-datepicker.min.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

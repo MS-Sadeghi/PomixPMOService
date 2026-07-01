@@ -1,177 +1,326 @@
 ﻿@model IdentityManagementSystem.UI.ViewModels.GetDataReportPageViewModel
 
 @{
-    ViewData["Title"] = "گزارش خلاصه تردد";
-    Layout = "~/Views/Shared/_AccessControlReportsLayout.cshtml";
+ViewData["Title"] = "گزارش خلاصه تردد";
+Layout = "~/Views/Shared/_AccessControlReportsLayout.cshtml";
 }
 
 <link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
 
 <div class="card">
 
-    <div class="card-header">
-        <h5 class="card-title">گزارش خلاصه ترددها</h5>
-    </div>
+```
+<div class="card-header">
+    <h5 class="card-title">گزارش خلاصه ترددها</h5>
+</div>
 
-    <div class="card-body">
+<div class="card-body">
 
-        <!-- FILTER -->
-        <form id="reportForm">
+    <form id="reportForm">
 
-            <div class="row">
+        <div class="row">
 
-                <div class="col-md-3 mb-3">
-                    <label>از تاریخ</label>
-                     <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="fa fa-calendar"></i>
-                        </span>
+            <div class="col-md-3 mb-3">
+                <label>از تاریخ</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fa fa-calendar"></i>
+                    </span>
 
-                        <input name="StartDate"
-                               class="form-control fc-datepicker"
-                               autocomplete="off" />
-                    </div>
+                    <input name="StartDate"
+                           class="form-control fc-datepicker"
+                           autocomplete="off" />
                 </div>
+            </div>
 
-                <div class="col-md-3 mb-3">
-                    <label>تا تاریخ</label>
-                     <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="fa fa-calendar"></i>
-                        </span>
+            <div class="col-md-3 mb-3">
+                <label>تا تاریخ</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fa fa-calendar"></i>
+                    </span>
 
-                        <input name="EndDate"
-                               class="form-control fc-datepicker"
-                               autocomplete="off" />
-                    </div>
+                    <input name="EndDate"
+                           class="form-control fc-datepicker"
+                           autocomplete="off" />
                 </div>
+            </div>
 
-                <div class="col-md-2 mb-3">
-                    <label>از ساعت</label>
-                    <input name="StartTime" type="time" class="form-control" />
-                </div>
+            <div class="col-md-2 mb-3">
+                <label>از ساعت</label>
+                <input name="StartTime" type="time" class="form-control" />
+            </div>
 
-                <div class="col-md-2 mb-3">
-                    <label>تا ساعت</label>
-                    <input name="EndTime" type="time" class="form-control" />
-                </div>
+            <div class="col-md-2 mb-3">
+                <label>تا ساعت</label>
+                <input name="EndTime" type="time" class="form-control" />
+            </div>
 
-                <div class="col-md-2 mb-3">
-                    <label>نوع تردد</label>
-                    <select name="EntranceTypes" class="form-control form-select" multiple>
-                        <option value="">انتخاب کنید</option>
-                        <option value="1">درب شرقی ورود مسیر 1</option>
-                        <option value="2">درب شرقی ورود مسیر 2</option>
-                        <option value="3">درب شرقی ورود مسیر 3</option>
-                        <option value="4">درب غربی خروج</option>
-                        <option value="5">درب غربی ورود</option>
-                    </select>
-                </div>
+            <div class="col-md-2 mb-3">
+                <label>مسیر تردد</label>
+                <select name="EntranceTypes"
+                        class="form-control form-select"
+                        multiple>
 
-                <div class="col-md-12 text-end mb-3">
-                    <button type="button" id="btnSearch" class="btn btn-primary">
-                        <i class="fe fe-search"></i> دریافت گزارش
-                    </button>
-                </div>
+                    <option value="1">درب شرقی ورود مسیر 1</option>
+                    <option value="2">درب شرقی ورود مسیر 2</option>
+                    <option value="3">درب شرقی ورود مسیر 3</option>
+                    <option value="4">درب غربی خروج</option>
+                    <option value="5">درب غربی ورود</option>
+
+                </select>
+            </div>
+
+            <div class="col-md-12 text-end">
+
+                <button type="button"
+                        id="btnSearch"
+                        class="btn btn-primary">
+
+                    <i class="fe fe-search"></i>
+                    دریافت گزارش
+
+                </button>
 
             </div>
 
-        </form>
-
-        <!-- EXPORT -->
-        <div class="btn-group mb-3">
-            <button class="btn btn-outline-primary" id="btnPrint">پرینت</button>
-            <button class="btn btn-outline-primary" id="btnExcel">اکسل</button>
-            <button class="btn btn-outline-primary" id="btnPdf">PDF</button>
         </div>
 
-        <!-- TABLE -->
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover text-nowrap">
-                <thead class="table-light">
-                    <tr>
-                        <th>ردیف</th>
-                        <th>تاریخ</th>
-                        <th>نوع تردد</th>
-                        <th>تعداد</th>
-                    </tr>
-                </thead>
-                <tbody id="reportBody">
-                    <tr>
-                        <td colspan="4" class="text-center">اطلاعاتی موجود نیست</td>
-                    </tr>
-                </tbody>
-            </table>
+    </form>
+
+    <hr />
+
+    <div id="errorBox"
+         class="alert alert-danger d-none">
+    </div>
+
+    <div id="loadingBox"
+         class="text-center d-none my-3">
+
+        <div class="spinner-border text-primary"></div>
+
+        <div class="mt-2">
+            در حال دریافت اطلاعات ...
         </div>
 
     </div>
+
+    <div class="btn-group mb-3">
+
+        <button class="btn btn-outline-primary" id="btnPrint">
+            پرینت
+        </button>
+
+        <button class="btn btn-outline-success" id="btnExcel">
+            اکسل
+        </button>
+
+        <button class="btn btn-outline-danger" id="btnPdf">
+            PDF
+        </button>
+
+    </div>
+
+    <div class="table-responsive">
+
+        <table id="reportTable"
+               class="table table-bordered table-hover">
+
+            <thead class="table-light">
+
+                <tr>
+                    <th>ردیف</th>
+                    <th>تاریخ</th>
+                    <th>مسیر تردد</th>
+                    <th>تعداد</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+```
+
 </div>
 
-@section Scripts {
-    <script>
+@section Scripts
+{
 
-        $(document).ready(function () {
+<script>
 
-            if (typeof $.fn.persianDatepicker === "undefined") {
-                console.error("Persian Datepicker is NOT loaded");
+let reportTable;
+
+$(document).ready(function () {
+
+    if (typeof $.fn.persianDatepicker !== "undefined") {
+
+        $(".fc-datepicker").persianDatepicker({
+            format: "YYYY/MM/DD",
+            autoClose: true
+        });
+
+    }
+
+    const now = new Date();
+
+    const currentTime =
+        String(now.getHours()).padStart(2,'0')
+        + ":" +
+        String(now.getMinutes()).padStart(2,'0');
+
+    $("input[name='StartTime']").val("00:00");
+    $("input[name='EndTime']").val(currentTime);
+
+    reportTable = $("#reportTable").DataTable({
+
+        destroy: true,
+
+        pageLength: 10,
+
+        responsive: true,
+
+        searching: true,
+
+        ordering: true,
+
+        autoWidth: false,
+
+        language: {
+
+            emptyTable: "اطلاعاتی موجود نیست",
+
+            search: "جستجو:",
+
+            lengthMenu: "نمایش _MENU_ رکورد",
+
+            info: "نمایش _START_ تا _END_ از _TOTAL_ رکورد",
+
+            paginate: {
+                next: "بعدی",
+                previous: "قبلی"
+            }
+
+        }
+
+    });
+
+});
+
+$("#btnSearch").on("click", function () {
+
+    $("#errorBox")
+        .addClass("d-none")
+        .removeClass("alert-warning")
+        .addClass("alert-danger")
+        .html("");
+
+    $("#loadingBox").removeClass("d-none");
+
+    const data = {
+
+        StartDate:
+            $("input[name='StartDate']").val(),
+
+        EndDate:
+            $("input[name='EndDate']").val(),
+
+        StartTime:
+            $("input[name='StartTime']").val(),
+
+        EndTime:
+            $("input[name='EndTime']").val(),
+
+        EntranceTypes:
+            $("select[name='EntranceTypes']").val()
+
+    };
+
+    $.ajax({
+
+        url: '/AccessControlReports/Report/GetDataReportAjax',
+
+        type: 'POST',
+
+        data: data,
+
+        success: function (res) {
+
+            reportTable.clear();
+
+            let rows = res;
+
+            if (res.data)
+                rows = res.data;
+
+            if (!rows || rows.length === 0) {
+
+                reportTable.draw();
+
+                $("#errorBox")
+                    .removeClass("d-none")
+                    .removeClass("alert-danger")
+                    .addClass("alert-warning")
+                    .text("داده‌ای یافت نشد");
+
                 return;
             }
 
-            $(".fc-datepicker").persianDatepicker({
-                format: "YYYY/MM/DD",
-                autoClose: true
+            $.each(rows, function (i, item) {
+
+                reportTable.row.add([
+
+                    i + 1,
+
+                    item.reportDate,
+
+                    item.entranceType,
+
+                    '<span class="badge bg-success">' +
+                    item.recordCount +
+                    '</span>'
+
+                ]);
+
             });
 
-            // ⬇️ تنظیم ساعت فعلی
-            var now = new Date();
+            reportTable.draw();
 
-            var hours = String(now.getHours()).padStart(2, '0');
-            var minutes = String(now.getMinutes()).padStart(2, '0');
+        },
 
-            var currentTime = hours + ":" + minutes;
+        error: function (xhr) {
 
-            $("input[name='StartTime']").val("00:00");
-            $("input[name='EndTime']").val(currentTime);
-        });
+            let message = "خطا در ارتباط با سرور";
 
-        $("#btnSearch").click(function () {
+            if (xhr.responseJSON &&
+                xhr.responseJSON.message) {
 
-            var data = {
-                StartDate: $("input[name='StartDate']").val(),
-                EndDate: $("input[name='EndDate']").val(),
-                StartTime: $("input[name='StartTime']").val(),
-                EndTime: $("input[name='EndTime']").val(),
-                EntranceTypes: $("select[name='EntranceTypes']").val()
-            };
+                message =
+                    xhr.responseJSON.message;
+            }
 
-            $.ajax({
-                url: '/AccessControlReports/Report/GetDataReportAjax',
-                type: 'POST',
-                data: data,
-                success: function (res) {
+            $("#errorBox")
+                .removeClass("d-none")
+                .text(message);
 
-                    console.log(res);
+        },
 
-                    var rows = "";
+        complete: function () {
 
-                    if (res.length === 0) {
-                        rows = `<tr><td colspan="4" class="text-center">داده‌ای یافت نشد</td></tr>`;
-                    } else {
-                        $.each(res, function (i, item) {
-                            rows += `
-                                <tr>
-                                    <td>${i + 1}</td>
-                                    <td>${item.reportDate}</td>
-                                    <td>${item.entranceType}</td>
-                                    <td><span class="badge bg-success">${item.recordCount}</span></td>
-                                </tr>`;
-                        });
-                    }
+            $("#loadingBox")
+                .addClass("d-none");
 
-                    $("#reportBody").html(rows);
-                }
-            });
+        }
 
-        });
-    </script>
+    });
+
+});
+
+</script>
+
 }

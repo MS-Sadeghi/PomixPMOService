@@ -26,9 +26,24 @@ namespace IdentityManagementSystem.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> GetDataReportAjax(GetDataFilterViewModel filter)
         {
-            var result = await _service.GetDataAsync(filter);
+            try
+            {
+                var result = await _service.GetDataAsync(filter);
 
-            return Json(result);
+                return Json(new
+                {
+                    success = true,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
         #endregion

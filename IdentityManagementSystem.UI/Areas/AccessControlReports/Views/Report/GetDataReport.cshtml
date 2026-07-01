@@ -177,19 +177,12 @@ $(document).ready(function () {
     $("input[name='EndTime']").val(currentTime);
 
     reportTable = $("#reportTable").DataTable({
-
         destroy: true,
-
         pageLength: 25,
-
         responsive: true,
-
         searching: true,
-
         ordering: true,
-
         autoWidth: false,
-
        language: {
             url: "/assets/datatables/fa.json"
         },
@@ -202,7 +195,9 @@ $(document).ready(function () {
             {
                 extend: 'pdfHtml5',
                 title: 'گزارش_خلاصه_تردد',
-                orientation: 'landscape',
+                exportOptions: {
+                    columns: [0,1,2,3]
+                },
                 pageSize: 'A4'
             },
             {
@@ -211,30 +206,23 @@ $(document).ready(function () {
             }
         ]
     });
+
+    reportTable.buttons().container().hide();
 });
 
 $("#btnExcel").on("click", function (e) {
-
     e.preventDefault();
-
     reportTable.button('.buttons-excel').trigger();
-
 });
 
 $("#btnPdf").on("click", function (e) {
-
     e.preventDefault();
-
     reportTable.button('.buttons-pdf').trigger();
-
 });
 
 $("#btnPrint").on("click", function (e) {
-
     e.preventDefault();
-
     reportTable.button('.buttons-print').trigger();
-
 });
 
 $("#btnSearch").on("click", function () {

@@ -170,71 +170,75 @@ $(document).ready(function () {
     $("input[name='StartTime']").val("00:00");
     $("input[name='EndTime']").val(currentTime);
 
-    reportTable = $("#reportTable").DataTable({
-        destroy: true,
-        pageLength: 25,
-        responsive: true,
-        searching: true,
-        ordering: true,
-        autoWidth: false,
-       language: {
-            url: "/assets/datatables/fa.json"
+   reportTable = $("#reportTable").DataTable({
+    destroy: true,
+    pageLength: 25,
+    responsive: true,
+    searching: true,
+    ordering: true,
+    autoWidth: false,
+
+    language: {
+        url: "/assets/datatables/fa.json"
+    },
+
+    dom: 'Bfrtip',
+
+    buttons: [
+        {
+            extend: 'excelHtml5',
+            title: 'گزارش_خلاصه_تردد'
         },
-        dom: 'frtip',
-        buttons: [
-            {
-                extend: 'excelHtml5',
-                title: 'گزارش_خلاصه_تردد'
-            },
-            {
-                extend: 'pdfHtml5',
-                title: 'گزارش_خلاصه_تردد',
-                exportOptions: {
-                    columns: [0,1,2,3]
-                },
-                pageSize: 'A4'
-            },
-            {
-                extend: 'print',
-                title: 'گزارش خلاصه تردد'
-            }
-        ]
-    });
+        {
+            extend: 'pdfHtml5',
+            title: 'گزارش_خلاصه_تردد'
+        },
+        {
+            extend: 'print',
+            title: 'گزارش_خلاصه_تردد'
+        }
+    ],
 
-    // ساخت دکمه های سفارشی
-    const customButtons = `
-        <div class="btn-group me-3" id="customExportButtons">
-            <button class="btn btn-outline-primary" id="btnPrint">
-                پرینت
-            </button>
+    initComplete: function () {
 
-            <button class="btn btn-outline-success" id="btnExcel">
-                اکسل
-            </button>
+        // مخفی کردن دکمه‌های پیش‌فرض
+        $('.dt-buttons').hide();
 
-            <button class="btn btn-outline-danger" id="btnPdf">
-                PDF
-            </button>
-        </div>
-    `;
+        // قرار دادن دکمه‌های سفارشی کنار جستجو
+        $('#reportTable_filter').before(`
+            <div id="customExportButtons" class="btn-group me-3">
+                <button class="btn btn-outline-primary" id="btnPrint">
+                    پرینت
+                </button>
 
-    // قرار دادن کنار سرچ دیتاتیبل
-    $("#reportTable_filter").before(customButtons);
+                <button class="btn btn-outline-success" id="btnExcel">
+                    اکسل
+                </button>
+
+                <button class="btn btn-outline-danger" id="btnPdf">
+                    PDF
+                </button>
+            </div>
+        `);
+    }
 });
 
-$("#btnExcel").on("click", function (e) {
-    e.preventDefault();
-    reportTable.button('.buttons-excel').trigger();
+   
 });
 
-$("#btnPdf").on("click", function (e) {
+$(document).on("click", "#btnExcel", function (e) {
     e.preventDefault();
-    reportTable.button('.buttons-pdf').trigger();
+    $(".buttons-excel").click();
 });
 
-$("#btnPrint").on("click", function (e) {
+$(document).on("click", "#btnPdf", function (e) {
     e.preventDefault();
-    reportTable.button('.buttons-print').trigger();
+    $(".buttons-pdf").click();
+});
+
+$(document).on("click", "#btnPrint", function (e) {
+    e.preventDefault();
+    $(".buttons-print").click();
 });
 
 $("#btnSearch").on("click", function () {

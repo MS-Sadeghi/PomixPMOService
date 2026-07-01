@@ -180,7 +180,7 @@ $(document).ready(function () {
 
         destroy: true,
 
-        pageLength: 10,
+        pageLength: 25,
 
         responsive: true,
 
@@ -192,9 +192,48 @@ $(document).ready(function () {
 
        language: {
             url: "/assets/datatables/fa.json"
-        }
-
+        },
+        dom: 'Bfrtip',
+        buttons: [
+            {
+                extend: 'excelHtml5',
+                title: 'گزارش_خلاصه_تردد'
+            },
+            {
+                extend: 'pdfHtml5',
+                title: 'گزارش_خلاصه_تردد',
+                orientation: 'landscape',
+                pageSize: 'A4'
+            },
+            {
+                extend: 'print',
+                title: 'گزارش خلاصه تردد'
+            }
+        ]
     });
+});
+
+$("#btnExcel").on("click", function (e) {
+
+    e.preventDefault();
+
+    reportTable.button('.buttons-excel').trigger();
+
+});
+
+$("#btnPdf").on("click", function (e) {
+
+    e.preventDefault();
+
+    reportTable.button('.buttons-pdf').trigger();
+
+});
+
+$("#btnPrint").on("click", function (e) {
+
+    e.preventDefault();
+
+    reportTable.button('.buttons-print').trigger();
 
 });
 

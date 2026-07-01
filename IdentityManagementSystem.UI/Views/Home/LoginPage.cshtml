@@ -22,7 +22,8 @@
     }
 
     .login-right {
-        flex: 0 0 450px;
+        flex: 0 0 520px;
+        max-width: 100%;
         background: rgba(255, 255, 255, 0.25);
         backdrop-filter: blur(12px);
         border-radius: 20px;
@@ -67,19 +68,48 @@
         direction: rtl !important;
     }
 
-    .captcha-container img {
-        margin-left: 10px !important;
-        margin-right: 0 !important;
+    .captcha-shell {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        direction: ltr;
+    }
+
+    .captcha-shell .form-group {
+        flex: 1 1 190px;
+        min-width: 0;
+        margin-bottom: 0;
+        direction: rtl;
+    }
+
+    .captcha-shell img {
+        width: 130px;
+        height: 45px;
+        object-fit: cover;
+        border: 1px solid rgba(255, 255, 255, 0.55);
+        border-radius: 8px;
     }
 
     .captcha-refresh-btn {
-        margin-left: 10px !important;
-        margin-right: 0 !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 45px;
+        width: 45px;
+        height: 45px;
+        padding: 0 !important;
+        border-radius: 8px !important;
+        color: #4b5563 !important;
+        background: #fff !important;
+        border: 1px solid #ccc !important;
+        font-size: 20px;
+        line-height: 1;
     }
 
-    .captcha-group {
-        direction: rtl !important;
-        text-align: right !important;
+    .captcha-refresh-btn:hover,
+    .captcha-refresh-btn:focus {
+        color: #0d6efd !important;
+        border-color: #86b7fe !important;
     }
 
     .form-group {
@@ -121,7 +151,7 @@
 </style>
 
 <div class="login-container">
-    <div class="row w-100" style="max-width: 400px;">
+    <div class="row w-100" style="max-width: 520px;">
         <div class="login-right">
             <h3 class="text-center pb-3">سامانه استعلام سند</h3>
             <form id="loginForm"  method="post" autocomplete="off" action="/Home/LoginPage">
@@ -159,7 +189,7 @@
                 </div>
 
                 <!-- Captcha Section -->
-                <div id="securitySection" class="form-group text-start mt-2" style="direction: rtl;">
+                <div id="securitySection" class="form-group captcha-shell mt-2">
                     <dnt-captcha asp-captcha-generator-max="9999"
                                  asp-captcha-generator-min="1000"
                                  asp-captcha-generator-language="English"
@@ -176,7 +206,7 @@
                                  asp-text-box-template="<div class='form-group'>{0}</div>"
                                  asp-validation-message-class="text-danger"
                                  asp-show-refresh-button="true"
-                                 asp-refresh-button-class="btn btn-light fe fe-refresh-cw" />
+                                 asp-refresh-button-class="btn btn-light captcha-refresh-btn fe fe-refresh-cw" />
                 </div> 
 
                 <!-- Submit Button -->

@@ -1,11 +1,21 @@
 ﻿@model IdentityManagementSystem.UI.ViewModels.GetDataReportPageViewModel
 
 @{
-ViewData["Title"] = "گزارش خلاصه تردد";
-Layout = "~/Views/Shared/_AccessControlReportsLayout.cshtml";
+    ViewData["Title"] = "گزارش خلاصه تردد";
+    Layout = "~/Views/Shared/_AccessControlReportsLayout.cshtml";
 }
 
 <link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
+
+<style>
+    .dataTables_wrapper .dataTables_filter {
+        float: left !important;
+    }
+
+    #customExportButtons {
+        float: right;
+    }
+</style>
 
 <div class="card">
 
@@ -104,22 +114,6 @@ Layout = "~/Views/Shared/_AccessControlReportsLayout.cshtml";
 
     </div>
 
-    <div class="btn-group mb-3">
-
-        <button class="btn btn-outline-primary" id="btnPrint">
-            پرینت
-        </button>
-
-        <button class="btn btn-outline-success" id="btnExcel">
-            اکسل
-        </button>
-
-        <button class="btn btn-outline-danger" id="btnPdf">
-            PDF
-        </button>
-
-    </div>
-
     <div class="table-responsive">
 
         <table id="reportTable"
@@ -207,7 +201,28 @@ $(document).ready(function () {
         ]
     });
 
-    reportTable.buttons().container().hide();
+    // مخفی کردن دکمه های اصلی DataTable
+    $(".dt-buttons").hide();
+
+    // ساخت دکمه های سفارشی
+    const customButtons = `
+        <div class="btn-group me-3" id="customExportButtons">
+            <button class="btn btn-outline-primary" id="btnPrint">
+                پرینت
+            </button>
+
+            <button class="btn btn-outline-success" id="btnExcel">
+                اکسل
+            </button>
+
+            <button class="btn btn-outline-danger" id="btnPdf">
+                PDF
+            </button>
+        </div>
+    `;
+
+    // قرار دادن کنار سرچ دیتاتیبل
+    $("#reportTable_filter").before(customButtons);
 });
 
 $("#btnExcel").on("click", function (e) {

@@ -17,8 +17,8 @@ public class PomixClient : IPomixClient
     }
 
     public async Task<T> ExecuteAsync<T>(
-        string serviceName,
-        object[] parameters)
+    string serviceName,
+    object[] parameters)
     {
         var request = new
         {
@@ -33,22 +33,39 @@ public class PomixClient : IPomixClient
 
         var response = await _httpClient.PostAsJsonAsync("", request);
 
-        response.EnsureSuccessStatusCode();
+        var responseText = await response.Content.ReadAsStringAsync();
+
+        var pomixResult =
+            JsonSerializer.Deserialize<PomixResult>(
+                responseText,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+        if (pomixResult == null)
+        {
+            throw new Exception("Pomix response is null");
+        }
+
+        if (pomixResult.ResponseStatusCode != 200)
+        {
+            throw new Exception(pomixResult.ResponseText);
+        }
 
         var result =
-            await response.Content.ReadFromJsonAsync<PomixResponse>();
+            JsonSerializer.Deserialize<T>(
+                pomixResult.ResponseText,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
 
         if (result == null)
-            throw new Exception("No response received from Pomix.");
+        {
+            throw new Exception("Unable to deserialize response.");
+        }
 
-        if (!result.IsSuccessful)
-            throw new Exception(result.ErrorDescription);
-
-        return JsonSerializer.Deserialize<T>(
-            result.ResponseText,
-            new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            })!;
+        return result;
     }
 }

@@ -20,43 +20,43 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.GetData
         {
             var parameters = new object[]
             {
-            new
-            {
-                parameterName = "StartDate",
-                parameterValue = request.StartDate
-            },
-            new
-            {
-                parameterName = "EndDate",
-                parameterValue = request.EndDate
-            },
-            new
-            {
-                parameterName = "EntranceTypes",
-                parameterValue = request.EntranceTypes
-            },
-            new
-            {
-                parameterName = "startTime",
-                parameterValue = request.StartTime
-            },
-            new
-            {
-                parameterName = "endTime",
-                parameterValue = request.EndTime
-            },
-            new
-            {
-                parameterName = "credentials",
-                parameterValue = new
+                new
                 {
-                    username =
-                        _configuration["AccessControl:Username"],
+                    parameterName = "StartDate",
+                    parameterValue = ToEnglishDigits(request.StartDate)
+                },
+                new
+                {
+                    parameterName = "EndDate",
+                    parameterValue = ToEnglishDigits(request.EndDate)
+                },
+                new
+                {
+                    parameterName = "EntranceTypes",
+                    parameterValue = request.EntranceTypes
+                },
+                new
+                {
+                    parameterName = "startTime",
+                    parameterValue = request.StartTime
+                },
+                new
+                {
+                    parameterName = "endTime",
+                    parameterValue = request.EndTime
+                },
+                new
+                {
+                    parameterName = "credentials",
+                    parameterValue = new
+                    {
+                        username =
+                            _configuration["AccessControl:Username"],
 
-                    password =
-                        _configuration["AccessControl:Password"]
+                        password =
+                            _configuration["AccessControl:Password"]
+                    }
                 }
-            }
             };
 
             return await _pomixClient.ExecuteAsync
@@ -65,6 +65,25 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.GetData
                     "bsr-GetData",
                     parameters
                 );
+        }
+
+
+        private static string ToEnglishDigits(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            return input
+                .Replace('۰', '0')
+                .Replace('۱', '1')
+                .Replace('۲', '2')
+                .Replace('۳', '3')
+                .Replace('۴', '4')
+                .Replace('۵', '5')
+                .Replace('۶', '6')
+                .Replace('۷', '7')
+                .Replace('۸', '8')
+                .Replace('۹', '9');
         }
     }
 }

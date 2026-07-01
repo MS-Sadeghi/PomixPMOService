@@ -29,6 +29,11 @@
                 "access-control-reports/get-data",
                 request);
 
+            var responseContent =
+                    await response.Content.ReadAsStringAsync();
+
+            var content = await response.Content.ReadAsStringAsync();
+
             if (!response.IsSuccessStatusCode)
                 return new List<GetDataReportViewModel>();
 

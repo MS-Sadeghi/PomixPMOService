@@ -58,7 +58,7 @@
 
                 <div class="col-md-2 mb-3">
                     <label>نوع تردد</label>
-                    <select name="EntranceType" class="form-control form-select" multiple>
+                    <select name="EntranceTypes" class="form-control form-select" multiple>
                         <option value="">انتخاب کنید</option>
                         <option value="1">درب شرقی ورود مسیر 1</option>
                         <option value="2">درب شرقی ورود مسیر 2</option>
@@ -109,6 +109,7 @@
 
 @section Scripts {
     <script>
+
         $(document).ready(function () {
 
             if (typeof $.fn.persianDatepicker === "undefined") {
@@ -148,6 +149,8 @@
                 type: 'POST',
                 data: data,
                 success: function (res) {
+
+                    console.log(res);
 
                     var rows = "";
 

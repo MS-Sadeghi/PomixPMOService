@@ -1,119 +1,85 @@
-﻿@model IdentityManagementSystem.UI.ViewModels.TrafficByNationalIdPageViewModel
+@model IdentityManagementSystem.UI.ViewModels.TrafficByNationalIdPageViewModel
 
 @{
     ViewData["Title"] = "گزارش تردد بر اساس کد ملی";
     Layout = "~/Views/Shared/_AccessControlReportsLayout.cshtml";
 }
 
-<link rel="stylesheet"
-      href="~/css/IndexStyle.css"
-      asp-append-version="true" />
+<link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
+
+<style>
+    .dataTables_wrapper .dataTables_filter {
+        float: left !important;
+    }
+
+    #customExportButtons {
+        float: right;
+    }
+</style>
 
 <div class="card">
-
     <div class="card-header">
-        <h5 class="card-title">
-            گزارش تردد بر اساس کد ملی
-        </h5>
-
-        <div class="card-options">
-            <button type="submit"
-                    form="reportForm"
-                    class="btn btn-outline-primary">
-                <i class="fe fe-refresh-cw"></i>
-            </button>
-        </div>
+        <h5 class="card-title">گزارش تردد بر اساس کد ملی</h5>
     </div>
 
     <div class="card-body">
-
-        <form id="reportForm"
-              asp-action="TrafficByNationalIDReport"
-              asp-area="AccessControlReports"
-              asp-controller="Report"
-              method="post">
-
+        <form id="reportForm">
             <div class="row">
-
                 <div class="col-md-3 mb-3">
-                    <label asp-for="Filter.StartDate" class="form-label">
-                        از تاریخ
-                    </label>
-
+                    <label>از تاریخ</label>
                     <div class="input-group">
                         <span class="input-group-text">
                             <i class="fa fa-calendar"></i>
                         </span>
-
-                        <input asp-for="Filter.StartDate"
-                               class="form-control fc-datepicker"
-                               autocomplete="off" />
+                        <input name="StartDate" class="form-control fc-datepicker" autocomplete="off" />
                     </div>
                 </div>
 
                 <div class="col-md-3 mb-3">
-                    <label asp-for="Filter.EndDate" class="form-label">
-                        تا تاریخ
-                    </label>
-
+                    <label>تا تاریخ</label>
                     <div class="input-group">
                         <span class="input-group-text">
                             <i class="fa fa-calendar"></i>
                         </span>
-
-                        <input asp-for="Filter.EndDate"
-                               class="form-control fc-datepicker"
-                               autocomplete="off" />
+                        <input name="EndDate" class="form-control fc-datepicker" autocomplete="off" />
                     </div>
                 </div>
 
                 <div class="col-md-2 mb-3">
-                    <label asp-for="Filter.StartTime" class="form-label">
-                        از ساعت
-                    </label>
-
-                    <input asp-for="Filter.StartTime"
-                           type="time"
-                           class="form-control" />
+                    <label>از ساعت</label>
+                    <input name="StartTime" type="time" class="form-control" />
                 </div>
 
                 <div class="col-md-2 mb-3">
-                    <label asp-for="Filter.EndTime" class="form-label">
-                        تا ساعت
-                    </label>
-
-                    <input asp-for="Filter.EndTime"
-                           type="time"
-                           class="form-control" />
+                    <label>تا ساعت</label>
+                    <input name="EndTime" type="time" class="form-control" />
                 </div>
 
                 <div class="col-md-2 mb-3">
-                    <label asp-for="Filter.NationalId" class="form-label">
-                        کد ملی
-                    </label>
-
-                    <input asp-for="Filter.NationalId"
-                           class="form-control"
-                           maxlength="10" />
+                    <label>کد ملی</label>
+                    <input name="NationalId" class="form-control" maxlength="10" />
                 </div>
 
-                <div class="col-md-12 text-end mb-3">
-                    <button type="submit" class="btn btn-primary"><i class="fe fe-search"></i>دریافت گزارش </button>
+                <div class="col-md-12 text-end">
+                    <button type="button" id="btnSearch" class="btn btn-primary">
+                        <i class="fe fe-search"></i>
+                        دریافت گزارش
+                    </button>
                 </div>
             </div>
-
         </form>
-        <div class="btn-group mb-2" role="group" >
-            <button type="button" class="btn btn-outline-primary">پرینت</button>
-            <button type="button" class="btn btn-outline-primary">اکسل</button>
-            <button type="button" class="btn btn-outline-primary">PDF</button>
+
+        <hr />
+
+        <div id="errorBox" class="alert alert-danger d-none"></div>
+
+        <div id="loadingBox" class="text-center d-none my-3">
+            <div class="spinner-border text-primary"></div>
+            <div class="mt-2">در حال دریافت اطلاعات ...</div>
         </div>
 
         <div class="table-responsive">
-
-            <table id="trafficByNationalIdTable"
-                   class="table table-bordered table-hover text-nowrap">
-
+            <table id="reportTable" class="table table-bordered table-hover text-nowrap">
                 <thead class="table-light">
                     <tr>
                         <th>ردیف</th>
@@ -123,42 +89,146 @@
                         <th>نوع تردد</th>
                     </tr>
                 </thead>
-
-                <tbody>
-
-                    @if (Model?.Reports?.Any() == true)
-                    {
-                        foreach (var item in Model.Reports)
-                        {
-                            <tr>
-                                <td>@item.RowNumber</td>
-                                <td>@item.FullName</td>
-                                <td>@item.NationalId</td>
-                                <td>@item.LogDateTimePersian</td>
-                                <td>@item.EntranceType</td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="5" class="text-center">
-                                هیچ اطلاعاتی وجود ندارد
-                            </td>
-                        </tr>
-                    }
-
-                </tbody>
-
+                <tbody></tbody>
             </table>
-
         </div>
-
     </div>
-
 </div>
 
 @section Scripts
 {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        let reportTable;
+
+        $(document).ready(function () {
+            if (typeof $.fn.persianDatepicker !== "undefined") {
+                $(".fc-datepicker").persianDatepicker({
+                    format: "YYYY/MM/DD",
+                    autoClose: true
+                });
+            }
+
+            const now = new Date();
+            const currentTime =
+                String(now.getHours()).padStart(2, '0') + ":" +
+                String(now.getMinutes()).padStart(2, '0');
+
+            $("input[name='StartTime']").val("00:00");
+            $("input[name='EndTime']").val(currentTime);
+
+            reportTable = $("#reportTable").DataTable({
+                destroy: true,
+                pageLength: 25,
+                responsive: true,
+                searching: true,
+                ordering: true,
+                autoWidth: false,
+                language: {
+                    url: "/assets/datatables/fa.json"
+                },
+                dom: 'Bfrtip',
+                buttons: [
+                    { extend: 'excelHtml5', title: 'گزارش_تردد_بر_اساس_کد_ملی' },
+                    { extend: 'pdfHtml5', title: 'گزارش_تردد_بر_اساس_کد_ملی' },
+                    { extend: 'print', title: 'گزارش_تردد_بر_اساس_کد_ملی' }
+                ],
+                initComplete: function () {
+                    $('.dt-buttons').hide();
+                    $('#reportTable_filter').before(`
+                        <div id="customExportButtons" class="btn-group me-3">
+                            <button class="btn btn-outline-primary" id="btnPrint">پرینت</button>
+                            <button class="btn btn-outline-success" id="btnExcel">اکسل</button>
+                            <button class="btn btn-outline-danger" id="btnPdf">PDF</button>
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        $(document).on("click", "#btnExcel", function (e) {
+            e.preventDefault();
+            $(".buttons-excel").click();
+        });
+
+        $(document).on("click", "#btnPdf", function (e) {
+            e.preventDefault();
+            $(".buttons-pdf").click();
+        });
+
+        $(document).on("click", "#btnPrint", function (e) {
+            e.preventDefault();
+            $(".buttons-print").click();
+        });
+
+        $("#btnSearch").on("click", function () {
+            $("#errorBox")
+                .addClass("d-none")
+                .removeClass("alert-warning")
+                .addClass("alert-danger")
+                .html("");
+
+            $("#loadingBox").removeClass("d-none");
+
+            const data = {
+                StartDate: $("input[name='StartDate']").val(),
+                EndDate: $("input[name='EndDate']").val(),
+                StartTime: $("input[name='StartTime']").val(),
+                EndTime: $("input[name='EndTime']").val(),
+                NationalId: $("input[name='NationalId']").val()
+            };
+
+            $.ajax({
+                url: '/AccessControlReports/Report/TrafficByNationalIDReportAjax',
+                type: 'POST',
+                data: data,
+                success: function (res) {
+                    reportTable.clear();
+
+                    let rows = res;
+
+                    if (res.data)
+                        rows = res.data;
+
+                    if (!rows || rows.length === 0) {
+                        reportTable.draw();
+
+                        $("#errorBox")
+                            .removeClass("d-none")
+                            .removeClass("alert-danger")
+                            .addClass("alert-warning")
+                            .text("داده‌ای یافت نشد");
+
+                        return;
+                    }
+
+                    $.each(rows, function (i, item) {
+                        reportTable.row.add([
+                            item.rowNumber || (i + 1),
+                            item.fullName,
+                            item.nationalId,
+                            item.logDateTimePersian,
+                            item.entranceType
+                        ]);
+                    });
+
+                    reportTable.draw();
+                },
+                error: function (xhr) {
+                    let message = "خطا در ارتباط با سرور";
+
+                    if (xhr.responseJSON && xhr.responseJSON.message)
+                        message = xhr.responseJSON.message;
+
+                    $("#errorBox")
+                        .removeClass("d-none")
+                        .text(message);
+                },
+                complete: function () {
+                    $("#loadingBox").addClass("d-none");
+                }
+            });
+        });
+    </script>
 }

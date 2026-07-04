@@ -1,11 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IdentityManagementSystem.UI.ViewModels
+namespace IdentityManagementSystem.UI.Areas.Security.Models
 {
     public class UserViewModel
     {
-
         public long UserId { get; set; }
         public string NationalId { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
@@ -48,12 +46,6 @@ namespace IdentityManagementSystem.UI.ViewModels
         public int RoleId { get; set; }
 
         public string? MobileNumber { get; set; }
-    }
-
-    public class RoleViewModel
-    {
-        public int roleId { get; set; }
-        public string roleName { get; set; } = string.Empty;
     }
 
     public class LoginViewModel

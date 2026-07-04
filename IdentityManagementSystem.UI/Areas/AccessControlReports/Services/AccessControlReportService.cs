@@ -1,4 +1,4 @@
-namespace IdentityManagementSystem.API.Services.AccessControlReports
+namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
 {
     using IdentityManagementSystem.UI.ViewModels;
     using System.Net.Http.Json;
@@ -18,11 +18,11 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
 
             var request = new
             {
-                StartDate = filter.StartDate,
-                EndDate = filter.EndDate,
-                StartTime = filter.StartTime,
-                EndTime = filter.EndTime,
-                EntranceTypes = filter.EntranceTypes
+                filter.StartDate,
+                filter.EndDate,
+                filter.StartTime,
+                filter.EndTime,
+                filter.EntranceTypes
             };
 
             var response = await client.PostAsJsonAsync(
@@ -47,10 +47,10 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
 
             var request = new
             {
-                StartDate = filter.StartDate,
-                EndDate = filter.EndDate,
-                StartTime = filter.StartTime,
-                EndTime = filter.EndTime
+                filter.StartDate,
+                filter.EndDate,
+                filter.StartTime,
+                filter.EndTime
             };
 
             var response = await client.PostAsJsonAsync(
@@ -70,11 +70,11 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
 
             var request = new
             {
-                StartDate = filter.StartDate,
-                EndDate = filter.EndDate,
-                StartTime = filter.StartTime,
-                EndTime = filter.EndTime,
-                TrafficTypes = filter.TrafficTypes
+                filter.StartDate,
+                filter.EndDate,
+                filter.StartTime,
+                filter.EndTime,
+                filter.TrafficTypes
             };
 
             var response = await client.PostAsJsonAsync(
@@ -94,14 +94,14 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
 
             var request = new
             {
-                StartDate = filter.StartDate,
-                EndDate = filter.EndDate,
-                StartTime = filter.StartTime,
-                EndTime = filter.EndTime,
-                P1 = filter.P1,
-                P2 = filter.P2,
-                P3 = filter.P3,
-                P4 = filter.P4
+                filter.StartDate,
+                filter.EndDate,
+                filter.StartTime,
+                filter.EndTime,
+                filter.P1,
+                filter.P2,
+                filter.P3,
+                filter.P4
             };
 
             var response = await client.PostAsJsonAsync(
@@ -121,11 +121,11 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
 
             var request = new
             {
-                StartDate = filter.StartDate,
-                EndDate = filter.EndDate,
-                StartTime = filter.StartTime,
-                EndTime = filter.EndTime,
-                NationalId = filter.NationalId
+                filter.StartDate,
+                filter.EndDate,
+                filter.StartTime,
+                filter.EndTime,
+                filter.NationalId
             };
 
             var response = await client.PostAsJsonAsync(

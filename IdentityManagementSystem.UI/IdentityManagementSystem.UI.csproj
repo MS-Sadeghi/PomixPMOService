@@ -19,7 +19,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Areas\Security\" />
 	  <Folder Include="wwwroot\assets\datatables\" />
 	</ItemGroup>
 

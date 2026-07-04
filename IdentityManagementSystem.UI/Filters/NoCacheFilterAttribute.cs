@@ -6,10 +6,27 @@ namespace IdentityManagementSystem.UI.Filters
     {
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            if (!context.HttpContext.Request.Path.StartsWithSegments("/Home/LoginPage"))
+            var area =
+                context.RouteData.Values["area"]?.ToString();
+
+            var controller =
+                context.RouteData.Values["controller"]?.ToString();
+
+            var action =
+                context.RouteData.Values["action"]?.ToString();
+
+            var isLoginPage =
+                area == "Security" &&
+                controller == "Account" &&
+                action == "Login";
+
+            if (!isLoginPage)
             {
-                context.HttpContext.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+                context.HttpContext.Response.Headers["Cache-Control"] =
+                    "no-cache, no-store, must-revalidate";
+
                 context.HttpContext.Response.Headers["Pragma"] = "no-cache";
+
                 context.HttpContext.Response.Headers["Expires"] = "0";
             }
         }

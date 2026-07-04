@@ -63,6 +63,8 @@
 
     <!-- JQUERY JS -->
     <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+	<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
 
     <!-- BOOTSTRAP JS -->
     <script src="~/assets/plugins/bootstrap/js/popper.min.js"></script>
@@ -92,8 +94,6 @@
     <!-- INPUT MASK JS-->
     <script src="~/assets/plugins/input-mask/jquery.mask.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/toastr.min.js"></script>
-	<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-	<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

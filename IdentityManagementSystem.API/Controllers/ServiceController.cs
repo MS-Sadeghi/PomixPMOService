@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using IdentityManagementSystem.API.Data;
+using IdentityManagementSystem.API.Models;
+using IdentityManagementSystem.Shared.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Retry;
-using IdentityManagementSystem.API.Data;
-using IdentityManagementSystem.API.Models;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -721,13 +722,6 @@ namespace IdentityManagementSystem.API.Controllers
         public bool IsRead { get; set; }
         public bool ExistDoc { get; set; } // اضافه شده برای هماهنگی با VerifyDocResponse
         public string? Message { get; set; }
-    }
-    public class CombinedRequestViewModel
-    {
-        public string NationalId { get; set; } = string.Empty;
-        public string MobileNumber { get; set; } = string.Empty;
-        public string DocumentNumber { get; set; } = string.Empty;
-        public string VerificationCode { get; set; } = string.Empty;
     }
     public class InternalShahkarResponse
     {

@@ -1,19 +1,16 @@
 ﻿using DNTCaptcha.Core;
-using IdentityManagementSystem.API.Services.AccessControlReports;
+using IdentityManagementSystem.UI.Areas.AccessControlReports.Services;
 using IdentityManagementSystem.UI.Filters;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ================= MVC =================
-builder.Services.AddControllersWithViews();
-
 // ================= Cookie Auth =================
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Home/LoginPage";
+        options.LoginPath = "/Security/Account/Login";
         options.AccessDeniedPath = "/Error/AccessDenied";
         options.ReturnUrlParameter = "returnUrl";
 
@@ -132,7 +129,7 @@ app.Use(async (context, next) =>
     var path = context.Request.Path.Value?.ToLower() ?? "";
 
     // مسیرهای آزاد
-    if (path.StartsWith("/home/loginpage") ||
+    if (path.StartsWith("/security/account/login") ||
         path.StartsWith("/api") ||
         path.StartsWith("/swagger") ||
         path.Contains("captcha") ||
@@ -152,7 +149,7 @@ app.Use(async (context, next) =>
         var accept = context.Request.Headers["Accept"].ToString().ToLower();
         if (accept.Contains("text/html"))
         {
-            context.Response.Redirect("/Home/LoginPage?returnUrl=" + context.Request.Path);
+            context.Response.Redirect("/Security/Account/Login?returnUrl=" + context.Request.Path);
             return;
         }
 
@@ -167,6 +164,11 @@ app.Use(async (context, next) =>
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=LoginPage}/{id?}");
+
+app.MapAreaControllerRoute(
+    name: "security",
+    areaName: "Security",
+    pattern: "Security/{controller=Account}/{action=Login}/{id?}");
 
 app.MapAreaControllerRoute(
     name: "judiciary-inquiry-area",

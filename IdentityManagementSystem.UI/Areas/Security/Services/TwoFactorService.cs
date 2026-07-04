@@ -1,4 +1,4 @@
-﻿namespace IdentityManagementSystem.Service
+﻿namespace IdentityManagementSystem.UI.Areas.Security.Services
 {
     // Services/TwoFactorService.cs
     public static class TwoFactorService

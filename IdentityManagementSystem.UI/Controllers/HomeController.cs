@@ -32,13 +32,18 @@ namespace IdentityManagementSystem.UI.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginPage(LoginViewModel model)
         {
-            if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
-            {
-                ModelState.AddModelError("", "کد امنیتی اشتباه است.");
+			if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
+			{
+				ModelState.AddModelError(
+				"",
+				"کد امنیتی اشتباه است. لطفاً کد جدید را وارد کنید."
+				);
+
                 return View(model);
             }
 
-            if (!ModelState.IsValid)
+
+			if (!ModelState.IsValid)
             {
                 ViewBag.ErrorMessage = "لطفاً همه فیلدها را وارد کنید.";
                 return View(model);

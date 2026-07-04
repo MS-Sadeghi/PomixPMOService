@@ -101,11 +101,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
+builder.Services.AddCors();
 app.UseCors(policy =>
 {
     policy.AllowAnyOrigin()
@@ -123,7 +124,6 @@ if (app.Environment.IsDevelopment())
 }
 
 // ================= FIXED AUTH MIDDLEWARE =================
-// ================= FIXED AUTH MIDDLEWARE =================
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value?.ToLower() ?? "";
@@ -138,6 +138,8 @@ app.Use(async (context, next) =>
         path.StartsWith("/lib") ||
         path.StartsWith("/assets"))
     {
+        Console.WriteLine(context.Request.Path);
+
         await next();
         return;
     }
@@ -146,15 +148,20 @@ app.Use(async (context, next) =>
 
     if (string.IsNullOrEmpty(token))
     {
-        var accept = context.Request.Headers["Accept"].ToString().ToLower();
-        if (accept.Contains("text/html"))
+        // جلوگیری از loop
+        if (!path.StartsWith("/security/account/login"))
         {
-            context.Response.Redirect("/Security/Account/Login?returnUrl=" + context.Request.Path);
+            var accept = context.Request.Headers["Accept"].ToString().ToLower();
+
+            if (accept.Contains("text/html"))
+            {
+                context.Response.Redirect("/Security/Account/Login");
+                return;
+            }
+
+            context.Response.StatusCode = 401;
             return;
         }
-
-        context.Response.StatusCode = 401;
-        return;
     }
 
     await next();

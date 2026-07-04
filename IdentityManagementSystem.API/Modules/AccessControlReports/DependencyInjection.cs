@@ -1,5 +1,9 @@
-﻿using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
+using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
 using IdentityManagementSystem.API.Modules.AccessControlReports.GetData;
+using IdentityManagementSystem.API.Modules.AccessControlReports.GetSum;
+using IdentityManagementSystem.API.Modules.AccessControlReports.TrafficByNationalId;
+using IdentityManagementSystem.API.Modules.AccessControlReports.TrafficByPlates;
+using IdentityManagementSystem.API.Modules.AccessControlReports.TrafficByType;
 using Microsoft.Extensions.Options;
 
 namespace IdentityManagementSystem.API.Modules.AccessControlReports;
@@ -19,12 +23,10 @@ public static class DependencyInjection
         });
 
         services.AddScoped<GetDataHandler>();
-
-        // در آینده
-        // services.AddScoped<GetSumHandler>();
-        // services.AddScoped<TrafficByTypeHandler>();
-        // services.AddScoped<TrafficByPlatesHandler>();
-        // services.AddScoped<TrafficByNationalIdHandler>();
+        services.AddScoped<GetSumHandler>();
+        services.AddScoped<TrafficByTypeHandler>();
+        services.AddScoped<TrafficByPlatesHandler>();
+        services.AddScoped<TrafficByNationalIdHandler>();
 
         return services;
     }

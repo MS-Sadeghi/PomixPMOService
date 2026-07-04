@@ -46,17 +46,6 @@
         transition: background 0.3s ease;
     }
 
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-control {
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        height: 45px;
-        padding: 10px;
-    }
-
     .captchaInput {
         height: 45px !important;
         border-radius: 8px !important;
@@ -65,21 +54,6 @@
         width: 100% !important;
         text-align: right !important;
         direction: rtl !important;
-    }
-
-    .captcha-container img {
-        margin-left: 10px !important;
-        margin-right: 0 !important;
-    }
-
-    .captcha-refresh-btn {
-        margin-left: 10px !important;
-        margin-right: 0 !important;
-    }
-
-    .captcha-group {
-        direction: rtl !important;
-        text-align: right !important;
     }
 
     .form-group {
@@ -123,7 +97,7 @@
 <div class="login-container">
     <div class="row w-100" style="max-width: 400px;">
         <div class="login-right">
-            <h3 class="text-center pb-3">سامانه استعلام سند</h3>
+            <h3 class="text-center pb-3">خوش آمدید</h3>
             <form id="loginForm"  method="post" autocomplete="off" action="/Home/LoginPage">
                 @Html.AntiForgeryToken()
 
@@ -159,7 +133,7 @@
                 </div>
 
                 <!-- Captcha Section -->
-                @* <div id="securitySection" class="form-group text-start mt-2" style="direction: rtl;"> *@
+                <div id="securitySection" class="form-group text-start mt-2" style="direction: rtl;">
                     <dnt-captcha asp-captcha-generator-max="9999"
                                  asp-captcha-generator-min="1000"
                                  asp-captcha-generator-language="English"
@@ -176,8 +150,8 @@
                                  asp-text-box-template="<div class='form-group'>{0}</div>"
                                  asp-validation-message-class="text-danger"
                                  asp-show-refresh-button="true"
-                                 asp-refresh-button-class="btn btn-light bx bx-sync" />
-                @* </div> *@
+                                 asp-refresh-button-class="btn fe fe-refresh-cw" />
+                </div> 
 
                 <!-- Submit Button -->
                 <div class="form-group mt-3">
@@ -191,6 +165,23 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+                $('#loginForm').on('submit', function () {
+
+            setTimeout(function () {
+
+                $('.field-validation-error').each(function () {
+
+                    const text = $(this).text().trim();
+
+                    if (text.length > 0) {
+                        toastr.error(text);
+                    }
+
+                });
+
+            },100);
+
+        });
         @if (TempData["SuccessLogoutMessage"] != null)
         {
                     @:toastr.options = {

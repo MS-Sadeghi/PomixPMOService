@@ -170,7 +170,7 @@ app.Use(async (context, next) =>
 // ================= Routing =================
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=LoginPage}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapAreaControllerRoute(
     name: "security",

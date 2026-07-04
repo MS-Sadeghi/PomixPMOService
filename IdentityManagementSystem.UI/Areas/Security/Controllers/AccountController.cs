@@ -118,13 +118,13 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 }
 
                 TempData["SuccessLogoutMessage"] = "شما با موفقیت از سیستم خارج شدید.";
-                return RedirectToAction("LoginPage");
+                return RedirectToAction("Login");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Logout error: {ex.Message}");
                 ViewBag.ErrorMessage = "خطا در خروج از سیستم: " + ex.Message;
-                return RedirectToAction("LoginPage");
+                return RedirectToAction("Login");
             }
         }
         #endregion
@@ -139,7 +139,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 if (string.IsNullOrEmpty(token))
                 {
                     TempData["ErrorMessage"] = "لطفاً ابتدا وارد سیستم شوید.";
-                    return RedirectToAction("LoginPage");
+                    return RedirectToAction("Login");
                 }
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -477,7 +477,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
             if (userInfo.UserId == 0)
             {
                 ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
-                return RedirectToAction("LoginPage");
+                return RedirectToAction("Login");
             }
 
             return View(userInfo);

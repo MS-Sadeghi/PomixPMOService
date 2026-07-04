@@ -207,7 +207,7 @@ namespace IdentityManagementSystem.UI.Controllers
                 if (string.IsNullOrEmpty(token))
                 {
                     ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
-                    return RedirectToAction("LoginPage", "Home", new { area = "" });
+                    return RedirectToAction("Login", "Account", new { area = "" });
                 }
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 

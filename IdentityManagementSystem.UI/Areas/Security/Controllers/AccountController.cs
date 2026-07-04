@@ -33,6 +33,9 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
+            TempData["Debug"] = "POST Login Called";
+            Console.WriteLine("POST Login Called");
+
             if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
             {
                 ModelState.AddModelError("", "کد امنیتی اشتباه است.");
@@ -41,7 +44,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
 
             if (!ModelState.IsValid)
             {
-                ViewBag.ErrorMessage = "لطفاً همه فیلدها را وارد کنید.";
+                ModelState.AddModelError("", "لطفاً همه فیلدها را وارد کنید.");
                 return View(model);
             }
 
@@ -72,20 +75,20 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                     }
                     else
                     {
-                        ViewBag.ErrorMessage = "خطا: توکن دریافت نشد.";
+                        ModelState.AddModelError("", "خطا: توکن دریافت نشد.");
                         return View(model);
                     }
                 }
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    ViewBag.ErrorMessage = "خطا در ورود: " + error;
+                    ModelState.AddModelError("", "خطا در ورود: " + error);
                     return View(model);
                 }
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessage = "خطا در ارتباط با سرور: " + ex.Message;
+                ModelState.AddModelError("", "خطا در ارتباط با سرور: " + ex.Message);
                 return View(model);
             }
         }
@@ -113,7 +116,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                     var response = await _client.PostAsJsonAsync("auth/refresh/revoke", new { RefreshToken = refreshToken });
                     if (!response.IsSuccessStatusCode)
                     {
-                        Console.WriteLine($"Failed to revoke refresh token: {await response.Content.ReadAsStringAsync()}");
+                        //Console.WriteLine($"Failed to revoke refresh token: {await response.Content.ReadAsStringAsync()}");
                     }
                 }
 
@@ -122,7 +125,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Logout error: {ex.Message}");
+                //Console.WriteLine($"Logout error: {ex.Message}");
                 ViewBag.ErrorMessage = "خطا در خروج از سیستم: " + ex.Message;
                 return RedirectToAction("Login");
             }

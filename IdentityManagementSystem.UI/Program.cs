@@ -138,7 +138,7 @@ app.Use(async (context, next) =>
         path.StartsWith("/lib") ||
         path.StartsWith("/assets"))
     {
-        Console.WriteLine(context.Request.Path);
+        //Console.WriteLine(context.Request.Path);
 
         await next();
         return;

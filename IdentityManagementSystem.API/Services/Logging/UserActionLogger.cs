@@ -1,9 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using IdentityManagementSystem.API.Data;
+﻿using IdentityManagementSystem.API.Data;
 using IdentityManagementSystem.API.Models;
-using System;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace IdentityManagementSystem.API.Services.Logging
 {
@@ -42,7 +39,7 @@ namespace IdentityManagementSystem.API.Services.Logging
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Error writing log: {ex.Message}");
+                //Console.WriteLine($"⚠️ Error writing log: {ex.Message}");
             }
         }
 

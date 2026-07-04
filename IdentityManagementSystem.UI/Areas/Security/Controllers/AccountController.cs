@@ -33,63 +33,52 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            TempData["Debug"] = "POST Login Called";
-            Console.WriteLine("POST Login Called");
-
             if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
             {
-                ModelState.AddModelError("", "کد امنیتی اشتباه است.");
-                return View(model);
+                return Json(new { success = false, message = "کد امنیتی اشتباه است." });
             }
 
             if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "لطفاً همه فیلدها را وارد کنید.");
-                return View(model);
+                return Json(new { success = false, message = "لطفاً همه فیلدها را وارد کنید." });
             }
 
             try
             {
                 var response = await _client.PostAsJsonAsync("auth/login", model);
-                if (response.IsSuccessStatusCode)
-                {
-                    var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
 
-                    if (loginResponse?.Tokens?.AccessToken != null)
-                    {
-                        HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
-                        HttpContext.Session.SetString("RefreshToken", loginResponse.Tokens.RefreshToken ?? "");
-
-                        // ذخیره اطلاعات نقش کاربر در Session - دسترسی مستقیم به properties
-                        var roleName = loginResponse.Role?.RoleName ?? "";
-                        var roleId = loginResponse.Role?.RoleId.ToString() ?? "0";
-
-                        HttpContext.Session.SetString("UserRole", roleName);
-                        HttpContext.Session.SetString("UserRoleId", roleId);
-                        HttpContext.Session.SetString("UserName", loginResponse.Name ?? "");
-                        HttpContext.Session.SetString("UserLastName", loginResponse.LastName ?? "");
-                        HttpContext.Session.SetString("UserId", loginResponse.UserId.ToString());
-                        HttpContext.Session.SetString("Username", loginResponse.Username ?? "");
-
-                        return RedirectToAction("Index", "Report", new { area = "AccessControlReports" });
-                    }
-                    else
-                    {
-                        ModelState.AddModelError("", "خطا: توکن دریافت نشد.");
-                        return View(model);
-                    }
-                }
-                else
+                if (!response.IsSuccessStatusCode)
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    ModelState.AddModelError("", "خطا در ورود: " + error);
-                    return View(model);
+                    return Json(new { success = false, message = error });
                 }
+
+                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+
+                if (loginResponse?.Tokens?.AccessToken == null)
+                {
+                    return Json(new { success = false, message = "توکن دریافت نشد." });
+                }
+
+                HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
+                HttpContext.Session.SetString("RefreshToken", loginResponse.Tokens.RefreshToken ?? "");
+
+                HttpContext.Session.SetString("UserRole", loginResponse.Role?.RoleName ?? "");
+                HttpContext.Session.SetString("UserRoleId", loginResponse.Role?.RoleId.ToString() ?? "0");
+                HttpContext.Session.SetString("UserName", loginResponse.Name ?? "");
+                HttpContext.Session.SetString("UserLastName", loginResponse.LastName ?? "");
+                HttpContext.Session.SetString("UserId", loginResponse.UserId.ToString());
+                HttpContext.Session.SetString("Username", loginResponse.Username ?? "");
+
+                return Json(new
+                {
+                    success = true,
+                    redirectUrl = Url.Action("Index", "Report", new { area = "AccessControlReports" })
+                });
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", "خطا در ارتباط با سرور: " + ex.Message);
-                return View(model);
+                return Json(new { success = false, message = ex.Message });
             }
         }
         #endregion

@@ -178,7 +178,7 @@
         e.preventDefault();
 
         $.ajax({
-            url: '/Account/Login?area=Security',
+            url:  '/Security/Account/Login',
             type: 'POST',
             data: $(this).serialize(),
             success: function (res) {
@@ -188,7 +188,14 @@
                     toastr.error(res.message);
                 }
             },
-            error: function (xhr) {
+            error: function (xhr, status, error) {
+
+                console.log(xhr);
+                console.log(status);
+                console.log(error);
+                console.log(xhr.responseText);
+
+
                 toastr.error("خطای سرور: " + xhr.status);
             }
         });

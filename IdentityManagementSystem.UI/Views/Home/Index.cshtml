@@ -1,6 +1,113 @@
 ﻿@{
     ViewData["Title"] = "داشبورد";
+    Layout = "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml";
 }
 <h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="col-12 dashboard-greetings">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">خدمات رفاهی</h4>
+        </div>
+        <div class="card-content">
+            <div class="card-body">
+                <section class="kb-content">
+                    <div class="row mx-1 mx-md-2 mx-lg-5">
+                        <div class="col-12">
+                            <div class="row match-height">
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                   <a  asp-area="AccessControlReports"
+                                       asp-controller="Report"
+                                       asp-action="Dashboard">
+
+                                        <div class="card kb-hover">
+                                            <div class="card-content">
+                                                <div class="card-body text-center p-1">
+                                                    <div class=" mb-1">
+                                                        <img width="80px" src="/app-assets/images/logo/insurance.png">
+                                                    </div>
+                                                    <h6 class="text-bold-600"> گزارش های سیستم تردد</h6>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <a   
+                                        asp-area="JudiciaryInquiry"
+                                        asp-controller="Cartable"
+                                        asp-action="Index"
+                                        >
+
+                                        <div class="card kb-hover">
+                                            <div class="card-content">
+                                                <div class="card-body text-center p-1">
+
+                                                    <div class=" mb-1">
+                                                        <img width="80px" src="/app-assets/images/logo/loan.png">
+                                                    </div>
+                                                    <h6 class="text-bold-600">احراز سند قوه قضائیه</h6>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <a href="/Home/SrvInformationGuesthouses">
+                                        <div class="card kb-hover">
+                                            <div class="card-content">
+                                                <div class="card-body text-center p-1">
+
+                                                    <div class=" mb-1">
+                                                        <img width="80px" src="/app-assets/images/logo/hotel.png">
+                                                    </div>
+                                                    <h6 class="text-bold-600">اماکن اقامتی</h6>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <a href="/Home/SrvContractParties">
+                                        <div class="card kb-hover">
+                                            <div class="card-content">
+                                                <div class="card-body text-center p-1">
+
+                                                    <div class=" mb-1">
+                                                        <img width="80px" src="/app-assets/images/logo/contract.png">
+                                                    </div>
+                                                    <h6 class="text-bold-600">مراکز طرف قرارداد</h6>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <a href="/Home/SrvFinancialAids">
+                                        <div class="card kb-hover">
+                                            <div class="card-content">
+                                                <div class="card-body text-center p-1">
+
+                                                    <div class=" mb-1">
+                                                        <img width="80px" src="/app-assets/images/logo/subsidy.png">
+                                                    </div>
+                                                    <h6 class="text-bold-600">کمک هزینه های رفاهی</h6>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>

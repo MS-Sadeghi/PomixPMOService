@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IdentityManagementSystem.UI.ViewModels
+namespace IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel
 {
     #region Common Filter
 

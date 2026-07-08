@@ -1,3 +1,4 @@
+using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel;
 using IdentityManagementSystem.UI.ViewModels;
 
 namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services

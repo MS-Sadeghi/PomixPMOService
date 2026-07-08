@@ -1,5 +1,5 @@
 using IdentityManagementSystem.UI.Areas.AccessControlReports.Services;
-using IdentityManagementSystem.UI.ViewModels;
+using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityManagementSystem.UI.Controllers

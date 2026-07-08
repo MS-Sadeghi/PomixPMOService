@@ -1,113 +1,144 @@
 ﻿@{
     ViewData["Title"] = "داشبورد";
-    Layout = "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<h1>@ViewData["Title"]</h1>
 
-<div class="col-12 dashboard-greetings">
-    <div class="card">
-        <div class="card-header">
-            <h4 class="card-title">خدمات رفاهی</h4>
-        </div>
-        <div class="card-content">
+<style>
+    .dashboard-service-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+        .dashboard-service-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14) !important;
+        }
+
+    .dashboard-card-image {
+        height: 155px;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .dashboard-service-card .feature {
+        width: 48px;
+        height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+        .dashboard-service-card .feature svg {
+            width: 23px;
+            height: 23px;
+        }
+
+    .dashboard-btn-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    [dir="rtl"] .dashboard-service-card .me-3 {
+        margin-left: 1rem !important;
+        margin-right: 0 !important;
+    }
+
+    [dir="rtl"] .dashboard-service-card .ms-2 {
+        margin-right: 0.5rem !important;
+        margin-left: 0 !important;
+    }
+</style>
+
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">@ViewData["Title"]</h1>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-area="AccessControlReports"
+                   asp-controller="Report"
+                   asp-action="Dashboard">
+                    گزارش تردد
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">داشبورد</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row row-sm">
+    <div class="col-xl-4 col-md-6 col-sm-12">
+        <div class="card overflow-hidden dashboard-service-card h-100">
+            <img src="~/assets/images/media/8.jpg"
+                 class="card-img-top dashboard-card-image"
+                 alt="گزارش‌های سیستم تردد">
             <div class="card-body">
-                <section class="kb-content">
-                    <div class="row mx-1 mx-md-2 mx-lg-5">
-                        <div class="col-12">
-                            <div class="row match-height">
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                   <a  asp-area="AccessControlReports"
-                                       asp-controller="Report"
-                                       asp-action="Dashboard">
-
-                                        <div class="card kb-hover">
-                                            <div class="card-content">
-                                                <div class="card-body text-center p-1">
-                                                    <div class=" mb-1">
-                                                        <img width="80px" src="/app-assets/images/logo/insurance.png">
-                                                    </div>
-                                                    <h6 class="text-bold-600"> گزارش های سیستم تردد</h6>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <a   
-                                        asp-area="JudiciaryInquiry"
-                                        asp-controller="Cartable"
-                                        asp-action="Index"
-                                        >
-
-                                        <div class="card kb-hover">
-                                            <div class="card-content">
-                                                <div class="card-body text-center p-1">
-
-                                                    <div class=" mb-1">
-                                                        <img width="80px" src="/app-assets/images/logo/loan.png">
-                                                    </div>
-                                                    <h6 class="text-bold-600">احراز سند قوه قضائیه</h6>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <a href="/Home/SrvInformationGuesthouses">
-                                        <div class="card kb-hover">
-                                            <div class="card-content">
-                                                <div class="card-body text-center p-1">
-
-                                                    <div class=" mb-1">
-                                                        <img width="80px" src="/app-assets/images/logo/hotel.png">
-                                                    </div>
-                                                    <h6 class="text-bold-600">اماکن اقامتی</h6>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <a href="/Home/SrvContractParties">
-                                        <div class="card kb-hover">
-                                            <div class="card-content">
-                                                <div class="card-body text-center p-1">
-
-                                                    <div class=" mb-1">
-                                                        <img width="80px" src="/app-assets/images/logo/contract.png">
-                                                    </div>
-                                                    <h6 class="text-bold-600">مراکز طرف قرارداد</h6>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <a href="/Home/SrvFinancialAids">
-                                        <div class="card kb-hover">
-                                            <div class="card-content">
-                                                <div class="card-body text-center p-1">
-
-                                                    <div class=" mb-1">
-                                                        <img width="80px" src="/app-assets/images/logo/subsidy.png">
-                                                    </div>
-                                                    <h6 class="text-bold-600">کمک هزینه های رفاهی</h6>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-
-                            </div>
-                        </div>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="feature bg-primary-transparent rounded-3 me-3">
+                        <i data-feather="clock" class="text-primary"></i>
                     </div>
-                </section>
+
+                    <div>
+                        <h5 class="card-title mb-1">گزارش‌های سیستم تردد</h5>
+                        <span class="text-muted fs-12">سامانه کنترل ورود و خروج</span>
+                    </div>
+                </div>
+
+                <p class="card-text text-muted">
+                    گزارش‌های ورود، خروج، تردد کارکنان و اطلاعات ثبت‌شده را مشاهده و دریافت کنید.
+                </p>
+
+                <a asp-area="AccessControlReports"
+                   asp-controller="Report"
+                   asp-action="GetDataReport"
+                   class="btn btn-primary d-inline-flex align-items-center">
+                    ورود به گزارش‌ها
+                    <i data-feather="arrow-left" class="ms-2 dashboard-btn-icon"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-6 col-sm-12">
+        <div class="card overflow-hidden dashboard-service-card h-100">
+            <img src="~/assets/images/media/9.jpg"
+                 class="card-img-top dashboard-card-image"
+                 alt="احراز سند قوه قضائیه">
+
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="feature bg-success-transparent rounded-3 me-3">
+                        <i data-feather="shield" class="text-success"></i>
+                    </div>
+
+                    <div>
+                        <h5 class="card-title mb-1">احراز سند قوه قضائیه</h5>
+                        <span class="text-muted fs-12">پیگیری و بررسی استعلام اسناد</span>
+                    </div>
+                </div>
+
+                <p class="card-text text-muted">
+                    درخواست‌های احراز سند را بررسی کنید و وضعیت استعلام‌های ثبت‌شده را پیگیری نمایید.
+                </p>
+
+                <a asp-area="JudiciaryInquiry"
+                   asp-controller="Cartable"
+                   asp-action="Index"
+                   class="btn btn-success d-inline-flex align-items-center">
+                    ورود به سامانه
+                    <i data-feather="arrow-left" class="ms-2 dashboard-btn-icon"></i>
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+                           document.addEventListener("DOMContentLoaded", function () {
+                           if (typeof feather !== "undefined") {
+                           feather.replace();
+                           }
+                           }); </script>
+}
+

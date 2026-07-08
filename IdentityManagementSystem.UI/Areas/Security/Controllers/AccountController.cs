@@ -1,15 +1,21 @@
 ﻿using DNTCaptcha.Core;
 using IdentityManagementSystem.UI.Areas.Security.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Net.Http.Headers;
 
-namespace IdentityManagementSystem.UI.Controllers
+namespace IdentityManagementSystem.UI.Areas.Security.Controllers
 {
-    public class HomeController : Controller
+    [Area("Security")]
+    public class AccountController : Controller
     {
         private readonly IDNTCaptchaValidatorService _captchaValidatorService;
         private readonly HttpClient _client;
 
-        public HomeController(
+        public AccountController(
             IHttpClientFactory httpClientFactory,
             IDNTCaptchaValidatorService captchaValidatorService)
         {
@@ -17,74 +23,62 @@ namespace IdentityManagementSystem.UI.Controllers
             _captchaValidatorService = captchaValidatorService ?? throw new ArgumentNullException(nameof(captchaValidatorService));
         }
 
+        #region Login
         [HttpGet]
-        public IActionResult Index()
+        public IActionResult Login()
         {
             return View(new LoginViewModel());
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginPage(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-			if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
-			{
-				ModelState.AddModelError(
-				"",
-				"کد امنیتی اشتباه است. لطفاً کد جدید را وارد کنید."
-				);
-
-                return View(model);
+            if (!_captchaValidatorService.HasRequestValidCaptchaEntry())
+            {
+                return Json(new { success = false, message = "کد امنیتی اشتباه است." });
             }
 
-
-			if (!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                ViewBag.ErrorMessage = "لطفاً همه فیلدها را وارد کنید.";
-                return View(model);
+                return Json(new { success = false, message = "لطفاً همه فیلدها را وارد کنید." });
             }
 
             try
             {
                 var response = await _client.PostAsJsonAsync("auth/login", model);
-                if (response.IsSuccessStatusCode)
-                {
-                    var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
 
-                    if (loginResponse?.Tokens?.AccessToken != null)
-                    {
-                        HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
-                        HttpContext.Session.SetString("RefreshToken", loginResponse.Tokens.RefreshToken ?? "");
-
-                        // ذخیره اطلاعات نقش کاربر در Session - دسترسی مستقیم به properties
-                        var roleName = loginResponse.Role?.RoleName ?? "";
-                        var roleId = loginResponse.Role?.RoleId.ToString() ?? "0";
-
-                        HttpContext.Session.SetString("UserRole", roleName);
-                        HttpContext.Session.SetString("UserRoleId", roleId);
-                        HttpContext.Session.SetString("UserName", loginResponse.Name ?? "");
-                        HttpContext.Session.SetString("UserLastName", loginResponse.LastName ?? "");
-                        HttpContext.Session.SetString("UserId", loginResponse.UserId.ToString());
-                        HttpContext.Session.SetString("Username", loginResponse.Username ?? "");
-
-                        return RedirectToAction("Dashboard", "Report", new { area = "AccessControlReports" });
-                    }
-                    else
-                    {
-                        ViewBag.ErrorMessage = "خطا: توکن دریافت نشد.";
-                        return View(model);
-                    }
-                }
-                else
+                if (!response.IsSuccessStatusCode)
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    ViewBag.ErrorMessage = "خطا در ورود: " + error;
-                    return View(model);
+                    return Json(new { success = false, message = error });
                 }
+
+                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+
+                if (loginResponse?.Tokens?.AccessToken == null)
+                {
+                    return Json(new { success = false, message = "توکن دریافت نشد." });
+                }
+
+                HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
+                HttpContext.Session.SetString("RefreshToken", loginResponse.Tokens.RefreshToken ?? "");
+
+                HttpContext.Session.SetString("UserRole", loginResponse.Role?.RoleName ?? "");
+                HttpContext.Session.SetString("UserRoleId", loginResponse.Role?.RoleId.ToString() ?? "0");
+                HttpContext.Session.SetString("UserName", loginResponse.Name ?? "");
+                HttpContext.Session.SetString("UserLastName", loginResponse.LastName ?? "");
+                HttpContext.Session.SetString("UserId", loginResponse.UserId.ToString());
+                HttpContext.Session.SetString("Username", loginResponse.Username ?? "");
+
+                return Json(new
+                {
+                    success = true,
+                    redirectUrl = Url.Action("Index", "Report", new { area = "AccessControlReports" })
+                });
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessage = "خطا در ارتباط با سرور: " + ex.Message;
-                return View(model);
+                return Json(new { success = false, message = ex.Message });
             }
         }
         #endregion
@@ -111,18 +105,18 @@ namespace IdentityManagementSystem.UI.Controllers
                     var response = await _client.PostAsJsonAsync("auth/refresh/revoke", new { RefreshToken = refreshToken });
                     if (!response.IsSuccessStatusCode)
                     {
-                        Console.WriteLine($"Failed to revoke refresh token: {await response.Content.ReadAsStringAsync()}");
+                        //Console.WriteLine($"Failed to revoke refresh token: {await response.Content.ReadAsStringAsync()}");
                     }
                 }
 
                 TempData["SuccessLogoutMessage"] = "شما با موفقیت از سیستم خارج شدید.";
-                return RedirectToAction("LoginPage");
+                return RedirectToAction("Login");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Logout error: {ex.Message}");
+                //Console.WriteLine($"Logout error: {ex.Message}");
                 ViewBag.ErrorMessage = "خطا در خروج از سیستم: " + ex.Message;
-                return RedirectToAction("LoginPage");
+                return RedirectToAction("Login");
             }
         }
         #endregion
@@ -137,7 +131,7 @@ namespace IdentityManagementSystem.UI.Controllers
                 if (string.IsNullOrEmpty(token))
                 {
                     TempData["ErrorMessage"] = "لطفاً ابتدا وارد سیستم شوید.";
-                    return RedirectToAction("LoginPage");
+                    return RedirectToAction("Login");
                 }
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -475,7 +469,7 @@ namespace IdentityManagementSystem.UI.Controllers
             if (userInfo.UserId == 0)
             {
                 ViewBag.ErrorMessage = "لطفاً ابتدا وارد سیستم شوید.";
-                return RedirectToAction("LoginPage");
+                return RedirectToAction("Login");
             }
 
             return View(userInfo);
@@ -483,71 +477,4 @@ namespace IdentityManagementSystem.UI.Controllers
 
         #endregion
     }
-
-    #region ViewModels
-    public class ChangePasswordViewModel
-    {
-        public string? CurrentPassword { get; set; }
-        public string NewPassword { get; set; }
-        public string ConfirmNewPassword { get; set; }
-    }
-
-    public class UserProfileViewModel
-    {
-        public string Name { get; set; }
-        public string LastName { get; set; }
-        public string Role { get; set; }
-    }
-
-    public class RoleInfo
-    {
-        public int RoleId { get; set; }
-        public string RoleName { get; set; }
-    }
-
-    public class LoginResponse
-    {
-        public long UserId { get; set; }
-        public string Username { get; set; }
-        public string Name { get; set; }
-        public string LastName { get; set; }
-        public RoleInfo Role { get; set; }
-        public TokenInfo Tokens { get; set; }
-    }
-
-    public class UserInfo
-    {
-        public long UserId { get; set; }
-        public string Username { get; set; }
-        public string Name { get; set; }
-        public string LastName { get; set; }
-        public string Role { get; set; }
-    }
-
-    public class RoleViewModel
-    {
-        public int RoleId { get; set; }
-        public string RoleName { get; set; }
-    }
-
-    public class TokenInfo
-    {
-        public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
-    }
-
-    public class UpdateUserViewModel
-    {
-        public long UserId { get; set; }
-        public string Name { get; set; }
-        public string LastName { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string ConfirmPassword { get; set; }
-        public string NationalId { get; set; }
-        public string MobileNumber { get; set; }
-        public int RoleId { get; set; }
-        public bool IsActive { get; set; }
-    }
-    #endregion
 }

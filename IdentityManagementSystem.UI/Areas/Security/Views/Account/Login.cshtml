@@ -1,4 +1,5 @@
-﻿@model IdentityManagementSystem.UI.ViewModels.LoginViewModel
+﻿@using IdentityManagementSystem.UI.Areas.Security.Models
+@model LoginViewModel
 @using DNTCaptcha.Core
 @{
     ViewData["Title"] = "ورود به سامانه";
@@ -98,7 +99,15 @@
     <div class="row w-100" style="max-width: 400px;">
         <div class="login-right">
             <h3 class="text-center pb-3">خوش آمدید</h3>
-            <form id="loginForm"  method="post" autocomplete="off" action="/Home/LoginPage">
+
+            @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+            {
+                <div class="alert alert-danger">
+                    @ViewBag.ErrorMessage
+                </div>
+            }
+
+            <form id="loginForm"  method="post" autocomplete="off" asp-area="Security" asp-controller="Account" asp-action="Login">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly"
                      class="text-danger validation-summary-errors d-none">
@@ -168,23 +177,32 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-                $('#loginForm').on('submit', function () {
+      $('#loginForm').submit(function (e) {
+        e.preventDefault();
 
-            setTimeout(function () {
+        $.ajax({
+            url:  '/Security/Account/Login',
+            type: 'POST',
+            data: $(this).serialize(),
+            success: function (res) {
+                if (res.success) {
+                    window.location.href = res.redirectUrl;
+                } else {
+                    toastr.error(res.message);
+                }
+            },
+            error: function (xhr, status, error) {
 
-                $('.field-validation-error').each(function () {
+                console.log(xhr);
+                console.log(status);
+                console.log(error);
+                console.log(xhr.responseText);
 
-                    const text = $(this).text().trim();
 
-                    if (text.length > 0) {
-                        toastr.error(text);
-                    }
-
-                });
-
-            },100);
-
+                toastr.error("خطای سرور: " + xhr.status);
+            }
         });
+    });
         @if (TempData["SuccessLogoutMessage"] != null)
         {
                     @:toastr.options = {

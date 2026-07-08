@@ -1,6 +1,6 @@
 using IdentityManagementSystem.UI.ViewModels;
 
-namespace IdentityManagementSystem.API.Services.AccessControlReports
+namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
 {
     public interface IAccessControlReportService
     {

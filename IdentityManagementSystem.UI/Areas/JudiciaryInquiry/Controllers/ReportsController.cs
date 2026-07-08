@@ -28,7 +28,7 @@ namespace IdentityManagementSystem.UI.Controllers
             if (string.IsNullOrEmpty(token))
             {
                 TempData["Error"] = "لطفاً ابتدا وارد شوید.";
-                return RedirectToAction("LoginPage", "Home", new { area = "" });
+                return RedirectToAction("Login", "Account", new { area = "" });
             }
 
             try

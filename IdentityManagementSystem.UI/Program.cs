@@ -1,19 +1,16 @@
 ﻿using DNTCaptcha.Core;
-using IdentityManagementSystem.API.Services.AccessControlReports;
+using IdentityManagementSystem.UI.Areas.AccessControlReports.Services;
 using IdentityManagementSystem.UI.Filters;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ================= MVC =================
-builder.Services.AddControllersWithViews();
-
 // ================= Cookie Auth =================
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Home/LoginPage";
+        options.LoginPath = "/Security/Account/Login";
         options.AccessDeniedPath = "/Error/AccessDenied";
         options.ReturnUrlParameter = "returnUrl";
 
@@ -104,11 +101,12 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
+builder.Services.AddCors();
 app.UseCors(policy =>
 {
     policy.AllowAnyOrigin()
@@ -126,13 +124,12 @@ if (app.Environment.IsDevelopment())
 }
 
 // ================= FIXED AUTH MIDDLEWARE =================
-// ================= FIXED AUTH MIDDLEWARE =================
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value?.ToLower() ?? "";
 
     // مسیرهای آزاد
-    if (path.StartsWith("/home/loginpage") ||
+    if (path.StartsWith("/security/account/login") ||
         path.StartsWith("/api") ||
         path.StartsWith("/swagger") ||
         path.Contains("captcha") ||
@@ -141,6 +138,8 @@ app.Use(async (context, next) =>
         path.StartsWith("/lib") ||
         path.StartsWith("/assets"))
     {
+        //Console.WriteLine(context.Request.Path);
+
         await next();
         return;
     }
@@ -149,15 +148,20 @@ app.Use(async (context, next) =>
 
     if (string.IsNullOrEmpty(token))
     {
-        var accept = context.Request.Headers["Accept"].ToString().ToLower();
-        if (accept.Contains("text/html"))
+        // جلوگیری از loop
+        if (!path.StartsWith("/security/account/login"))
         {
-            context.Response.Redirect("/Home/LoginPage?returnUrl=" + context.Request.Path);
+            var accept = context.Request.Headers["Accept"].ToString().ToLower();
+
+            if (accept.Contains("text/html"))
+            {
+                context.Response.Redirect("/Security/Account/Login");
+                return;
+            }
+
+            context.Response.StatusCode = 401;
             return;
         }
-
-        context.Response.StatusCode = 401;
-        return;
     }
 
     await next();
@@ -166,7 +170,12 @@ app.Use(async (context, next) =>
 // ================= Routing =================
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=LoginPage}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapAreaControllerRoute(
+    name: "security",
+    areaName: "Security",
+    pattern: "Security/{controller=Account}/{action=Login}/{id?}");
 
 app.MapAreaControllerRoute(
     name: "judiciary-inquiry-area",

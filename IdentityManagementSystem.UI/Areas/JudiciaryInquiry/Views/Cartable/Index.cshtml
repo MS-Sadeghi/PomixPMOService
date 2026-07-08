@@ -1,9 +1,11 @@
-﻿@using IdentityManagementSystem.UI.Controllers
-@model IdentityManagementSystem.UI.Controllers.PaginatedCartableViewModel
+﻿@using IdentityManagementSystem.UI.Helper
+@using IdentityManagementSystem.UI.Areas.JudiciaryInquiry.Models
+@model PaginatedCartableViewModel
 @{
     ViewData["Title"] = "کارتابل";
     Layout = "~/Views/Shared/_Layout.cshtml";
-    var formModel = ViewBag.FormModel as IdentityManagementSystem.UI.Controllers.CartableFormViewModel ?? new IdentityManagementSystem.UI.Controllers.CartableFormViewModel();
+    var formModel = ViewBag.FormModel as 
+    CartableFormViewModel ?? new CartableFormViewModel();
     var verifyDocData = ViewBag.VerifyDocData as dynamic ?? null;
     var showDocumentTab = ViewBag.ShowDocumentTab as bool? ?? false;
     var documentError = ViewBag.DocumentError as string ?? null;

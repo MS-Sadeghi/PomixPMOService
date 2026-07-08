@@ -142,15 +142,39 @@ namespace IdentityManagementSystem.UI.Controllers
             return await ExecuteReportAsync(() => _service.TrafficByNationalIdAsync(filter));
         }
 
-        #endregion
+		#endregion
 
-        [HttpGet]
-        public IActionResult Index()
+		#region Dashboard
+		[HttpGet]
+        public IActionResult Dashboard()
         {
             return View();
         }
+		[HttpPost]
+		public async Task<IActionResult> GetDashboardAjax()
+		{
+			try
+			{
+				var result = await _service.GetDashboardAsync();
 
-        private async Task<IActionResult> ExecuteReportAsync<T>(Func<Task<List<T>>> action)
+				return Json(new
+				{
+					success = true,
+					data = result
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new
+				{
+					success = false,
+					message = ex.Message
+				});
+			}
+		}
+		#endregion
+
+		private async Task<IActionResult> ExecuteReportAsync<T>(Func<Task<List<T>>> action)
         {
             try
             {

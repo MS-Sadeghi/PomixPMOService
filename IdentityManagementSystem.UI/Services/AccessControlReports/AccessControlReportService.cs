@@ -1,7 +1,7 @@
 namespace IdentityManagementSystem.API.Services.AccessControlReports
 {
-    using IdentityManagementSystem.UI.ViewModels;
     using System.Net.Http.Json;
+    using IdentityManagementSystem.UI.ViewModels;
 
     public class AccessControlReportService : IAccessControlReportService
     {
@@ -138,5 +138,24 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
             return await response.Content.ReadFromJsonAsync<List<TrafficByNationalIdReportViewModel>>()
                    ?? new List<TrafficByNationalIdReportViewModel>();
         }
-    }
+		public async Task<DashboardResponseViewModel> GetDashboardAsync()
+		{
+			var client = _factory.CreateClient("PomixApi");
+
+                var response = await client.PostAsync(
+	                "access-control-reports/dashboard",
+	                null
+                );
+
+			        if (!response.IsSuccessStatusCode)
+			        {
+				        return new DashboardResponseViewModel();
+			        }
+
+			        return await response.Content
+				        .ReadFromJsonAsync<DashboardResponseViewModel>()
+				        ?? new DashboardResponseViewModel();
+        }
+
+	}
 }

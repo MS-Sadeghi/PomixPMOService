@@ -22,7 +22,10 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <div><h6 class="text-muted">کل تردد امروز</h6><h2>14,582</h2></div>
+                    <div>
+                        <h6 class="text-muted">کل تردد امروز</h6>
+                        <h2 id="totalTrafficToday">-</h2>
+                    </div>
                     <div class="avatar bg-primary-transparent">
                         <i class="fe fe-activity"></i>
                     </div>
@@ -35,7 +38,10 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <div><h6 class="text-muted">تردد خودروها</h6> <h2>9,248</h2></div>
+                    <div>
+                        <h6 class="text-muted">تردد خودروها</h6>
+                        <h2 id="vehicleTrafficToday">-</h2>
+                        </div>
                     <div class="avatar bg-success-transparent">
                         <i class="fe fe-truck"></i>
                     </div>
@@ -48,7 +54,10 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <div><h6 class="text-muted">تردد افراد</h6> <h2>5,334</h2></div>
+                    <div>
+                        <h6 class="text-muted">تردد افراد</h6>
+                        <h2 id="peopleTrafficToday">-</h2>
+                    </div>
                     <div class="avatar bg-info-transparent">
                         <i class="fe fe-users"></i>
                     </div>
@@ -61,7 +70,10 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
-                    <div><h6 class="text-muted">گزارش‌های امروز</h6><h2>163</h2> </div>
+                    <div>
+                        <h6 class="text-muted">گزارش‌های امروز</h6>
+                        <h2 id="reportsCountToday">-</h2>
+                        </div>
                     <div class="avatar bg-warning-transparent">
                         <i class="fe fe-file-text"></i>
                     </div>
@@ -76,11 +88,7 @@
             <div class="card-header">
                 <h3 class="card-title"> روند تردد هفت روز اخیر</h3>
             </div>
-            <div class="card-body">
-                <div style="height:350px;background:#f8f9fa;border-radius:8px;display:flex;align-items:center;justify-content:center;">
-                    نمودار Line Chart
-                </div>
-            </div>
+            <div class="card-body"> <div id="weeklyTrafficChart"></div> </div>
         </div>
     </div>
 
@@ -174,12 +182,7 @@
             <div class="card-header">
                 <h3 class="card-title">انواع تردد</h3>
             </div>
-
-            <div class="card-body">
-                <div style="height:280px;background:#f8f9fa;border-radius:8px;display:flex;align-items:center;justify-content:center;">
-                    Pie Chart
-                </div>
-            </div>
+            <div class="card-body"> <div id="trafficTypesChart"></div> </div>
         </div>
     </div>
 
@@ -220,3 +223,117 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script src="~/assets/js/apexcharts.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            url: '@Url.Action("GetDashboardAjax", "Report", new { area = "AccessControlReports" })',
+            type: 'POST',
+            success: function (response) {
+                if (!response.success) {
+                    console.error(response.message || 'خطا در دریافت اطلاعات داشبورد');
+                    return;
+                }
+
+                const data = response.data;
+
+                $('#totalTrafficToday').text(
+                    Number(data.totalTrafficToday || 0).toLocaleString('fa-IR')
+                );
+
+                $('#vehicleTrafficToday').text(
+                    Number(data.vehicleTrafficToday || 0).toLocaleString('fa-IR')
+                );
+
+                $('#peopleTrafficToday').text(
+                    Number(data.peopleTrafficToday || 0).toLocaleString('fa-IR')
+                );
+
+                $('#reportsCountToday').text(
+                    Number(data.reportsCountToday || 0).toLocaleString('fa-IR')
+                );
+
+                $('#lastUpdated').text(data.lastUpdated || '-');
+
+                renderWeeklyTrafficChart(data.weeklyTraffic || []);
+                renderTrafficTypesChart(data.trafficTypes || []);
+            },
+            error: function (xhr) {
+                console.error(
+                    xhr.responseJSON?.message ||
+                    'خطا در دریافت اطلاعات داشبورد'
+                );
+            }
+        });
+    });
+
+    function renderWeeklyTrafficChart(items) {
+        const chartElement = document.querySelector('#weeklyTrafficChart');
+
+        if (!chartElement) {
+            return;
+        }
+
+        const options = {
+            chart: {
+                type: 'line',
+                height: 350,
+                toolbar: {
+                    show: false
+                }
+            },
+            series: [
+                {
+                    name: 'تعداد تردد',
+                    data: items.map(x => x.value)
+                }
+            ],
+            xaxis: {
+                categories: items.map(x => x.label)
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            dataLabels: {
+                enabled: false
+            },
+            noData: {
+                text: 'داده‌ای برای نمایش وجود ندارد'
+            }
+        };
+
+        const chart = new ApexCharts(chartElement, options);
+        chart.render();
+    }
+
+    function renderTrafficTypesChart(items) {
+        const chartElement = document.querySelector('#trafficTypesChart');
+
+        if (!chartElement) {
+            return;
+        }
+
+        const options = {
+            chart: {
+                type: 'donut',
+                height: 280
+            },
+            series: items.map(x => x.value),
+            labels: items.map(x => x.label),
+            legend: {
+                position: 'bottom'
+            },
+            noData: {
+                text: 'داده‌ای برای نمایش وجود ندارد'
+            }
+        };
+
+        const chart = new ApexCharts(chartElement, options);
+        chart.render();
+    }
+</script>
+}

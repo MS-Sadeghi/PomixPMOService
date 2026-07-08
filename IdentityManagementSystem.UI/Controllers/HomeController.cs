@@ -72,7 +72,7 @@ namespace IdentityManagementSystem.UI.Controllers
                         HttpContext.Session.SetString("UserId", loginResponse.UserId.ToString());
                         HttpContext.Session.SetString("Username", loginResponse.Username ?? "");
 
-                        return RedirectToAction("Index", "Report", new { area = "AccessControlReports" });
+                        return RedirectToAction("Dashboard", "Report", new { area = "AccessControlReports" });
                     }
                     else
                     {

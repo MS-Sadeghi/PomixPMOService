@@ -1,6 +1,11 @@
-﻿using DNTCaptcha.Core;
+﻿using System.Net.Http.Headers;
+using DNTCaptcha.Core;
 using IdentityManagementSystem.UI.Areas.Security.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
@@ -87,7 +92,6 @@ namespace IdentityManagementSystem.UI.Controllers
                 return View(model);
             }
         }
-        #endregion
 
         #region Logout
         [HttpPost]

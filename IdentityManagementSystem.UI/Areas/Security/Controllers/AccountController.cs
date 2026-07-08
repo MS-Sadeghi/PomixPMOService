@@ -73,7 +73,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 return Json(new
                 {
                     success = true,
-                    redirectUrl = Url.Action("Index", "Report", new { area = "AccessControlReports" })
+                    redirectUrl = Url.Action("Dashboard", "Report", new { area = "AccessControlReports" })
                 });
             }
             catch (Exception ex)

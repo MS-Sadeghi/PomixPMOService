@@ -185,7 +185,7 @@ app.MapAreaControllerRoute(
 app.MapAreaControllerRoute(
     name: "traffic-reports-area",
     areaName: "AccessControlReports",
-    pattern: "AccessControlReports/{controller=Report}/{action=Index}/{id?}");
+    pattern: "AccessControlReports/{controller=Report}/{action=Dashboard}/{id?}");
 
 // Compatibility routes for existing links/bookmarks.
 app.MapControllerRoute(

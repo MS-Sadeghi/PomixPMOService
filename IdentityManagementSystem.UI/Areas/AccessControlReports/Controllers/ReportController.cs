@@ -130,7 +130,8 @@ namespace IdentityManagementSystem.UI.Controllers
 		[HttpGet]
         public IActionResult Dashboard()
         {
-            return View();
+			HttpContext.Session.SetString("CurrentModule", "AccessControlReports");
+			return View();
         }
 		[HttpPost]
 		public async Task<IActionResult> GetDashboardAjax()

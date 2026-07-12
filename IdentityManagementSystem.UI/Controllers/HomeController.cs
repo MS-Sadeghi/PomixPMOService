@@ -18,7 +18,8 @@ namespace IdentityManagementSystem.UI.Controllers
 
         [HttpGet]
         public IActionResult Index()
-        {       
+        {
+			HttpContext.Session.Remove("CurrentModule"); 
             return View();
         }
 

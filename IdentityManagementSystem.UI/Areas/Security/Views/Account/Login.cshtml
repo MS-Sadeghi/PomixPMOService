@@ -167,7 +167,14 @@
 
                 <!-- Submit Button -->
                 <div class="form-group mt-3">
-                    <button type="submit" class="btn btn-primary mb-1">ورود</button>
+                    <button type="submit" id="loginBtn" class="btn btn-primary w-100">
+                        <span id="loginText">ورود</span>
+
+                        <span id="loginSpinner"
+                              class="spinner-border spinner-border-sm ms-2 d-none"
+                              role="status">
+                        </span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -177,32 +184,62 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-      $('#loginForm').submit(function (e) {
-        e.preventDefault();
+        $('#loginForm').submit(function (e) {
 
-        $.ajax({
-            url:  '/Security/Account/Login',
-            type: 'POST',
-            data: $(this).serialize(),
-            success: function (res) {
-                if (res.success) {
-                    window.location.href = res.redirectUrl;
-                } else {
-                    toastr.error(res.message);
+            e.preventDefault();
+
+            const btn = $("#loginBtn");
+            const spinner = $("#loginSpinner");
+            const text = $("#loginText");
+
+            btn.prop("disabled", true);
+
+            spinner.removeClass("d-none");
+
+            text.text("در حال ورود...");
+
+            $.ajax({
+
+                url: '/Security/Account/Login',
+
+                type: 'POST',
+
+                data: $(this).serialize(),
+
+                success: function (res) {
+
+                    if (res.success) {
+
+                        text.text("ورود موفق");
+
+                        window.location.href = res.redirectUrl;
+                    }
+                    else {
+
+                        spinner.addClass("d-none");
+
+                        text.text("ورود");
+
+                        btn.prop("disabled", false);
+
+                        toastr.error(res.message);
+                    }
+                },
+
+                error: function (xhr) {
+
+                    spinner.addClass("d-none");
+
+                    text.text("ورود");
+
+                    btn.prop("disabled", false);
+
+                    toastr.error("خطای سرور");
                 }
-            },
-            error: function (xhr, status, error) {
 
-                console.log(xhr);
-                console.log(status);
-                console.log(error);
-                console.log(xhr.responseText);
+            });
 
-
-                toastr.error("خطای سرور: " + xhr.status);
-            }
         });
-    });
         @if (TempData["SuccessLogoutMessage"] != null)
         {
                     @:toastr.options = {

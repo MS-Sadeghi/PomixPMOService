@@ -27,8 +27,144 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
     @await RenderSectionAsync("Styles", required: false)
-    ```
 
+    <style>
+        /* ===== Header actions ===== */
+        .header-action-btn {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--text-muted, #6c757d);
+            position: relative;
+            transition: background-color .2s ease, color .2s ease;
+        }
+
+            .header-action-btn:hover {
+                background-color: rgba(0, 0, 0, .05);
+                color: var(--primary, #4d5fe3);
+            }
+
+            .header-action-btn .fe,
+            .header-action-btn .bi {
+                font-size: 1.15rem;
+            }
+
+        .header-action-badge {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff4d4f;
+            border: 2px solid #fff;
+        }
+
+        /* ===== Notification off-canvas panel ===== */
+        /* Slides in from the LEFT edge of the viewport by explicit design request,
+                   regardless of the page's RTL text direction. */
+        .notif-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(17, 20, 33, .4);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .25s ease, visibility .25s ease;
+            z-index: 1045;
+        }
+
+            .notif-overlay.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
+        .notif-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 380px;
+            max-width: 88vw;
+            background: #fff;
+            box-shadow: 10px 0 30px rgba(17, 20, 33, .18);
+            transform: translateX(-100%);
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+            z-index: 1046;
+            display: flex;
+            flex-direction: column;
+            direction: rtl;
+        }
+
+            .notif-panel.open {
+                transform: translateX(0);
+            }
+
+        .notif-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #eef0f5;
+        }
+
+        .notif-panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: .5rem 0;
+        }
+
+        .notif-panel-footer {
+            padding: .75rem 1.25rem;
+            border-top: 1px solid #eef0f5;
+            text-align: center;
+        }
+
+        .notif-item {
+            display: flex;
+            gap: .75rem;
+            padding: .85rem 1.25rem;
+            border-bottom: 1px solid #f5f6fa;
+            transition: background-color .15s ease;
+        }
+
+            .notif-item:hover {
+                background-color: #f8f9fc;
+            }
+
+            .notif-item.unread {
+                background-color: #f4f6ff;
+            }
+
+        .notif-item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notif-item-text p {
+            margin: 0;
+            font-size: .875rem;
+        }
+
+        .notif-item-time {
+            font-size: .72rem;
+            color: #9aa0ac;
+        }
+
+        @@media (max-width: 576px) {
+            .notif-panel {
+                width: 100%;
+                max-width: 100vw;
+            }
+        }
+    </style>
 </head>
 
 <body class="app rtl">
@@ -46,11 +182,10 @@
 
                     <div class="header-left">
                         <a class="logo-horizontal"
-                           asp-area=""
                            asp-controller="Home"
-                           asp-action="Dashboard"
+                           asp-action="Index"
                            id="main-logo">
-                            <img src="~/assets/images/brand/logo-7.png"
+                            <img src="~/assets/images/brand/InteranetLogo1.png"
                                  id="logo-image"
                                  alt="سامانه خدمات" />
                         </a>
@@ -58,30 +193,40 @@
 
                     <div class="header-center"></div>
 
-                    <div class="header-right">
+                    <div class="header-right d-flex align-items-center">
 
+                        <!-- Notifications -->
+                        <a href="javascript:void(0)"
+                           class="header-action-btn me-1"
+                           id="notifBtn"
+                           title="اعلان‌ها"
+                           aria-haspopup="true"
+                           aria-expanded="false">
+                            <i class="fe fe-bell"></i>
+                            <span class="header-action-badge" id="notifBadge"></span>
+                        </a>
 
-                        <a class="full-screen-link"
+                        <!-- Fullscreen -->
+                        <a class="header-action-btn me-1"
                            href="javascript:void(0)"
                            id="fullScreenBtn"
                            title="تمام‌صفحه">
                             <i class="fe fe-maximize" id="fullScreenIcon"></i>
                         </a>
 
+                        <!-- Profile -->
                         <div class="dropdown d-flex profile-1">
                             <a href="javascript:void(0)" data-bs-toggle="dropdown" class="nav-link leading-none d-flex">
                                 <img src="~/assets/images/users/22.jfif" alt="profile-user" class="avatar  profile-user brround cover-image">
                             </a>
                             <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                                <div class="dropdown-divider m-0"></div>
-                                <a class="dropdown-item" asp-controller="Home" asp-action="EditProfile">
+                                <a class="dropdown-item" href="/Security/Account/EditProfile">
                                     <i class="dropdown-icon fe fe-user"></i>
                                     پروفایل
                                 </a>
 
                                 <form id="logout-form"
-                                      asp-controller="Home"
-                                      asp-action="Logout"
+                                      href="/Security/Account/Logout"
                                       method="post"
                                       class="d-none">
                                     @Html.AntiForgeryToken()
@@ -101,7 +246,7 @@
             </header>
 
             <!-- Main Content -->
-            <main class="main-content app-content">
+            <main class="main-content app-content me-2">
                 <div class="main-container container">
                     @RenderBody()
                 </div>
@@ -133,6 +278,52 @@
         <i class="fa fa-angle-up"></i>
     </a>
 
+    <!-- Notification overlay + slide-in panel (opens from the left) -->
+    <div class="notif-overlay" id="notifOverlay"></div>
+    <aside class="notif-panel" id="notifPanel" aria-hidden="true">
+        <div class="notif-panel-header">
+            <h6 class="mb-0 fw-semibold">اعلان‌ها</h6>
+            <a href="javascript:void(0)" id="notifCloseBtn" class="header-action-btn" title="بستن">
+                <i class="fe fe-x"></i>
+            </a>
+        </div>
+        <div class="notif-panel-body" id="notifList">
+            <div class="notif-item unread">
+                <div class="notif-item-icon bg-primary-transparent">
+                    <i data-feather="clock" class="text-primary" style="width:18px;height:18px;"></i>
+                </div>
+                <div class="notif-item-text">
+                    <p class="fw-semibold">گزارش تردد جدید ثبت شد</p>
+                    <p class="text-muted">گزارش ورود و خروج امروز آماده مشاهده است.</p>
+                    <span class="notif-item-time">۱۰ دقیقه پیش</span>
+                </div>
+            </div>
+            <div class="notif-item unread">
+                <div class="notif-item-icon bg-success-transparent">
+                    <i data-feather="shield" class="text-success" style="width:18px;height:18px;"></i>
+                </div>
+                <div class="notif-item-text">
+                    <p class="fw-semibold">استعلام سند تایید شد</p>
+                    <p class="text-muted">نتیجه احراز سند قوه قضائیه مشخص شد.</p>
+                    <span class="notif-item-time">۱ ساعت پیش</span>
+                </div>
+            </div>
+            <div class="notif-item">
+                <div class="notif-item-icon bg-warning-transparent">
+                    <i data-feather="alert-circle" class="text-warning" style="width:18px;height:18px;"></i>
+                </div>
+                <div class="notif-item-text">
+                    <p class="fw-semibold">یادآوری</p>
+                    <p class="text-muted">تکمیل اطلاعات پروفایل کاربری خود را فراموش نکنید.</p>
+                    <span class="notif-item-time">دیروز</span>
+                </div>
+            </div>
+        </div>
+        <div class="notif-panel-footer">
+            <a href="javascript:void(0)" class="text-primary small fw-semibold">مشاهده همه اعلان‌ها</a>
+        </div>
+    </aside>
+
     <!-- Core Scripts -->
     <script src="~/assets/js/jquery.min.js"></script>
     <script src="~/assets/plugins/bootstrap/js/popper.min.js"></script>
@@ -163,6 +354,10 @@
                     year: "numeric"
                 })
             );
+
+            if (typeof feather !== "undefined") {
+                feather.replace();
+            }
         });
 
         const fullScreenBtn = document.getElementById("fullScreenBtn");
@@ -189,6 +384,45 @@
                     : "fe fe-maximize";
             });
         }
+
+        // ===== Notification slide-in panel =====
+        const notifBtn = document.getElementById("notifBtn");
+        const notifCloseBtn = document.getElementById("notifCloseBtn");
+        const notifPanel = document.getElementById("notifPanel");
+        const notifOverlay = document.getElementById("notifOverlay");
+
+        function openNotifPanel() {
+            notifPanel.classList.add("open");
+            notifOverlay.classList.add("show");
+            notifPanel.setAttribute("aria-hidden", "false");
+            notifBtn.setAttribute("aria-expanded", "true");
+        }
+
+        function closeNotifPanel() {
+            notifPanel.classList.remove("open");
+            notifOverlay.classList.remove("show");
+            notifPanel.setAttribute("aria-hidden", "true");
+            notifBtn.setAttribute("aria-expanded", "false");
+        }
+
+        if (notifBtn) {
+            notifBtn.addEventListener("click", function () {
+                const isOpen = notifPanel.classList.contains("open");
+                isOpen ? closeNotifPanel() : openNotifPanel();
+            });
+        }
+
+        if (notifCloseBtn) {
+            notifCloseBtn.addEventListener("click", closeNotifPanel);
+        }
+
+        if (notifOverlay) {
+            notifOverlay.addEventListener("click", closeNotifPanel);
+        }
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeNotifPanel();
+        });
 
         const profileTrigger = document.getElementById("profileTrigger");
         const profileDropdown = document.getElementById("profileDropdown");

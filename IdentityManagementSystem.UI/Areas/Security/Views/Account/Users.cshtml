@@ -3,7 +3,19 @@
 @model IEnumerable<UserViewModel>
 @{
     ViewData["Title"] = "کاربران";
-    Layout = "_AccessControlReportsLayout";
+    var module = Context.Session.GetString("CurrentModule");
+
+    Layout = module switch
+    {
+        "AccessControlReports" =>
+            "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml",
+
+        "JudiciaryInquiry" =>
+            "~/Areas/JudiciaryInquiry/Views/Shared/_JudiciaryInquiryLayout.cshtml",
+
+        _ =>
+            "~/Views/Shared/_Layout.cshtml"
+    };
 }
 
 @if (ViewBag.ErrorMessage != null)

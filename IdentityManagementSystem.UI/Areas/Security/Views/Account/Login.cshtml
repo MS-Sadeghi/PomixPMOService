@@ -1,9 +1,10 @@
 ﻿@using IdentityManagementSystem.UI.Areas.Security.Models
 @model LoginViewModel
 @using DNTCaptcha.Core
+
 @{
     ViewData["Title"] = "ورود به سامانه";
-    Layout = "~/Views/Shared/_LayoutAuth.cshtml";
+    Layout = "~/Areas/Security/Views/Shared/_LayoutAuth.cshtml";
 }
 
 <style>
@@ -15,64 +16,91 @@
         padding: 20px;
     }
 
-    .row.w-100 {
+    .login-card {
         display: flex;
+        width: 900px;
+        max-width: 100%;
+        background: rgba(255,255,255,.25);
+        backdrop-filter: blur(12px);
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow: 0 10px 35px rgba(31,38,135,.18);
+        border: 1px solid rgba(255,255,255,.3);
+        transition: .3s;
+    }
+
+        .login-card:hover {
+            transform: translateY(-6px);
+        }
+
+    /* فرم ورود */
+    .login-right {
+        flex: 1;
+        padding: 45px;
+    }
+
+    /* بخش لوگو */
+    .login-left {
+        width: 360px;
+        background: linear-gradient(135deg,#f8fbff,#edf4ff);
+        display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
-        margin: 0 auto;
-    }
-
-    .login-right {
-        flex: 0 0 450px;
-        background: rgba(255, 255, 255, 0.25);
-        backdrop-filter: blur(12px);
-        border-radius: 20px;
         padding: 40px;
-        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        transition: transform 0.3s ease;
+        border-left: 1px solid rgba(0,0,0,.08);
     }
 
-        .login-right:hover {
-            transform: translateY(-5px);
+        .login-left img {
+            max-width: 220px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 30px;
+            transition: .3s;
         }
+
+            .login-left img:hover {
+                transform: scale(1.05);
+            }
+
+    .login-title {
+        font-size: 26px;
+        font-weight: 700;
+        color: #244b8b;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .login-subtitle {
+        font-size: 16px;
+        color: #666;
+        text-align: center;
+        line-height: 30px;
+    }
+
+    h3 {
+        font-weight: 700;
+        margin-bottom: 30px;
+    }
 
     .btn-primary {
         border: none;
         padding: 12px;
-        width: 100%;
-        border-radius: 5px;
-        font-weight: 500;
-        color: #fff;
-        transition: background 0.3s ease;
+        border-radius: 8px;
+        font-weight: 600;
     }
 
     .captchaInput {
         height: 45px !important;
         border-radius: 8px !important;
         border: 1px solid #ccc !important;
-        padding: 10px !important;
         width: 100% !important;
         text-align: right !important;
-        direction: rtl !important;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-        position: relative;
-    }
-
-    .input-group {
-        position: relative;
-        width: 100%;
     }
 
     .form-control {
-        border: 1px solid #ccc;
-        border-radius: 8px;
         height: 45px;
-        padding: 10px;
-        width: 100%;
+        border-radius: 8px;
     }
 
     .input-group-text {
@@ -81,24 +109,44 @@
     }
 
     .form-control:focus {
-        border-color: #86b7fe;
-        outline: 0;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
     }
 
-    .wrap-input100 {
-        margin-bottom: 5px;
-    }
+    @@media(max-width:991px) {
 
-    .login-right form > div {
-        margin-bottom: 20px;
+        .login-card {
+            flex-direction: column;
+            width: 450px;
+        }
+
+        .login-left {
+            width: 100%;
+            border-left: none;
+            border-bottom: 1px solid rgba(0,0,0,.08);
+            padding: 30px;
+        }
+
+            .login-left img {
+                max-width: 160px;
+                margin-bottom: 20px;
+            }
+
+        .login-right {
+            padding: 30px;
+        }
     }
 </style>
 
 <div class="login-container">
-    <div class="row w-100" style="max-width: 400px;">
+
+    <div class="login-card">
+
+        <!-- سمت راست -->
         <div class="login-right">
-            <h3 class="text-center pb-3">خوش آمدید</h3>
+
+            <h3 class="text-center">
+                خوش آمدید
+            </h3>
 
             @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
             {
@@ -107,7 +155,7 @@
                 </div>
             }
 
-            <form id="loginForm"  method="post" autocomplete="off" asp-area="Security" asp-controller="Account" asp-action="Login">
+            <form id="loginForm" method="post" autocomplete="off" asp-area="Security" asp-controller="Account" asp-action="Login">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly"
                      class="text-danger validation-summary-errors d-none">
@@ -163,46 +211,97 @@
                                  asp-validation-message-class="text-danger captcha-validation-message"
                                  asp-show-refresh-button="true"
                                  asp-refresh-button-class="btn fe fe-refresh-cw" />
-                </div> 
+                </div>
 
                 <!-- Submit Button -->
                 <div class="form-group mt-3">
-                    <button type="submit" class="btn btn-primary mb-1">ورود</button>
+                    <button type="submit" id="loginBtn" class="btn btn-primary w-100">
+                        <span id="loginText">ورود</span>
+
+                        <span id="loginSpinner"
+                              class="spinner-border spinner-border-sm ms-2 d-none"
+                              role="status">
+                        </span>
+                    </button>
                 </div>
             </form>
-        </div>
-    </div>
-</div>
 
+        </div>
+
+        <!-- سمت چپ -->
+        <div class="login-left">
+
+            <img src="~/assets/images/brand/logo-pmo.png"
+                 alt="Logo" />
+
+            <div class="login-title">
+                اداره بندر شهید رجایی
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-      $('#loginForm').submit(function (e) {
-        e.preventDefault();
+        $('#loginForm').submit(function (e) {
 
-        $.ajax({
-            url:  '/Security/Account/Login',
-            type: 'POST',
-            data: $(this).serialize(),
-            success: function (res) {
-                if (res.success) {
-                    window.location.href = res.redirectUrl;
-                } else {
-                    toastr.error(res.message);
+            e.preventDefault();
+
+            const btn = $("#loginBtn");
+            const spinner = $("#loginSpinner");
+            const text = $("#loginText");
+
+            btn.prop("disabled", true);
+
+            spinner.removeClass("d-none");
+
+            text.text("در حال ورود...");
+
+            $.ajax({
+
+                url: '/Security/Account/Login',
+
+                type: 'POST',
+
+                data: $(this).serialize(),
+
+                success: function (res) {
+
+                    if (res.success) {
+
+                        text.text("ورود موفق");
+
+                        window.location.href = res.redirectUrl;
+                    }
+                    else {
+
+                        spinner.addClass("d-none");
+
+                        text.text("ورود");
+
+                        btn.prop("disabled", false);
+
+                        toastr.error(res.message);
+                    }
+                },
+
+                error: function (xhr) {
+
+                    spinner.addClass("d-none");
+
+                    text.text("ورود");
+
+                    btn.prop("disabled", false);
+
+                    toastr.error("خطای سرور");
                 }
-            },
-            error: function (xhr, status, error) {
 
-                console.log(xhr);
-                console.log(status);
-                console.log(error);
-                console.log(xhr.responseText);
+            });
 
-
-                toastr.error("خطای سرور: " + xhr.status);
-            }
         });
-    });
         @if (TempData["SuccessLogoutMessage"] != null)
         {
                     @:toastr.options = {

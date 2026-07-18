@@ -3,7 +3,7 @@
 @model PaginatedCartableViewModel
 @{
     ViewData["Title"] = "کارتابل";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Areas/JudiciaryInquiry/Views/Shared/_JudiciaryInquiryLayout.cshtml";
     var formModel = ViewBag.FormModel as 
     CartableFormViewModel ?? new CartableFormViewModel();
     var verifyDocData = ViewBag.VerifyDocData as dynamic ?? null;

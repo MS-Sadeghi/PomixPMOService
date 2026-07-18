@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IdentityManagementSystem.UI.ViewModels
+namespace IdentityManagementSystem.UI.Areas.JudiciaryInquiry.ViewModels
 {
     public class RequestViewModel
     {

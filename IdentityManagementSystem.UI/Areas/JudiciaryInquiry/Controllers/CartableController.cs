@@ -37,8 +37,10 @@ namespace IdentityManagementSystem.UI.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(int page = 1, string search = "", string filterStatus = "")
         {
-            // گرفتن داده‌ها از API
-            var model = await GetCartableData(
+			HttpContext.Session.SetString("CurrentModule", "JudiciaryInquiry");
+
+			// گرفتن داده‌ها از API
+			var model = await GetCartableData(
             page,
             search,
             filterStatus);
@@ -180,8 +182,6 @@ namespace IdentityManagementSystem.UI.Controllers
             return View("Index", await GetCartableData(1, "", ""));
         }
 
-
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitRequest(CartableFormViewModel model)
@@ -250,7 +250,6 @@ namespace IdentityManagementSystem.UI.Controllers
                 return View("Index", await GetCartableData(1, "", ""));
             }
         }
-
 
         public class UpdateValidationStatusModel
         {
@@ -575,8 +574,5 @@ namespace IdentityManagementSystem.UI.Controllers
         }
 
     }
-
-
-
 
 }

@@ -27,7 +27,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-            return View(new LoginViewModel());
+            return View();
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -73,7 +73,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 return Json(new
                 {
                     success = true,
-                    redirectUrl = Url.Action("Dashboard", "Report", new { area = "AccessControlReports" })
+                    redirectUrl = Url.Action("Index", "Home")
                 });
             }
             catch (Exception ex)

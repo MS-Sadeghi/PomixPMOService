@@ -1,6 +1,7 @@
 namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
 {
     using System.Net.Http.Json;
+    using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel;
     using IdentityManagementSystem.UI.ViewModels;
 
     public class AccessControlReportService : IAccessControlReportService

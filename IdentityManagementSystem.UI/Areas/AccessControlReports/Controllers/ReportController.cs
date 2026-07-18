@@ -1,5 +1,5 @@
 using IdentityManagementSystem.UI.Areas.AccessControlReports.Services;
-using IdentityManagementSystem.UI.ViewModels;
+using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityManagementSystem.UI.Controllers
@@ -130,7 +130,8 @@ namespace IdentityManagementSystem.UI.Controllers
 		[HttpGet]
         public IActionResult Dashboard()
         {
-            return View();
+			HttpContext.Session.SetString("CurrentModule", "AccessControlReports");
+			return View();
         }
 		[HttpPost]
 		public async Task<IActionResult> GetDashboardAjax()

@@ -235,7 +235,7 @@
                  alt="Logo" />
 
             <div class="login-title">
-                اداره بندر شهید رجایی
+                اداره کل بنادر و دریانوردی استان هرمزگان
             </div>
 
         </div>
@@ -243,6 +243,7 @@
     </div>
 
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
@@ -304,17 +305,17 @@
         });
         @if (TempData["SuccessLogoutMessage"] != null)
         {
-                    @:toastr.options = {
-                    @:"closeButton": true,
-                    @:"progressBar": true,
-                    @:"positionClass": "toast-top-left",
-                    @:"timeOut": "3000",
-                    @:"rtl": true
-                    @:};
-                    @:toastr.success('@TempData["SuccessLogoutMessage"]');
+            @:toastr.options = {
+            @:"closeButton": true,
+            @:"progressBar": true,
+            @:"positionClass": "toast-top-left",
+            @:"timeOut": "3000",
+            @:"rtl": true
+            @:};
+            @:toastr.success('@TempData["SuccessLogoutMessage"]');
         }
 
-        const jwtToken = '@ViewBag.JwtToken';
+                const jwtToken = '@ViewBag.JwtToken';
         if (jwtToken) {
             localStorage.setItem('jwtToken', jwtToken);
             window.location.href = '/JudiciaryInquiry/Cartable/Index';
@@ -332,14 +333,14 @@
             const shownMessages = new Set();
 
             document.querySelectorAll(
-            '.field-validation-error, .validation-summary-errors'
+                '.field-validation-error, .validation-summary-errors'
             ).forEach(function (element) {
-            const message = element.textContent.trim();
+                const message = element.textContent.trim();
 
-            if (message && !shownMessages.has(message)) {
-                shownMessages.add(message);
-                toastr.error(message);
-            }
+                if (message && !shownMessages.has(message)) {
+                    shownMessages.add(message);
+                    toastr.error(message);
+                }
             });
 
             if ('@(!string.IsNullOrEmpty(ViewBag.ErrorMessage) ? ViewBag.ErrorMessage : "")' !== '') {
@@ -364,6 +365,6 @@
                 }
             });
         });
-       
+
     </script>
 }

@@ -92,6 +92,7 @@ builder.Services.AddControllersWithViews(options =>
 });
 
 // ================= Build =================
+builder.Services.AddCors();
 var app = builder.Build();
 
 // ================= Pipeline =================
@@ -106,7 +107,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-builder.Services.AddCors();
+
 app.UseCors(policy =>
 {
     policy.AllowAnyOrigin()

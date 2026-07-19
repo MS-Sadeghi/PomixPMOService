@@ -75,8 +75,7 @@
                                                 </a>
 
                                                 <form id="logout-form"
-                                                      asp-controller="Home"
-                                                      asp-action="Logout"
+                                                      action="/Security/Account/Logout"
                                                       method="post"
                                                       class="d-none">
                                                     @Html.AntiForgeryToken()

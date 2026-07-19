@@ -3,19 +3,7 @@
 
 @{
     ViewData["Title"] = "پروفایل";
-    var module = Context.Session.GetString("CurrentModule");
-
-    Layout = module switch
-    {
-        "AccessControlReports" =>
-            "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml",
-
-        "JudiciaryInquiry" =>
-            "~/Areas/JudiciaryInquiry/Views/Shared/_JudiciaryInquiryLayout.cshtml",
-
-        _ =>
-            "~/Views/Shared/_Layout.cshtml"
-    };
+    Layout = "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml";
 }
 
 <div class="card">

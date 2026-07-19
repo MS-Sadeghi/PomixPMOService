@@ -62,8 +62,11 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.TrafficByPla
                     parameterName = "credentials",
                     parameterValue = new
                     {
-                        username = _configuration["AccessControl:Username"],
-                        password = _configuration["AccessControl:Password"]
+                        username =
+                            _configuration["AccessControl:Username"],
+
+                        password =
+                            _configuration["AccessControl:Password"]
                     }
                 }
             };

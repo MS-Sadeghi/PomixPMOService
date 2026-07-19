@@ -112,7 +112,7 @@
             const currentTime =
                 String(now.getHours()).padStart(2, '0') + ":" +
                 String(now.getMinutes()).padStart(2, '0');
-            $("input[name='StartTime']").val("00:00");
+            $("input[name='StartTime']").val("07:00");
             $("input[name='EndTime']").val(currentTime);
 
             // ثبت فونت Vazir
@@ -254,12 +254,12 @@
                 initComplete: function () {
                     $('.dt-buttons').hide();
                     $('#reportTable_filter').before(`
-                        <div id="customExportButtons" class="btn-group me-3">
-                            <button class="btn btn-outline-primary" id="btnPrint">پرینت</button>
-                            <button class="btn btn-outline-success" id="btnExcel">اکسل</button>
-                            <button class="btn btn-outline-danger" id="btnPdf">PDF</button>
-                        </div>
-                    `);
+                                <div id="customExportButtons" class="btn-group me-3">
+                                    <button class="btn btn-outline-primary" id="btnPrint">پرینت</button>
+                                    <button class="btn btn-outline-success" id="btnExcel">اکسل</button>
+                                    <button class="btn btn-outline-danger" id="btnPdf">PDF</button>
+                                </div>
+                            `);
                 }
             });
         });

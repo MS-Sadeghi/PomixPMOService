@@ -12,6 +12,29 @@
     #customExportButtons {
         float: right;
     }
+
+    #trafficTypeMenu {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    #trafficTypeBtn.is-invalid {
+        border-color: #dc3545;
+    }
+
+    #trafficTypeBtn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+        #trafficTypeBtn .dropdown-toggle-text {
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 </style>
 <div class="card">
     <div class="card-header">
@@ -47,14 +70,45 @@
                     <input name="EndTime" type="time" class="form-control" />
                 </div>
                 <div class="col-md-2 mb-3">
-                    <label class="form-label">مسیر تردد</label>
-                    <select name="TrafficTypes" class="form-control form-select" placeholder="انتخاب کنید">
-                        <option value="0">--انتخاب کنید--</option>
-                        <option value="0">تمام ترددها</option>
-                        <option value="1">سواری رو</option>
-                        <option value="2">کامیون رو</option>
-                        <option value="3">نفر رو</option>
-                    </select>
+                    <label class="form-label">نوع تردد</label>
+                    <div class="dropdown">
+                        <button type="button"
+                                class="btn btn-outline-secondary dropdown-toggle w-100 text-end"
+                                id="trafficTypeBtn"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                                aria-expanded="false"
+                                title="انتخاب کنید">
+                            <span class="dropdown-toggle-text">انتخاب کنید</span>
+                        </button>
+                        <ul class="dropdown-menu w-100 p-2" id="trafficTypeMenu" aria-labelledby="trafficTypeBtn">
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="trafficTypeAll">
+                                    <label class="form-check-label" for="trafficTypeAll">همه</label>
+                                </div>
+                                <hr class="dropdown-divider" />
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input traffic-type-checkbox" type="checkbox" value="1" id="trafficType1">
+                                    <label class="form-check-label" for="trafficType1">سواری رو</label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input traffic-type-checkbox" type="checkbox" value="2" id="trafficType2">
+                                    <label class="form-check-label" for="trafficType2">کامیون رو</label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input traffic-type-checkbox" type="checkbox" value="3" id="trafficType3">
+                                    <label class="form-check-label" for="trafficType3">نفر رو</label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="col-md-12 text-end">
                     <button type="button" id="btnSearch" class="btn btn-primary">
@@ -106,6 +160,33 @@
             return text.split(/\s+/).reverse().join(' ');
         }
 
+        function getSelectedTrafficTypes() {
+            return $(".traffic-type-checkbox:checked")
+                .map(function () { return $(this).val(); })
+                .get();
+        }
+
+        function updateTrafficTypeButtonText() {
+            const checked = $(".traffic-type-checkbox:checked");
+            const $btn = $("#trafficTypeBtn");
+            const $label = $btn.find(".dropdown-toggle-text");
+            let text;
+
+            if (checked.length === 0) {
+                text = "انتخاب کنید";
+            } else if (checked.length === $(".traffic-type-checkbox").length) {
+                text = "همه";
+            } else {
+                const labels = checked.map(function () {
+                    return $("label[for='" + this.id + "']").text();
+                }).get();
+                text = labels.join('، ');
+            }
+
+            $label.text(text);
+            $btn.attr("title", text);
+        }
+
         $(document).ready(function () {
             if (typeof $.fn.persianDatepicker !== "undefined") {
                 $(".fc-datepicker").persianDatepicker({
@@ -119,6 +200,27 @@
                 String(now.getMinutes()).padStart(2, '0');
             $("input[name='StartTime']").val("07:00");
             $("input[name='EndTime']").val(currentTime);
+
+            // جلوگیری از بسته شدن منو با کلیک روی چک‌باکس‌ها
+            $("#trafficTypeMenu").on("click", function (e) {
+                e.stopPropagation();
+            });
+
+            // چک‌باکس «همه»
+            $("#trafficTypeAll").on("change", function () {
+                $(".traffic-type-checkbox").prop("checked", $(this).is(":checked"));
+                updateTrafficTypeButtonText();
+                $("#trafficTypeBtn").removeClass("is-invalid");
+            });
+
+            // چک‌باکس‌های تکی
+            $(document).on("change", ".traffic-type-checkbox", function () {
+                const total = $(".traffic-type-checkbox").length;
+                const checkedCount = $(".traffic-type-checkbox:checked").length;
+                $("#trafficTypeAll").prop("checked", checkedCount === total);
+                updateTrafficTypeButtonText();
+                $("#trafficTypeBtn").removeClass("is-invalid");
+            });
 
             // ثبت فونت Vazir
             window.pdfMake = window.pdfMake || {};
@@ -145,7 +247,7 @@
                 buttons: [
                     {
                         extend: 'excelHtml5',
-                        title: 'گزارش تفکیک نوع تردد',
+                        title: 'گزارش تردد بر اساس نوع',
                         exportOptions: {
                             columns: [0, 1, 2, 3],
                             format: {
@@ -159,7 +261,7 @@
                     },
                     {
                         extend: 'pdfHtml5',
-                        title: fixPersianForPdf('گزارش تفکیک نوع تردد'),
+                        title: fixPersianForPdf('گزارش تردد بر اساس نوع'),
                         pageSize: 'A4',
                         pageOrientation: 'landscape',
 
@@ -253,7 +355,7 @@
                     },
                     {
                         extend: 'print',
-                        title: 'گزارش تفکیک نوع تردد'
+                        title: 'گزارش تردد بر اساس نوع'
                     }
                 ],
                 initComplete: function () {
@@ -288,6 +390,19 @@
                 .removeClass("alert-warning")
                 .addClass("alert-danger")
                 .html("");
+
+            const trafficTypes = getSelectedTrafficTypes();
+
+            if (trafficTypes.length === 0) {
+                $("#trafficTypeBtn").addClass("is-invalid");
+                $("#errorBox")
+                    .removeClass("d-none")
+                    .removeClass("alert-danger")
+                    .addClass("alert-warning")
+                    .text("لطفاً حداقل یک مسیر تردد را انتخاب کنید.");
+                return;
+            }
+
             $("#loadingBox").removeClass("d-none");
 
             const data = {
@@ -295,13 +410,14 @@
                 EndDate: $("input[name='EndDate']").val(),
                 StartTime: $("input[name='StartTime']").val(),
                 EndTime: $("input[name='EndTime']").val(),
-                TrafficTypes: $("select[name='TrafficTypes']").val()
+                TrafficTypes: trafficTypes
             };
 
             $.ajax({
                 url: '/AccessControlReports/Report/TrafficByTypeReportAjax',
                 type: 'POST',
                 data: data,
+                traditional: true,
                 success: function (res) {
                     reportTable.clear();
                     let rows = res;

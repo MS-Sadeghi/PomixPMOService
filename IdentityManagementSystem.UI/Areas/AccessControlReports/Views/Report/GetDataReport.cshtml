@@ -15,129 +15,191 @@
     #customExportButtons {
         float: right;
     }
+
+    #entranceTypeMenu {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    #entranceTypeBtn.is-invalid {
+        border-color: #dc3545;
+    }
+
+    #entranceTypeBtn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+        #entranceTypeBtn .dropdown-toggle-text {
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 </style>
 
 <div class="card">
 
-<div class="card-header">
-    <h5 class="card-title">گزارش تردد مسیرها</h5>
-</div>
+    <div class="card-header">
+        <h5 class="card-title">گزارش تردد مسیر</h5>
+    </div>
 
-<div class="card-body">
+    <div class="card-body">
 
-    <form id="reportForm">
+        <form id="reportForm">
 
-        <div class="row">
+            <div class="row">
 
-            <div class="col-md-3 mb-3">
-                <label>از تاریخ</label>
-                <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="fa fa-calendar"></i>
-                    </span>
+                <div class="col-md-3 mb-3">
+                    <label>از تاریخ</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar"></i>
+                        </span>
 
-                    <input name="StartDate"
-                           class="form-control fc-datepicker"
-                           autocomplete="off" />
+                        <input name="StartDate"
+                               class="form-control fc-datepicker"
+                               autocomplete="off" />
+                    </div>
                 </div>
-            </div>
 
-            <div class="col-md-3 mb-3">
-                <label>تا تاریخ</label>
-                <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="fa fa-calendar"></i>
-                    </span>
+                <div class="col-md-3 mb-3">
+                    <label>تا تاریخ</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar"></i>
+                        </span>
 
-                    <input name="EndDate"
-                           class="form-control fc-datepicker"
-                           autocomplete="off" />
+                        <input name="EndDate"
+                               class="form-control fc-datepicker"
+                               autocomplete="off" />
+                    </div>
                 </div>
+
+                <div class="col-md-2 mb-3">
+                    <label>از ساعت</label>
+                    <input name="StartTime" type="time" class="form-control" />
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label>تا ساعت</label>
+                    <input name="EndTime" type="time" class="form-control" />
+                </div>
+
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">مسیر تردد</label>
+                    <div class="dropdown">
+                        <button type="button"
+                                class="btn btn-outline-secondary dropdown-toggle w-100 text-end"
+                                id="entranceTypeBtn"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                                aria-expanded="false"
+                                title="انتخاب کنید">
+                            <span class="dropdown-toggle-text">انتخاب کنید</span>
+                        </button>
+                        <ul class="dropdown-menu w-100 p-2" id="entranceTypeMenu" aria-labelledby="entranceTypeBtn">
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="entranceTypeAll">
+                                    <label class="form-check-label" for="entranceTypeAll">همه</label>
+                                </div>
+                                <hr class="dropdown-divider" />
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input entrance-type-checkbox" type="checkbox" value="1" id="entranceType1">
+                                    <label class="form-check-label" for="entranceType1">درب شرقی ورود مسیر 1</label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input entrance-type-checkbox" type="checkbox" value="2" id="entranceType2">
+                                    <label class="form-check-label" for="entranceType2">درب شرقی ورود مسیر 2</label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input entrance-type-checkbox" type="checkbox" value="3" id="entranceType3">
+                                    <label class="form-check-label" for="entranceType3">درب شرقی ورود مسیر 3</label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input entrance-type-checkbox" type="checkbox" value="4" id="entranceType4">
+                                    <label class="form-check-label" for="entranceType4">درب غربی خروج</label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input entrance-type-checkbox" type="checkbox" value="5" id="entranceType5">
+                                    <label class="form-check-label" for="entranceType5">درب غربی ورود</label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-12 text-end">
+
+                    <button type="button"
+                            id="btnSearch"
+                            class="btn btn-primary">
+
+                        <i class="fe fe-search"></i>
+                        دریافت گزارش
+
+                    </button>
+
+                </div>
+
             </div>
 
-            <div class="col-md-2 mb-3">
-                <label>از ساعت</label>
-                <input name="StartTime" type="time" class="form-control" />
-            </div>
+        </form>
 
-            <div class="col-md-2 mb-3">
-                <label>تا ساعت</label>
-                <input name="EndTime" type="time" class="form-control" />
-            </div>
+        <hr />
 
-            <div class="col-md-2 mb-3">
-                    <label class="form-label">نوع تردد</label>
-                <select name="EntranceTypes"
-                        class="form-control form-select"
-                             placeholder="انتخاب کنید">
-                    <option value="0">--انتخاب کنید--</option>
-                    <option value="1">درب شرقی ورود مسیر 1</option>
-                    <option value="2">درب شرقی ورود مسیر 2</option>
-                    <option value="3">درب شرقی ورود مسیر 3</option>
-                    <option value="4">درب غربی خروج</option>
-                    <option value="5">درب غربی ورود</option>
+        <div id="errorBox"
+             class="alert alert-danger d-none">
+        </div>
 
-                </select>
-            </div>
+        <div id="loadingBox"
+             class="text-center d-none my-3">
 
-            <div class="col-md-12 text-end">
+            <div class="spinner-border text-primary"></div>
 
-                <button type="button"
-                        id="btnSearch"
-                        class="btn btn-primary">
-
-                    <i class="fe fe-search"></i>
-                    دریافت گزارش
-
-                </button>
-
+            <div class="mt-2">
+                در حال دریافت اطلاعات ...
             </div>
 
         </div>
 
-    </form>
+        <div class="table-responsive">
 
-    <hr />
+            <table id="reportTable"
+                   class="table table-bordered table-hover">
 
-    <div id="errorBox"
-         class="alert alert-danger d-none">
-    </div>
+                <thead class="table-light">
 
-    <div id="loadingBox"
-         class="text-center d-none my-3">
+                    <tr>
+                        <th>ردیف</th>
+                        <th>تاریخ</th>
+                        <th>مسیر تردد</th>
+                        <th>تعداد</th>
+                    </tr>
 
-        <div class="spinner-border text-primary"></div>
+                </thead>
 
-        <div class="mt-2">
-            در حال دریافت اطلاعات ...
+                <tbody>
+                </tbody>
+
+            </table>
+
         </div>
 
     </div>
-
-    <div class="table-responsive">
-
-        <table id="reportTable"
-               class="table table-bordered table-hover">
-
-            <thead class="table-light">
-
-                <tr>
-                    <th>ردیف</th>
-                    <th>تاریخ</th>
-                    <th>مسیر تردد</th>
-                    <th>تعداد</th>
-                </tr>
-
-            </thead>
-
-            <tbody>
-            </tbody>
-
-        </table>
-
-    </div>
-
-</div>
 
 
 </div>
@@ -145,317 +207,377 @@
 @section Scripts
 {
     <script>
-              let reportTable;
+        let reportTable;
 
-              function fixPersianForPdf(value) {
-                  if (value === null || value === undefined) {
-                      return "";
-                  }
+        function fixPersianForPdf(value) {
+            if (value === null || value === undefined) {
+                return "";
+            }
 
-                  const text = $('<div>').html(value).text().trim();
+            const text = $('<div>').html(value).text().trim();
 
-                  if (!/[\u0600-\u06FF]/.test(text)) {
-                      return text;
-                  }
+            if (!/[\u0600-\u06FF]/.test(text)) {
+                return text;
+            }
 
-                  return text.split(/\s+/).reverse().join(' ');
-              }
+            return text.split(/\s+/).reverse().join(' ');
+        }
 
-              $(document).ready(function () {
+        function getSelectedEntranceTypes() {
+            return $(".entrance-type-checkbox:checked")
+                .map(function () { return $(this).val(); })
+                .get();
+        }
 
-                  if (typeof $.fn.persianDatepicker !== "undefined") {
-                      $(".fc-datepicker").persianDatepicker({
-                          format: "YYYY/MM/DD",
-                          autoClose: true
-                      });
-                  }
+        function updateEntranceTypeButtonText() {
+            const checked = $(".entrance-type-checkbox:checked");
+            const $btn = $("#entranceTypeBtn");
+            const $label = $btn.find(".dropdown-toggle-text");
+            let text;
 
-                  const now = new Date();
+            if (checked.length === 0) {
+                text = "انتخاب کنید";
+            } else if (checked.length === $(".entrance-type-checkbox").length) {
+                text = "همه";
+            } else {
+                const labels = checked.map(function () {
+                    return $("label[for='" + this.id + "']").text();
+                }).get();
+                text = labels.join('، ');
+            }
 
-                  const currentTime =
-                      String(now.getHours()).padStart(2, '0') +
-                      ":" +
-                      String(now.getMinutes()).padStart(2, '0');
+            $label.text(text);
+            $btn.attr("title", text);
+        }
 
-                  $("input[name='StartTime']").val("07:00");
-                  $("input[name='EndTime']").val(currentTime);
+        $(document).ready(function () {
 
-                  window.pdfMake = window.pdfMake || {};
+            if (typeof $.fn.persianDatepicker !== "undefined") {
+                $(".fc-datepicker").persianDatepicker({
+                    format: "YYYY/MM/DD",
+                    autoClose: true
+                });
+            }
 
-                  pdfMake.fonts = {
-                      Vazir: {
-                          normal: 'Vazir.ttf',
-                          bold: 'Vazir.ttf',
-                          italics: 'Vazir.ttf',
-                          bolditalics: 'Vazir.ttf'
-                      }
-                  };
+            const now = new Date();
 
-                  reportTable = $("#reportTable").DataTable({
-                      destroy: true,
-                      pageLength: 25,
-                      responsive: true,
-                      searching: true,
-                      ordering: true,
-                      autoWidth: false,
+            const currentTime =
+                String(now.getHours()).padStart(2, '0') +
+                ":" +
+                String(now.getMinutes()).padStart(2, '0');
 
-                      language: {
-                          url: "/assets/datatables/fa.json"
-                      },
+            $("input[name='StartTime']").val("00:00");
+            $("input[name='EndTime']").val(currentTime);
 
-                      dom: 'Bfrtip',
+            // جلوگیری از بسته شدن منو با کلیک روی چک‌باکس‌ها
+            $("#entranceTypeMenu").on("click", function (e) {
+                e.stopPropagation();
+            });
 
-                      buttons: [
-                          {
-                              extend: 'excelHtml5',
-                              title: 'گزارش تردد مسیر',
+            // چک‌باکس «همه»
+            $("#entranceTypeAll").on("change", function () {
+                $(".entrance-type-checkbox").prop("checked", $(this).is(":checked"));
+                updateEntranceTypeButtonText();
+                $("#entranceTypeBtn").removeClass("is-invalid");
+            });
 
-                              exportOptions: {
-                                  columns: [0, 1, 2, 3],
+            // چک‌باکس‌های تکی
+            $(document).on("change", ".entrance-type-checkbox", function () {
+                const total = $(".entrance-type-checkbox").length;
+                const checkedCount = $(".entrance-type-checkbox:checked").length;
+                $("#entranceTypeAll").prop("checked", checkedCount === total);
+                updateEntranceTypeButtonText();
+                $("#entranceTypeBtn").removeClass("is-invalid");
+            });
 
-                                  format: {
-                                      body: function (data, row, column) {
-                                          const text = $('<div>').html(data).text().trim();
+            window.pdfMake = window.pdfMake || {};
 
-                                          // تاریخ به‌صورت متن وارد Excel شود
-                                          if (column === 1) {
-                                              return "'" + text;
-                                          }
+            pdfMake.fonts = {
+                Vazir: {
+                    normal: 'Vazir.ttf',
+                    bold: 'Vazir.ttf',
+                    italics: 'Vazir.ttf',
+                    bolditalics: 'Vazir.ttf'
+                }
+            };
 
-                                          return text;
-                                      }
-                                  }
-                              },
+            reportTable = $("#reportTable").DataTable({
+                destroy: true,
+                pageLength: 25,
+                responsive: true,
+                searching: true,
+                ordering: true,
+                autoWidth: false,
 
-                              customize: function (xlsx) {
-                                  const sheet = xlsx.xl.worksheets['sheet1.xml'];
+                language: {
+                    url: "/assets/datatables/fa.json"
+                },
 
-                                  $('cols col', sheet).each(function (index) {
-                                      let width = 18;
+                dom: 'Bfrtip',
 
-                                      if (index === 0) width = 10;
-                                      if (index === 1) width = 18;
-                                      if (index === 2) width = 35;
-                                      if (index === 3) width = 15;
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        title: 'گزارش خلاصه تردد',
 
-                                      $(this).attr('width', width);
-                                      $(this).attr('customWidth', 1);
-                                  });
-                              }
-                          },
-                          {
-                              extend: 'pdfHtml5',
-                              title: fixPersianForPdf('گزارش تردد مسیر'),
-                              pageSize: 'A4',
-                              pageOrientation: 'landscape',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3],
 
-                              exportOptions: {
-                                  columns: [0, 1, 2, 3],
+                            format: {
+                                body: function (data, row, column) {
+                                    const text = $('<div>').html(data).text().trim();
 
-                                  format: {
-                                      header: function (data) {
-                                          return fixPersianForPdf(data);
-                                      },
-
-                                      body: function (data) {
-                                          return fixPersianForPdf(data);
-                                      }
-                                  }
-                              },
-
-                            customize: function (doc) {
-                                doc.defaultStyle.font = 'Vazir';
-                                doc.defaultStyle.alignment = 'right';
-
-                                doc.styles.title = {
-                                    font: 'Vazir',
-                                    fontSize: 16,
-                                    bold: true,
-                                    alignment: 'right',
-                                    margin: [0, 0, 0, 15]
-                                };
-
-                                doc.styles.tableHeader = {
-                                    font: 'Vazir',
-                                    bold: true,
-                                    fontSize: 11,
-                                    alignment: 'right'
-                                };
-
-                                const table = doc.content[1];
-
-                                table.table.widths = ['10%', '25%', '45%', '20%'];
-
-                                table.layout = {
-                                    hLineWidth: function () {
-                                        return 0.8;
-                                    },
-
-                                    vLineWidth: function () {
-                                        return 0.8;
-                                    },
-
-                                    hLineColor: function () {
-                                        return '#444';
-                                    },
-
-                                    vLineColor: function () {
-                                        return '#444';
-                                    },
-
-                                    paddingLeft: function () {
-                                        return 5;
-                                    },
-
-                                    paddingRight: function () {
-                                        return 5;
-                                    },
-
-                                    paddingTop: function () {
-                                        return 5;
-                                    },
-
-                                    paddingBottom: function () {
-                                        return 5;
+                                    // تاریخ به‌صورت متن وارد Excel شود
+                                    if (column === 1) {
+                                        return "'" + text;
                                     }
-                                };
 
-                                table.table.body.forEach(function (row) {
-                                    row.forEach(function (cell, index) {
-                                        const text =
-                                            typeof cell === 'string'
-                                                ? cell
-                                                : (cell?.text ?? '');
-
-                                        row[index] = {
-                                            text: text,
-                                            font: 'Vazir',
-                                            alignment: 'right',
-                                            margin: [4, 4, 4, 4]
-                                        };
-                                    });
-                                });
+                                    return text;
+                                }
                             }
-                          },
-                          {
-                              extend: 'print',
-                              title: 'گزارش تردد مسیر'
-                          }
-                      ],
+                        },
 
-                      initComplete: function () {
-                          $('.dt-buttons').hide();
+                        customize: function (xlsx) {
+                            const sheet = xlsx.xl.worksheets['sheet1.xml'];
 
-                          $('#reportTable_filter').before(`
-                              <div id="customExportButtons" class="btn-group me-3">
-                                  <button class="btn btn-outline-primary" id="btnPrint">
-                                      پرینت
-                                  </button>
+                            $('cols col', sheet).each(function (index) {
+                                let width = 18;
 
-                                  <button class="btn btn-outline-success" id="btnExcel">
-                                      اکسل
-                                  </button>
+                                if (index === 0) width = 10;
+                                if (index === 1) width = 18;
+                                if (index === 2) width = 35;
+                                if (index === 3) width = 15;
 
-                                  <button class="btn btn-outline-danger" id="btnPdf">
-                                      PDF
-                                  </button>
-                              </div>
-                          `);
-                      }
-                  });
-              });
+                                $(this).attr('width', width);
+                                $(this).attr('customWidth', 1);
+                            });
+                        }
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        title: fixPersianForPdf('گزارش خلاصه تردد'),
+                        pageSize: 'A4',
+                        pageOrientation: 'landscape',
 
-              $(document).on("click", "#btnExcel", function (e) {
-                  e.preventDefault();
-                  $(".buttons-excel").click();
-              });
+                        exportOptions: {
+                            columns: [0, 1, 2, 3],
 
-              $(document).on("click", "#btnPdf", function (e) {
-                  e.preventDefault();
-                  $(".buttons-pdf").click();
-              });
+                            format: {
+                                header: function (data) {
+                                    return fixPersianForPdf(data);
+                                },
 
-              $(document).on("click", "#btnPrint", function (e) {
-                  e.preventDefault();
-                  $(".buttons-print").click();
-              });
+                                body: function (data) {
+                                    return fixPersianForPdf(data);
+                                }
+                            }
+                        },
 
-              $("#btnSearch").on("click", function () {
+                      customize: function (doc) {
+                          doc.defaultStyle.font = 'Vazir';
+                          doc.defaultStyle.alignment = 'right';
 
-                  $("#errorBox")
-                      .addClass("d-none")
-                      .removeClass("alert-warning")
-                      .addClass("alert-danger")
-                      .html("");
+                          doc.styles.title = {
+                              font: 'Vazir',
+                              fontSize: 16,
+                              bold: true,
+                              alignment: 'right',
+                              margin: [0, 0, 0, 15]
+                          };
 
-                  $("#loadingBox").removeClass("d-none");
+                          doc.styles.tableHeader = {
+                              font: 'Vazir',
+                              bold: true,
+                              fontSize: 11,
+                              alignment: 'right'
+                          };
 
-                  const data = {
-                      StartDate: $("input[name='StartDate']").val(),
-                      EndDate: $("input[name='EndDate']").val(),
-                      StartTime: $("input[name='StartTime']").val(),
-                      EndTime: $("input[name='EndTime']").val(),
-                      EntranceTypes: $("select[name='EntranceTypes']").val()
-                  };
+                          const table = doc.content[1];
 
-                  $.ajax({
-                      url: '/AccessControlReports/Report/GetDataReportAjax',
-                      type: 'POST',
-                      data: data,
+                          table.table.widths = ['10%', '25%', '45%', '20%'];
 
-                      success: function (res) {
-                          reportTable.clear();
+                          table.layout = {
+                              hLineWidth: function () {
+                                  return 0.8;
+                              },
 
-                          let rows = res;
+                              vLineWidth: function () {
+                                  return 0.8;
+                              },
 
-                          if (res.data) {
-                              rows = res.data;
-                          }
+                              hLineColor: function () {
+                                  return '#444';
+                              },
 
-                          if (!rows || rows.length === 0) {
-                              reportTable.draw();
+                              vLineColor: function () {
+                                  return '#444';
+                              },
 
-                              $("#errorBox")
-                                  .removeClass("d-none")
-                                  .removeClass("alert-danger")
-                                  .addClass("alert-warning")
-                                  .text("داده‌ای یافت نشد");
+                              paddingLeft: function () {
+                                  return 5;
+                              },
 
-                              return;
-                          }
+                              paddingRight: function () {
+                                  return 5;
+                              },
 
-                          $.each(rows, function (i, item) {
-                              reportTable.row.add([
-                                  i + 1,
-                                  item.reportDate,
-                                  item.entranceType,
-                                  '<span class="badge bg-success">' +
-                                  item.recordCount +
-                                  '</span>'
-                              ]);
+                              paddingTop: function () {
+                                  return 5;
+                              },
+
+                              paddingBottom: function () {
+                                  return 5;
+                              }
+                          };
+
+                          table.table.body.forEach(function (row) {
+                              row.forEach(function (cell, index) {
+                                  const text =
+                                      typeof cell === 'string'
+                                          ? cell
+                                          : (cell?.text ?? '');
+
+                                  row[index] = {
+                                      text: text,
+                                      font: 'Vazir',
+                                      alignment: 'right',
+                                      margin: [4, 4, 4, 4]
+                                  };
+                              });
                           });
-
-                          reportTable.draw();
-                      },
-
-                      error: function (xhr) {
-                          let message = "خطا در ارتباط با سرور";
-
-                          if (xhr.responseJSON && xhr.responseJSON.message) {
-                              message = xhr.responseJSON.message;
-                          }
-
-                          $("#errorBox")
-                              .removeClass("d-none")
-                              .text(message);
-                      },
-
-                      complete: function () {
-                          $("#loadingBox").addClass("d-none");
                       }
-                  });
-              });
+                    },
+                    {
+                        extend: 'print',
+                        title: 'گزارش خلاصه تردد'
+                    }
+                ],
+
+                initComplete: function () {
+                    $('.dt-buttons').hide();
+
+                    $('#reportTable_filter').before(`
+                        <div id="customExportButtons" class="btn-group me-3">
+                            <button class="btn btn-outline-primary" id="btnPrint">
+                                پرینت
+                            </button>
+
+                            <button class="btn btn-outline-success" id="btnExcel">
+                                اکسل
+                            </button>
+
+                            <button class="btn btn-outline-danger" id="btnPdf">
+                                PDF
+                            </button>
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        $(document).on("click", "#btnExcel", function (e) {
+            e.preventDefault();
+            $(".buttons-excel").click();
+        });
+
+        $(document).on("click", "#btnPdf", function (e) {
+            e.preventDefault();
+            $(".buttons-pdf").click();
+        });
+
+        $(document).on("click", "#btnPrint", function (e) {
+            e.preventDefault();
+            $(".buttons-print").click();
+        });
+
+        $("#btnSearch").on("click", function () {
+
+            $("#errorBox")
+                .addClass("d-none")
+                .removeClass("alert-warning")
+                .addClass("alert-danger")
+                .html("");
+
+            const entranceTypes = getSelectedEntranceTypes();
+
+            if (entranceTypes.length === 0) {
+                $("#entranceTypeBtn").addClass("is-invalid");
+                $("#errorBox")
+                    .removeClass("d-none")
+                    .removeClass("alert-danger")
+                    .addClass("alert-warning")
+                    .text("لطفاً حداقل یک نوع تردد را انتخاب کنید.");
+                return;
+            }
+
+            $("#loadingBox").removeClass("d-none");
+
+            const data = {
+                StartDate: $("input[name='StartDate']").val(),
+                EndDate: $("input[name='EndDate']").val(),
+                StartTime: $("input[name='StartTime']").val(),
+                EndTime: $("input[name='EndTime']").val(),
+                EntranceTypes: entranceTypes
+            };
+
+            $.ajax({
+                url: '/AccessControlReports/Report/GetDataReportAjax',
+                type: 'POST',
+                data: data,
+                traditional: true,
+
+                success: function (res) {
+                    reportTable.clear();
+
+                    let rows = res;
+
+                    if (res.data) {
+                        rows = res.data;
+                    }
+
+                    if (!rows || rows.length === 0) {
+                        reportTable.draw();
+
+                        $("#errorBox")
+                            .removeClass("d-none")
+                            .removeClass("alert-danger")
+                            .addClass("alert-warning")
+                            .text("داده‌ای یافت نشد");
+
+                        return;
+                    }
+
+                    $.each(rows, function (i, item) {
+                        reportTable.row.add([
+                            i + 1,
+                            item.reportDate,
+                            item.entranceType,
+                            '<span class="badge bg-success">' +
+                            item.recordCount +
+                            '</span>'
+                        ]);
+                    });
+
+                    reportTable.draw();
+                },
+
+                error: function (xhr) {
+                    let message = "خطا در ارتباط با سرور";
+
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+
+                    $("#errorBox")
+                        .removeClass("d-none")
+                        .text(message);
+                },
+
+                complete: function () {
+                    $("#loadingBox").addClass("d-none");
+                }
+            });
+        });
 
     </script>
 }
-

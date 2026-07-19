@@ -167,39 +167,43 @@ app.Use(async (context, next) =>
 });
 
 // ================= Routing =================
+//app.MapControllerRoute(
+//    name: "default",
+//    pattern: "{controller=Home}/{action=Index}/{id?}");
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=AccessControlReports}/{action=GetDataReport}/{id?}");
 
 app.MapAreaControllerRoute(
     name: "security",
     areaName: "Security",
     pattern: "Security/{controller=Account}/{action=Login}/{id?}");
 
-app.MapAreaControllerRoute(
-    name: "judiciary-inquiry-area",
-    areaName: "JudiciaryInquiry",
-    pattern: "JudiciaryInquiry/{controller=Cartable}/{action=Index}/{id?}");
+//app.MapAreaControllerRoute(
+//    name: "judiciary-inquiry-area",
+//    areaName: "JudiciaryInquiry",
+//    pattern: "JudiciaryInquiry/{controller=Cartable}/{action=Index}/{id?}");
 
 app.MapAreaControllerRoute(
     name: "traffic-reports-area",
     areaName: "AccessControlReports",
-    pattern: "AccessControlReports/{controller=Report}/{action=Dashboard}/{id?}");
+    pattern: "AccessControlReports/{controller=Report}/{action=GetDataReport}/{id?}");
 
 // Compatibility routes for existing links/bookmarks.
-app.MapControllerRoute(
-    name: "legacy-cartable",
-    pattern: "Cartable/{action=Index}/{id?}",
-    defaults: new { area = "JudiciaryInquiry", controller = "Cartable" });
+//app.MapControllerRoute(
+//    name: "legacy-cartable",
+//    pattern: "Cartable/{action=Index}/{id?}",
+//    defaults: new { area = "JudiciaryInquiry", controller = "Cartable" });
 
-app.MapControllerRoute(
-    name: "legacy-reports",
-    pattern: "Reports/{action=Index}/{id?}",
-    defaults: new { area = "JudiciaryInquiry", controller = "Reports" });
+//app.MapControllerRoute(
+//    name: "legacy-reports",
+//    pattern: "Reports/{action=Index}/{id?}",
+//    defaults: new { area = "JudiciaryInquiry", controller = "Reports" });
 
 app.MapControllerRoute(
     name: "legacy-access-report",
-    pattern: "Report/{action=Index}/{id?}",
+    pattern: "Report/{action=GetDataReport}/{id?}",
     defaults: new { area = "AccessControlReports", controller = "Report" });
 
 app.Run();

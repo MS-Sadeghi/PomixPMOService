@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using IdentityManagementSystem.API.Controllers;
+﻿using IdentityManagementSystem.API.Controllers;
 using IdentityManagementSystem.API.Data;
+using IdentityManagementSystem.API.Modules.AccessControlReports;
+using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
 using IdentityManagementSystem.API.Services;
 using IdentityManagementSystem.API.Services.Logging;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,12 @@ builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<TokenService, TokenService>();
 builder.Services.Configure<ShahkarServiceOptions>(builder.Configuration.GetSection("Shahkar"));
+
+// --- AccessControlReports Modules ---
+builder.Services.Configure<PomixOptions>(
+    builder.Configuration.GetSection("Pomix"));
+builder.Services.AddAccessControlReports();
+
 
 // --- Authentication & Authorization ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -94,19 +102,8 @@ builder.Services.AddCors(options =>
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
-
     });
 });
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("AllowFrontend", policy =>
-//    {
-//        builder.WithOrigins("https://localhost:7031") 
-//               .AllowAnyMethod()
-//               .AllowAnyHeader()
-//               .AllowCredentials(); 
-//    });
-//});
 
 var app = builder.Build();
 
@@ -120,8 +117,22 @@ app.UseSwaggerUI(c =>
 
 app.UseRouting();
 
-//app.UseCors("AllowFrontend");
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+
 app.UseCors("AllowUI");
+
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
+
 app.UseAuthentication();
 app.UseAuthorization();
 

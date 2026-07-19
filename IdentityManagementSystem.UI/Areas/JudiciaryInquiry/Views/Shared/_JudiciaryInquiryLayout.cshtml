@@ -1,0 +1,246 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ServiceUIPMO</title>
+
+    <!-- BOOTSTRAP RTL CSS -->
+    <link href="~/assets/plugins/bootstrap/css/bootstrap.rtl.min.css" rel="stylesheet" />
+
+    <!-- STYLE CSS -->
+    <link href="~/assets/css/style.css" rel="stylesheet" />
+
+    <!-- FONT-ICONS CSS -->
+    <link href="~/assets/css/icons.css" rel="stylesheet" />
+    <link href="~/assets/iconfonts/bootstrapicons/bootstrap-icons.css" rel="stylesheet" />
+    <link href="~/assets/iconfonts/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="~/assets/iconfonts/ionicons/ionicons.css" rel="stylesheet" />
+    <!-- COLOR SKIN CSS -->
+    <link id="theme" rel="stylesheet" type="text/css" media="all" href="~/assets/colors/color1.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/toastr.min.css" />
+    <!-- SITE CUSTOM CSS -->
+    <link rel="stylesheet" href="~/css/JudiciaryInquirySite.css" asp-append-version="true" />
+
+    @RenderSection("Styles", required: false)
+</head>
+
+<body class="app sidebar-mini rtl">
+    <!-- GLOBAL-LOADER -->
+    <div id="global-loader">
+        <img src="~/assets/images/loader.svg" class="loader-img" alt="Loader">
+    </div>
+
+    <!-- PAGE -->
+    <div class="page">
+        <div class="page-main">
+            <header class="app-header">
+                <div class="header-container">
+                    <div class="header-left">
+                        <a asp-area="JudiciaryInquiry"
+                           asp-controller="Cartable"
+                           asp-action="Index"
+                            class="logo-horizontal" id="main-logo">
+                            <img src="~/assets/images/brand/logo-7.png" id="logo-image" alt="Logo" />
+                        </a>
+                    </div>
+
+                    <div class="header-center"></div>
+
+                    <div class="header-right">
+                        <!-- مدیریت کاربران -->
+                        @{
+                            var userRole = Context.Session.GetString("UserRole");
+                            var userRoleId = Context.Session.GetString("UserRoleId");
+                            var isAdmin = (userRole == "ادمین" || userRoleId == "3");
+                        }
+                        @if (isAdmin)
+                        {
+                            <a href="/Security/Account/Users"
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fe fe-users"></i>
+                                <span>مدیریت کاربران</span>
+                            </a>
+                        }
+                        <a class="full-screen-link" href="javascript:void(0)" id="fullScreenBtn">
+                            <i class="fe fe-maximize" id="fullScreenIcon"></i>
+                        </a>
+                        <div class="dropdown d-flex profile-1">
+                            <a href="javascript:void(0)" data-bs-toggle="dropdown" class="nav-link leading-none d-flex">
+                                <img src="~/assets/images/users/22.jfif" alt="profile-user" class="avatar  profile-user brround cover-image">
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                                <div class="dropdown-divider m-0"></div>
+                                <a class="dropdown-item" href="/Security/Account/EditProfile">
+                                    <i class="dropdown-icon fe fe-user"></i>
+                                    پروفایل
+                                </a>
+
+                                <form id="logout-form"
+                                      action="/Security/Account/Logout"
+                                      method="post"
+                                      class="d-none">
+                                    @Html.AntiForgeryToken()
+                                </form>
+
+                                <a class="dropdown-item"
+                                   href="javascript:void(0);"
+                                   onclick="document.getElementById('logout-form').submit();">
+                                    <i class="dropdown-icon fe fe-log-out"></i>
+                                    خروج
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- محتوای اصلی -->
+            <div class="main-content mt-5 hor-content">
+                <div class="side-app">
+                    <!-- CONTAINER -->
+                    <div class="main-container container">
+                        @RenderBody()
+                    </div>
+                </div>
+            </div>
+
+            <!-- فوتر -->
+            <footer class="footer">
+                <div class="container">
+                    <div class="row align-items-center flex-row-reverse">
+                        <div class="col-md-12 text-center small text-muted">
+                            © <span id="year">۱۴۰۴</span>
+                            <a href="javascript:void(0)" class="text-dark fw-semibold">اداره کل بنادر و دریانوردی هرمزگان</a> —
+                            طراحی و توسعه توسط
+                            <a href="javascript:void(0)" class="text-primary fw-semibold">تیم فناوری اطلاعات</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- BACK-TO-TOP -->
+    <a href="#top" id="back-to-top"><i class="fa fa-angle-up"></i></a>
+
+    <!-- SCRIPTS -->
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/plugins/bootstrap/js/popper.min.js"></script>
+    <script src="~/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
+    <script src="~/assets/js/jquery.sparkline.min.js"></script>
+    <script src="~/assets/js/sticky.js"></script>
+    <script src="~/assets/plugins/select2/select2.full.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/dataTables.bootstrap5.js"></script>
+    <script src="~/assets/plugins/datatable/dataTables.responsive.min.js"></script>
+    <script src="~/assets/js/themeColors.js"></script>
+    <script src="~/assets/js/custom.js"></script>
+    <script src="~/assets/js/show-password.min.js"></script>
+    <script src="~/assets/js/generate-otp.js"></script>
+    <script src="~/assets/plugins/input-mask/jquery.mask.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/dataTables.buttons.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.bootstrap5.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.html5.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.print.min.js"></script>
+    <script src="~/assets/plugins/datatable/js/buttons.colVis.min.js"></script>
+    <script src="~/assets/plugins/datatable/dataTables.responsive.min.js"></script>
+    <script src="~/assets/plugins/datatable/responsive.bootstrap5.min.js"></script>
+    <script src="~/assets/js/table-data.js"></script>
+    <script src="~/lib/bootstrap/dist/js/toastr.min.js"></script>
+    <script src="~/assets/plugins/edit-table/bst-edittable.js"></script>
+    <script src="~/assets/plugins/edit-table/edit-table.js"></script>
+
+    <script>
+        $(document).ready(function () {
+             if ('@User.Identity.IsAuthenticated' === 'True') {
+                 $.get('/Home/GetUserProfile')
+                     .done(function (data) {
+                         if (data && data.success !== false) {
+                             $('#user-name').text(data.name + ' ' + data.lastName);
+                             $('#user-role').text(data.role);
+                             $('#userNameDisplay').text(data.name || 'کاربر');
+                         }
+                     })
+                     .fail(function (xhr) {
+                         if (xhr.status === 401) {
+                             console.warn('Unauthorized - User may not be logged in.');
+                         }
+                     });
+             }
+            // پیکربندی Toastr
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-left",
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            };
+        });
+
+        const fullScreenBtn = document.getElementById('fullScreenBtn');
+        const fullScreenIcon = document.getElementById('fullScreenIcon');
+
+        if (fullScreenBtn) {
+            fullScreenBtn.addEventListener('click', function () {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().then(() => {
+                        updateFullScreenIcon(true);
+                    }).catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen().then(() => {
+                        updateFullScreenIcon(false);
+                    }).catch(err => {
+                        console.error(`Error attempting to exit full-screen mode: ${err.message}`);
+                    });
+                }
+            });
+
+            document.addEventListener('fullscreenchange', function () {
+                updateFullScreenIcon(!!document.fullscreenElement);
+            });
+        }
+
+        function updateFullScreenIcon(isFullScreen) {
+            if (fullScreenIcon) {
+                if (isFullScreen) {
+                    fullScreenIcon.className = 'fe fe-minimize';
+                } else {
+                    fullScreenIcon.className = 'fe fe-maximize';
+                }
+            }
+        }
+
+        const profileTrigger = document.getElementById('profileTrigger');
+        const profileDropdown = document.getElementById('profileDropdown');
+
+        if (profileTrigger && profileDropdown) {
+            profileTrigger.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                profileDropdown.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!profileDropdown.contains(e.target)) {
+                    profileDropdown.classList.remove('open');
+                }
+            });
+        }
+
+        // بروزرسانی سال شمسی
+        document.getElementById("year").textContent = new Date().toLocaleDateString("fa-IR", { year: "numeric" });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

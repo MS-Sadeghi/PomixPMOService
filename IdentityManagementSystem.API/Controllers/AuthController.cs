@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using IdentityManagementSystem.API.Data;
+using IdentityManagementSystem.API.Models;
+using IdentityManagementSystem.API.Models.ViewModels;
+using IdentityManagementSystem.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using IdentityManagementSystem.API.Models.ViewModels;
-using IdentityManagementSystem.API.Data;
-using IdentityManagementSystem.API.Models;
-using IdentityManagementSystem.API.Services;
 using System.Security.Claims;
 
 namespace IdentityManagementSystem.API.Controllers
@@ -34,12 +34,15 @@ namespace IdentityManagementSystem.API.Controllers
                 .FirstOrDefaultAsync(u => u.Username == loginViewModel.Username);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginViewModel.Password, user.PasswordHash))
-                return Unauthorized("نام کاربری یا رمز عبور اشتباه است.");
+                return Unauthorized(new
+                {
+                    message = "نام کاربری یا رمز عبور اشتباه است."
+                });
 
             // بروزرسانی آخرین ورود 
             user.LastLogin = DateTime.UtcNow;
             await _context.SaveChangesAsync();
-               
+
             // تولید توکن‌ها
             var tokens = await _tokenService.GenerateTokensAsync(user);
 
@@ -146,8 +149,8 @@ namespace IdentityManagementSystem.API.Controllers
         private bool IsAdmin()
         {
             var roleIdClaim = User.FindFirst("RoleId")?.Value;
-            
-            if(int.TryParse(roleIdClaim, out var roleId)&& roleId==3) return true;
+
+            if (int.TryParse(roleIdClaim, out var roleId) && roleId == 3) return true;
             var roleName = User.FindFirst(ClaimTypes.Role)?.Value;
             return roleName == "ادمین";
         }
@@ -460,7 +463,7 @@ namespace IdentityManagementSystem.API.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error saving UserLog: {ex}");
+                //Console.WriteLine($"Error saving UserLog: {ex}");
             }
         }
     }

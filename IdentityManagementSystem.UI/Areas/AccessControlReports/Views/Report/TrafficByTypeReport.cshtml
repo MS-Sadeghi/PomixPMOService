@@ -1,0 +1,458 @@
+@using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel
+@model TrafficByTypePageViewModel
+@{
+    ViewData["Title"] = "گزارش تفکیک نوع تردد";
+}
+<link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
+<style>
+    .dataTables_wrapper .dataTables_filter {
+        float: left !important;
+    }
+
+    #customExportButtons {
+        float: right;
+    }
+
+    #trafficTypeMenu {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    #trafficTypeBtn.is-invalid {
+        border-color: #dc3545;
+    }
+
+    #trafficTypeBtn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+        #trafficTypeBtn .dropdown-toggle-text {
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+</style>
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title">گزارش تفکیک نوع تردد</h5>
+    </div>
+    <div class="card-body">
+        <form id="reportForm">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label>از تاریخ</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                        <input name="StartDate" class="form-control fc-datepicker" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label>تا تاریخ</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fa fa-calendar"></i>
+                        </span>
+                        <input name="EndDate" class="form-control fc-datepicker" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label>از ساعت</label>
+                    <input name="StartTime" type="time" class="form-control" />
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label>تا ساعت</label>
+                    <input name="EndTime" type="time" class="form-control" />
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">نوع تردد</label>
+                    <div class="dropdown">
+                        <button type="button"
+                                class="btn btn-outline-secondary dropdown-toggle w-100 text-end"
+                                id="trafficTypeBtn"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                                aria-expanded="false"
+                                title="انتخاب کنید">
+                            <span class="dropdown-toggle-text">انتخاب کنید</span>
+                        </button>
+                        <ul class="dropdown-menu w-100 p-2" id="trafficTypeMenu" aria-labelledby="trafficTypeBtn">
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="trafficTypeAll">
+                                    <label class="form-check-label" for="trafficTypeAll">همه</label>
+                                </div>
+                                <hr class="dropdown-divider" />
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input traffic-type-checkbox" type="checkbox" value="1" id="trafficType1">
+                                    <label class="form-check-label" for="trafficType1">سواری رو</label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input traffic-type-checkbox" type="checkbox" value="2" id="trafficType2">
+                                    <label class="form-check-label" for="trafficType2">کامیون رو</label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input traffic-type-checkbox" type="checkbox" value="3" id="trafficType3">
+                                    <label class="form-check-label" for="trafficType3">نفر رو</label>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-12 text-end">
+                    <button type="button" id="btnSearch" class="btn btn-primary">
+                        <i class="fe fe-search"></i>
+                        دریافت گزارش
+                    </button>
+                </div>
+            </div>
+        </form>
+        <hr />
+        <div id="errorBox" class="alert alert-danger d-none"></div>
+        <div id="loadingBox" class="text-center d-none my-3">
+            <div class="spinner-border text-primary"></div>
+            <div class="mt-2">در حال دریافت اطلاعات ...</div>
+        </div>
+        <div class="table-responsive">
+            <table id="reportTable" class="table table-bordered table-hover text-nowrap">
+                <thead class="table-light">
+                    <tr>
+                        <th>ردیف</th>
+                        <th>تاریخ گزارش</th>
+                        <th>مسیر تردد</th>
+                        <th>تعداد تردد</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let reportTable;
+
+        function fixPersianForPdf(value) {
+            if (value === null || value === undefined) {
+                return "";
+            }
+
+            const text = $('<div>').html(value).text().trim();
+
+            if (!/[\u0600-\u06FF]/.test(text)) {
+                return text;
+            }
+
+            return text.split(/\s+/).reverse().join(' ');
+        }
+
+        function getSelectedTrafficTypes() {
+            return $(".traffic-type-checkbox:checked")
+                .map(function () { return $(this).val(); })
+                .get();
+        }
+
+        function updateTrafficTypeButtonText() {
+            const checked = $(".traffic-type-checkbox:checked");
+            const $btn = $("#trafficTypeBtn");
+            const $label = $btn.find(".dropdown-toggle-text");
+            let text;
+
+            if (checked.length === 0) {
+                text = "انتخاب کنید";
+            } else if (checked.length === $(".traffic-type-checkbox").length) {
+                text = "همه";
+            } else {
+                const labels = checked.map(function () {
+                    return $("label[for='" + this.id + "']").text();
+                }).get();
+                text = labels.join('، ');
+            }
+
+            $label.text(text);
+            $btn.attr("title", text);
+        }
+
+        $(document).ready(function () {
+            if (typeof $.fn.persianDatepicker !== "undefined") {
+                $(".fc-datepicker").persianDatepicker({
+                    format: "YYYY/MM/DD",
+                    autoClose: true
+                });
+            }
+            const now = new Date();
+            const currentTime =
+                String(now.getHours()).padStart(2, '0') + ":" +
+                String(now.getMinutes()).padStart(2, '0');
+            $("input[name='StartTime']").val("07:00");
+            $("input[name='EndTime']").val(currentTime);
+
+            // جلوگیری از بسته شدن منو با کلیک روی چک‌باکس‌ها
+            $("#trafficTypeMenu").on("click", function (e) {
+                e.stopPropagation();
+            });
+
+            // چک‌باکس «همه»
+            $("#trafficTypeAll").on("change", function () {
+                $(".traffic-type-checkbox").prop("checked", $(this).is(":checked"));
+                updateTrafficTypeButtonText();
+                $("#trafficTypeBtn").removeClass("is-invalid");
+            });
+
+            // چک‌باکس‌های تکی
+            $(document).on("change", ".traffic-type-checkbox", function () {
+                const total = $(".traffic-type-checkbox").length;
+                const checkedCount = $(".traffic-type-checkbox:checked").length;
+                $("#trafficTypeAll").prop("checked", checkedCount === total);
+                updateTrafficTypeButtonText();
+                $("#trafficTypeBtn").removeClass("is-invalid");
+            });
+
+            // ثبت فونت Vazir
+            window.pdfMake = window.pdfMake || {};
+            pdfMake.fonts = {
+                Vazir: {
+                    normal: 'Vazir.ttf',
+                    bold: 'Vazir.ttf',
+                    italics: 'Vazir.ttf',
+                    bolditalics: 'Vazir.ttf'
+                }
+            };
+
+            reportTable = $("#reportTable").DataTable({
+                destroy: true,
+                pageLength: 25,
+                responsive: true,
+                searching: true,
+                ordering: true,
+                autoWidth: false,
+                language: {
+                    url: "/assets/datatables/fa.json"
+                },
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        title: 'گزارش تردد بر اساس نوع',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3],
+                            format: {
+                                body: function (data, row, column) {
+                                    let text = $('<div>').html(data).text().trim();
+                                    if (column === 1) return "'" + text; // تاریخ
+                                    return text;
+                                }
+                            }
+                        }
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        title: fixPersianForPdf('گزارش تردد بر اساس نوع'),
+                        pageSize: 'A4',
+                        pageOrientation: 'landscape',
+
+                        exportOptions: {
+                            columns: [0, 1, 2, 3],
+
+                            format: {
+                                header: function (data) {
+                                    return fixPersianForPdf(data);
+                                },
+
+                                body: function (data) {
+                                    return fixPersianForPdf(data);
+                                }
+                            }
+                        },
+
+                        customize: function (doc) {
+                            doc.defaultStyle.font = 'Vazir';
+                            doc.defaultStyle.alignment = 'right';
+
+                            doc.styles.title = {
+                                font: 'Vazir',
+                                fontSize: 16,
+                                bold: true,
+                                alignment: 'right',
+                                margin: [0, 0, 0, 15]
+                            };
+
+                            doc.styles.tableHeader = {
+                                font: 'Vazir',
+                                bold: true,
+                                fontSize: 11,
+                                alignment: 'right'
+                            };
+
+                            const table = doc.content[1];
+
+                            table.table.widths = ['10%', '35%', '35%', '20%'];
+
+                            table.layout = {
+                                hLineWidth: function () {
+                                    return 0.8;
+                                },
+
+                                vLineWidth: function () {
+                                    return 0.8;
+                                },
+
+                                hLineColor: function () {
+                                    return '#444';
+                                },
+
+                                vLineColor: function () {
+                                    return '#444';
+                                },
+
+                                paddingLeft: function () {
+                                    return 5;
+                                },
+
+                                paddingRight: function () {
+                                    return 5;
+                                },
+
+                                paddingTop: function () {
+                                    return 5;
+                                },
+
+                                paddingBottom: function () {
+                                    return 5;
+                                }
+                            };
+
+                            table.table.body.forEach(function (row) {
+                                row.forEach(function (cell, index) {
+                                    const text =
+                                        typeof cell === 'string'
+                                            ? cell
+                                            : (cell?.text ?? '');
+
+                                    row[index] = {
+                                        text: text,
+                                        font: 'Vazir',
+                                        alignment: 'right',
+                                        margin: [4, 4, 4, 4]
+                                    };
+                                });
+                            });
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        title: 'گزارش تردد بر اساس نوع'
+                    }
+                ],
+                initComplete: function () {
+                    $('.dt-buttons').hide();
+                    $('#reportTable_filter').before(`
+                        <div id="customExportButtons" class="btn-group me-3">
+                            <button class="btn btn-outline-primary" id="btnPrint">پرینت</button>
+                            <button class="btn btn-outline-success" id="btnExcel">اکسل</button>
+                            <button class="btn btn-outline-danger" id="btnPdf">PDF</button>
+                        </div>
+                    `);
+                }
+            });
+        });
+
+        $(document).on("click", "#btnExcel", function (e) {
+            e.preventDefault();
+            $(".buttons-excel").click();
+        });
+        $(document).on("click", "#btnPdf", function (e) {
+            e.preventDefault();
+            $(".buttons-pdf").click();
+        });
+        $(document).on("click", "#btnPrint", function (e) {
+            e.preventDefault();
+            $(".buttons-print").click();
+        });
+
+        $("#btnSearch").on("click", function () {
+            $("#errorBox")
+                .addClass("d-none")
+                .removeClass("alert-warning")
+                .addClass("alert-danger")
+                .html("");
+
+            const trafficTypes = getSelectedTrafficTypes();
+
+            if (trafficTypes.length === 0) {
+                $("#trafficTypeBtn").addClass("is-invalid");
+                $("#errorBox")
+                    .removeClass("d-none")
+                    .removeClass("alert-danger")
+                    .addClass("alert-warning")
+                    .text("لطفاً حداقل یک مسیر تردد را انتخاب کنید.");
+                return;
+            }
+
+            $("#loadingBox").removeClass("d-none");
+
+            const data = {
+                StartDate: $("input[name='StartDate']").val(),
+                EndDate: $("input[name='EndDate']").val(),
+                StartTime: $("input[name='StartTime']").val(),
+                EndTime: $("input[name='EndTime']").val(),
+                TrafficTypes: trafficTypes
+            };
+
+            $.ajax({
+                url: '/AccessControlReports/Report/TrafficByTypeReportAjax',
+                type: 'POST',
+                data: data,
+                traditional: true,
+                success: function (res) {
+                    reportTable.clear();
+                    let rows = res;
+                    if (res.data) rows = res.data;
+                    if (!rows || rows.length === 0) {
+                        reportTable.draw();
+                        $("#errorBox")
+                            .removeClass("d-none")
+                            .removeClass("alert-danger")
+                            .addClass("alert-warning")
+                            .text("داده‌ای یافت نشد");
+                        return;
+                    }
+                    $.each(rows, function (i, item) {
+                        reportTable.row.add([
+                            i + 1,
+                            item.reportDate,
+                            item.entranceType,
+                            '<span class="badge bg-success">' + item.recordCount + '</span>'
+                        ]);
+                    });
+                    reportTable.draw();
+                },
+                error: function (xhr) {
+                    let message = "خطا در ارتباط با سرور";
+                    if (xhr.responseJSON && xhr.responseJSON.message)
+                        message = xhr.responseJSON.message;
+                    $("#errorBox")
+                        .removeClass("d-none")
+                        .text(message);
+                },
+                complete: function () {
+                    $("#loadingBox").addClass("d-none");
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,10 @@
+﻿@{
+    var area = Context.Request.RouteValues["area"]?.ToString();
+
+    Layout = area switch
+    {
+        "AccessControlReports" => "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml",
+        "JudiciaryInquiry" => "~/Areas/JudiciaryInquiry/Views/Shared/_JudiciaryInquiryLayout.cshtml",
+        _ => "~/Views/Shared/_Layout.cshtml"
+    };
+}

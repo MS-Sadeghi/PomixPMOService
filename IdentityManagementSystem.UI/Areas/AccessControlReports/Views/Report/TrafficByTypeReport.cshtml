@@ -1,7 +1,7 @@
 @using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel
 @model TrafficByTypePageViewModel
 @{
-    ViewData["Title"] = "گزارش تردد بر اساس نوع";
+    ViewData["Title"] = "گزارش تفکیک نوع تردد";
 }
 <link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
 <style>
@@ -15,7 +15,7 @@
 </style>
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title">گزارش تردد بر اساس نوع</h5>
+        <h5 class="card-title">گزارش تفکیک نوع تردد</h5>
     </div>
     <div class="card-body">
         <form id="reportForm">
@@ -145,7 +145,7 @@
                 buttons: [
                     {
                         extend: 'excelHtml5',
-                        title: 'گزارش تردد بر اساس نوع',
+                        title: 'گزارش تفکیک نوع تردد',
                         exportOptions: {
                             columns: [0, 1, 2, 3],
                             format: {
@@ -159,7 +159,7 @@
                     },
                     {
                         extend: 'pdfHtml5',
-                        title: fixPersianForPdf('گزارش تردد بر اساس نوع'),
+                        title: fixPersianForPdf('گزارش تفکیک نوع تردد'),
                         pageSize: 'A4',
                         pageOrientation: 'landscape',
 
@@ -253,7 +253,7 @@
                     },
                     {
                         extend: 'print',
-                        title: 'گزارش تردد بر اساس نوع'
+                        title: 'گزارش تفکیک نوع تردد'
                     }
                 ],
                 initComplete: function () {

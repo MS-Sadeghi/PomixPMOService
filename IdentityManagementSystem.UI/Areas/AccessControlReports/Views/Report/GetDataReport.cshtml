@@ -2,7 +2,7 @@
 @model GetDataReportPageViewModel
 
 @{
-    ViewData["Title"] = "گزارش خلاصه تردد";
+    ViewData["Title"] = "گزارش تردد مسیر";
 }
 
 <link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
@@ -20,7 +20,7 @@
 <div class="card">
 
 <div class="card-header">
-    <h5 class="card-title">گزارش خلاصه ترددها</h5>
+    <h5 class="card-title">گزارش تردد مسیرها</h5>
 </div>
 
 <div class="card-body">
@@ -208,7 +208,7 @@
                       buttons: [
                           {
                               extend: 'excelHtml5',
-                              title: 'گزارش خلاصه تردد',
+                              title: 'گزارش تردد مسیر',
 
                               exportOptions: {
                                   columns: [0, 1, 2, 3],
@@ -245,7 +245,7 @@
                           },
                           {
                               extend: 'pdfHtml5',
-                              title: fixPersianForPdf('گزارش خلاصه تردد'),
+                              title: fixPersianForPdf('گزارش تردد مسیر'),
                               pageSize: 'A4',
                               pageOrientation: 'landscape',
 
@@ -339,7 +339,7 @@
                           },
                           {
                               extend: 'print',
-                              title: 'گزارش خلاصه تردد'
+                              title: 'گزارش تردد مسیر'
                           }
                       ],
 

@@ -19,12 +19,12 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.TrafficByPla
             {
                 new
                 {
-                    parameterName = "StartDate",
+                    parameterName = "startDate",
                     parameterValue = ToEnglishDigits(request.StartDate)
                 },
                 new
                 {
-                    parameterName = "EndDate",
+                    parameterName = "endDate",
                     parameterValue = ToEnglishDigits(request.EndDate)
                 },
                 new

@@ -1,7 +1,7 @@
 @using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel
 @model GetSumReportPageViewModel
 @{
-    ViewData["Title"] = "گزارش مجموع تردد";
+    ViewData["Title"] = "گزارش مجموع نوع تردد";
 }
 <link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
 <style>
@@ -15,7 +15,7 @@
 </style>
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title">گزارش مجموع تردد</h5>
+        <h5 class="card-title">گزارش مجموع نوع تردد</h5>
     </div>
     <div class="card-body">
         <form id="reportForm">
@@ -135,7 +135,7 @@
                 buttons: [
                     {
                         extend: 'excelHtml5',
-                        title: 'گزارش مجموع تردد',
+                        title: 'گزارش مجموع نوع تردد',
                         exportOptions: {
                             columns: [0, 1, 2, 3],
                             format: {
@@ -149,7 +149,7 @@
                     },
                     {
                         extend: 'pdfHtml5',
-                        title: fixPersianForPdf('گزارش مجموع تردد'),
+                        title: fixPersianForPdf('گزارش مجموع نوع تردد'),
                         pageSize: 'A4',
                         pageOrientation: 'landscape',
 
@@ -243,7 +243,7 @@
                     },
                     {
                         extend: 'print',
-                        title: 'گزارش مجموع تردد'
+                        title: 'گزارش مجموع نوع تردد'
                     }
                 ],
                 initComplete: function () {

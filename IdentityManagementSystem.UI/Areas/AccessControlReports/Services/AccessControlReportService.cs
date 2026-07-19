@@ -1,9 +1,9 @@
-namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
-{
-    using System.Net.Http.Json;
-    using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel;
-    using IdentityManagementSystem.UI.ViewModels;
+using IdentityManagementSystem.UI.Areas.AccessControlReports.Services;
+using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel;
+using IdentityManagementSystem.UI.ViewModels;
 
+namespace IdentityManagementSystem.API.Services.AccessControlReports
+{
     public class AccessControlReportService : IAccessControlReportService
     {
         private readonly IHttpClientFactory _factory;
@@ -19,11 +19,11 @@ namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
 
             var request = new
             {
-                filter.StartDate,
-                filter.EndDate,
-                filter.StartTime,
-                filter.EndTime,
-                filter.EntranceTypes
+                StartDate = filter.StartDate,
+                EndDate = filter.EndDate,
+                StartTime = filter.StartTime,
+                EndTime = filter.EndTime,
+                EntranceTypes = filter.EntranceTypes
             };
 
             var response = await client.PostAsJsonAsync(
@@ -48,10 +48,10 @@ namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
 
             var request = new
             {
-                filter.StartDate,
-                filter.EndDate,
-                filter.StartTime,
-                filter.EndTime
+                StartDate = filter.StartDate,
+                EndDate = filter.EndDate,
+                StartTime = filter.StartTime,
+                EndTime = filter.EndTime
             };
 
             var response = await client.PostAsJsonAsync(
@@ -71,11 +71,11 @@ namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
 
             var request = new
             {
-                filter.StartDate,
-                filter.EndDate,
-                filter.StartTime,
-                filter.EndTime,
-                filter.TrafficTypes
+                StartDate = filter.StartDate,
+                EndDate = filter.EndDate,
+                StartTime = filter.StartTime,
+                EndTime = filter.EndTime,
+                TrafficTypes = filter.TrafficTypes
             };
 
             var response = await client.PostAsJsonAsync(
@@ -95,14 +95,14 @@ namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
 
             var request = new
             {
-                filter.StartDate,
-                filter.EndDate,
-                filter.StartTime,
-                filter.EndTime,
-                filter.P1,
-                filter.P2,
-                filter.P3,
-                filter.P4
+                StartDate = filter.StartDate,
+                EndDate = filter.EndDate,
+                StartTime = filter.StartTime,
+                EndTime = filter.EndTime,
+                P1 = filter.P1,
+                P2 = filter.P2,
+                P3 = filter.P3,
+                P4 = filter.P4
             };
 
             var response = await client.PostAsJsonAsync(
@@ -122,11 +122,11 @@ namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
 
             var request = new
             {
-                filter.StartDate,
-                filter.EndDate,
-                filter.StartTime,
-                filter.EndTime,
-                filter.NationalId
+                StartDate = filter.StartDate,
+                EndDate = filter.EndDate,
+                StartTime = filter.StartTime,
+                EndTime = filter.EndTime,
+                NationalId = filter.NationalId
             };
 
             var response = await client.PostAsJsonAsync(
@@ -139,24 +139,24 @@ namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
             return await response.Content.ReadFromJsonAsync<List<TrafficByNationalIdReportViewModel>>()
                    ?? new List<TrafficByNationalIdReportViewModel>();
         }
-		public async Task<DashboardResponseViewModel> GetDashboardAsync()
-		{
-			var client = _factory.CreateClient("PomixApi");
+        public async Task<DashboardResponseViewModel> GetDashboardAsync()
+        {
+            var client = _factory.CreateClient("PomixApi");
 
-                var response = await client.PostAsync(
-	                "access-control-reports/dashboard",
-	                null
-                );
+            var response = await client.PostAsync(
+                "access-control-reports/dashboard",
+                null
+            );
 
-			        if (!response.IsSuccessStatusCode)
-			        {
-				        return new DashboardResponseViewModel();
-			        }
+            if (!response.IsSuccessStatusCode)
+            {
+                return new DashboardResponseViewModel();
+            }
 
-			        return await response.Content
-				        .ReadFromJsonAsync<DashboardResponseViewModel>()
-				        ?? new DashboardResponseViewModel();
+            return await response.Content
+                .ReadFromJsonAsync<DashboardResponseViewModel>()
+                ?? new DashboardResponseViewModel();
         }
 
-	}
+    }
 }

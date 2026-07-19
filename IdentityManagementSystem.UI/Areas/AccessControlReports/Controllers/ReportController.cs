@@ -59,9 +59,15 @@ namespace IdentityManagementSystem.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> GetSumReport(GetSumReportPageViewModel model)
         {
-            // Call API : bsr-GetSum
+            model.Reports = await _service.GetSumAsync(model.Filter);
 
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetSumReportAjax(BaseReportFilterViewModel filter)
+        {
+            return await ExecuteReportAsync(() => _service.GetSumAsync(filter));
         }
 
         #endregion
@@ -77,9 +83,15 @@ namespace IdentityManagementSystem.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> TrafficByTypeReport(TrafficByTypePageViewModel model)
         {
-            // Call API : bsr-TrafficByType
+            model.Reports = await _service.TrafficByTypeAsync(model.Filter);
 
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> TrafficByTypeReportAjax(TrafficByTypeFilterViewModel filter)
+        {
+            return await ExecuteReportAsync(() => _service.TrafficByTypeAsync(filter));
         }
 
         #endregion
@@ -95,9 +107,15 @@ namespace IdentityManagementSystem.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> TrafficByPlatesReport(TrafficByPlatesPageViewModel model)
         {
-            // Call API : bsr-TrafficByPlates
+            model.Reports = await _service.TrafficByPlatesAsync(model.Filter);
 
             return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> TrafficByPlatesReportAjax(TrafficByPlatesFilterViewModel filter)
+        {
+            return await ExecuteReportAsync(() => _service.TrafficByPlatesAsync(filter));
         }
 
         #endregion
@@ -113,7 +131,7 @@ namespace IdentityManagementSystem.UI.Controllers
         [HttpPost]
         public async Task<IActionResult> TrafficByNationalIDReport(TrafficByNationalIdPageViewModel model)
         {
-            // Call API : bsr-TrafficByNationalid
+            model.Reports = await _service.TrafficByNationalIdAsync(model.Filter);
 
             return View(model);
         }
@@ -124,40 +142,39 @@ namespace IdentityManagementSystem.UI.Controllers
             return await ExecuteReportAsync(() => _service.TrafficByNationalIdAsync(filter));
         }
 
-		#endregion
+        #endregion
 
-		#region Dashboard
-		[HttpGet]
+        #region Dashboard
+        [HttpGet]
         public IActionResult Dashboard()
         {
-			HttpContext.Session.SetString("CurrentModule", "AccessControlReports");
-			return View();
+            return View();
         }
-		[HttpPost]
-		public async Task<IActionResult> GetDashboardAjax()
-		{
-			try
-			{
-				var result = await _service.GetDashboardAsync();
+        [HttpPost]
+        public async Task<IActionResult> GetDashboardAjax()
+        {
+            try
+            {
+                var result = await _service.GetDashboardAsync();
 
-				return Json(new
-				{
-					success = true,
-					data = result
-				});
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(new
-				{
-					success = false,
-					message = ex.Message
-				});
-			}
-		}
-		#endregion
+                return Json(new
+                {
+                    success = true,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+        #endregion
 
-		private async Task<IActionResult> ExecuteReportAsync<T>(Func<Task<List<T>>> action)
+        private async Task<IActionResult> ExecuteReportAsync<T>(Func<Task<List<T>>> action)
         {
             try
             {

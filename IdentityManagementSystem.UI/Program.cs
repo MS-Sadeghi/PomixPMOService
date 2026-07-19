@@ -1,18 +1,17 @@
 ﻿using DNTCaptcha.Core;
+using IdentityManagementSystem.API.Services.AccessControlReports;
+using IdentityManagementSystem.UI.Areas.AccessControlReports.Services;
+using IdentityManagementSystem.UI.Filters;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using IdentityManagementSystem.UI.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// ================= MVC =================
-builder.Services.AddControllersWithViews();
 
 // ================= Cookie Auth =================
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Home/LoginPage";
+        options.LoginPath = "/Security/Account/Login";
         options.AccessDeniedPath = "/Error/AccessDenied";
         options.ReturnUrlParameter = "returnUrl";
 
@@ -57,6 +56,11 @@ builder.Services.AddHttpClient("PomixApiPublic", client =>
     };
 });
 
+
+// ================= AccessControlReports =================
+builder.Services.AddScoped<IAccessControlReportService, AccessControlReportService>();
+
+
 // ================= Captcha =================
 builder.Services.AddDNTCaptcha(options =>
 {
@@ -86,6 +90,7 @@ builder.Services.AddControllersWithViews(options =>
 });
 
 // ================= Build =================
+builder.Services.AddCors();
 var app = builder.Build();
 
 // ================= Pipeline =================
@@ -95,10 +100,11 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
 
 app.UseCors(policy =>
 {
@@ -111,15 +117,18 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
 
-// ================= FIXED AUTH MIDDLEWARE =================
 // ================= FIXED AUTH MIDDLEWARE =================
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value?.ToLower() ?? "";
 
     // مسیرهای آزاد
-    if (path.StartsWith("/home/loginpage") ||
+    if (path.StartsWith("/security/account/login") ||
         path.StartsWith("/api") ||
         path.StartsWith("/swagger") ||
         path.Contains("captcha") ||
@@ -128,6 +137,8 @@ app.Use(async (context, next) =>
         path.StartsWith("/lib") ||
         path.StartsWith("/assets"))
     {
+        //Console.WriteLine(context.Request.Path);
+
         await next();
         return;
     }
@@ -136,15 +147,20 @@ app.Use(async (context, next) =>
 
     if (string.IsNullOrEmpty(token))
     {
-        var accept = context.Request.Headers["Accept"].ToString().ToLower();
-        if (accept.Contains("text/html"))
+        // جلوگیری از loop
+        if (!path.StartsWith("/security/account/login"))
         {
-            context.Response.Redirect("/Home/LoginPage?returnUrl=" + context.Request.Path);
+            var accept = context.Request.Headers["Accept"].ToString().ToLower();
+
+            if (accept.Contains("text/html"))
+            {
+                context.Response.Redirect("/Security/Account/Login");
+                return;
+            }
+
+            context.Response.StatusCode = 401;
             return;
         }
-
-        context.Response.StatusCode = 401;
-        return;
     }
 
     await next();
@@ -153,6 +169,37 @@ app.Use(async (context, next) =>
 // ================= Routing =================
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Cartable}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapAreaControllerRoute(
+    name: "security",
+    areaName: "Security",
+    pattern: "Security/{controller=Account}/{action=Login}/{id?}");
+
+app.MapAreaControllerRoute(
+    name: "judiciary-inquiry-area",
+    areaName: "JudiciaryInquiry",
+    pattern: "JudiciaryInquiry/{controller=Cartable}/{action=Index}/{id?}");
+
+app.MapAreaControllerRoute(
+    name: "traffic-reports-area",
+    areaName: "AccessControlReports",
+    pattern: "AccessControlReports/{controller=Report}/{action=Dashboard}/{id?}");
+
+// Compatibility routes for existing links/bookmarks.
+app.MapControllerRoute(
+    name: "legacy-cartable",
+    pattern: "Cartable/{action=Index}/{id?}",
+    defaults: new { area = "JudiciaryInquiry", controller = "Cartable" });
+
+app.MapControllerRoute(
+    name: "legacy-reports",
+    pattern: "Reports/{action=Index}/{id?}",
+    defaults: new { area = "JudiciaryInquiry", controller = "Reports" });
+
+app.MapControllerRoute(
+    name: "legacy-access-report",
+    pattern: "Report/{action=Index}/{id?}",
+    defaults: new { area = "AccessControlReports", controller = "Report" });
 
 app.Run();

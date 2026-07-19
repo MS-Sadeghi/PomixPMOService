@@ -173,7 +173,13 @@ app.Use(async (context, next) =>
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=AccessControlReports}/{action=GetDataReport}/{id?}");
+    pattern: "",
+    defaults: new
+    {
+        area = "AccessControlReports",
+        controller = "Report",
+        action = "GetDataReport"
+    });
 
 app.MapAreaControllerRoute(
     name: "security",

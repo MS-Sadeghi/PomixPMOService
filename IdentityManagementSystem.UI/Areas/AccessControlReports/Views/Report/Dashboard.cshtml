@@ -1,199 +1,282 @@
 ﻿@{
     ViewData["Title"] = "داشبورد";
-    Layout = "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml";
 }
 
-<div class="row">
-    <!-- Welcome -->
-    <div class="col-xl-12">
-        <div class="card bg-primary-transparent">
-            <div class="card-body d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="fw-bold mb-1">سامانه جامع گزارشات تردد</h4>
-                    <p class="mb-0 text-muted">به داشبورد سامانه خوش آمدید.</p>
+<!-- Start::page-header -->
+<div class="col-xl-12">
+    <div class="d-flex align-items-center justify-content-between my-3 page-header-breadcrumb flex-wrap gap-2">
+        <div>
+            <nav>
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="javascript:void(0);">داشبورد</a></li>
+                    <li aria-current="page" class="breadcrumb-item active">داشبورد آماری</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="dropdown">
+                <button aria-expanded="false" class="btn btn-primary btn-wave" data-bs-auto-close="outside" data-bs-toggle="dropdown" id="dashboardFilterDropdown" type="button">
+                    فیلتر بر اساس
+                    <i class="ri-arrow-down-s-fill ms-1"></i>
+                </button>
+                <ul aria-labelledby="dashboardFilterDropdown" class="dropdown-menu">
+                    <li><a class="dropdown-item" href="javascript:void(0);">امروز</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);">دیروز</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);">۷ روز گذشته</a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);">۳۰ روز گذشته</a></li>
+                </ul>
+            </div>
+            <button class="btn btn-secondary btn-icon btn-wave" data-bs-placement="top" data-bs-title="بروزرسانی" data-bs-toggle="tooltip" id="refreshDashboardBtn">
+                <i class="ti ti-refresh"></i>
+            </button>
+            <button class="btn btn-light border btn-icon btn-wave" data-bs-placement="top" data-bs-title="چاپ" data-bs-toggle="tooltip">
+                <i class="ti ti-printer"></i>
+            </button>
+        </div>
+    </div>
+</div>
+<!-- End::page-header -->
+<!-- Start::welcome banner -->
+<div class="col-xl-12">
+    <div class="card custom-card main-banner-card overflow-hidden">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-xl-9">
+                    <h5 class="mb-2 fw-semibold">سامانه جامع گزارشات تردد</h5>
+                    <p class="mb-0 text-muted">پایش لحظه‌ای تردد خودرو و افراد، گزارش‌های تفکیکی و تحلیل روند هفتگی.</p>
                 </div>
-                <i class="fe fe-bar-chart-2 fs-90 text-primary"></i>
+                <div class="col-xl-3 text-center">
+                    <i class="ri-building-4-line fs-60 text-primary"></i>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- Statistics -->
-    <div class="col-xl-3 col-lg-6">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="text-muted">کل تردد امروز</h6>
-                        <h2 id="totalTrafficToday">-</h2>
-                    </div>
-                    <div class="avatar bg-primary-transparent">
-                        <i class="fe fe-activity"></i>
-                    </div>
+</div>
+<!-- End::welcome banner -->
+<!-- Start::stat cards -->
+<div class="col-xxl-3 col-md-6">
+    <div class="card custom-card overflow-hidden main-custom-card">
+        <div class="card-body">
+            <div class="d-flex gap-3 align-items-center">
+                <div class="avatar avatar-md primary">
+                    <i class="ri-pulse-line fs-20"></i>
+                </div>
+                <div class="flex-fill">
+                    <div class="fw-medium fs-13 mb-1">کل تردد امروز</div>
+                    <div class="fs-22 fw-semibold mb-0" id="totalTrafficToday">-</div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="col-xl-3 col-lg-6">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="text-muted">تردد خودروها</h6>
-                        <h2 id="vehicleTrafficToday">-</h2>
+<div class="col-xxl-3 col-md-6">
+    <div class="card custom-card overflow-hidden main-custom-card">
+        <div class="card-body">
+            <div class="d-flex gap-3 align-items-center">
+                <div class="avatar avatar-md secondary">
+                    <i class="ri-truck-line fs-20"></i>
+                </div>
+                <div class="flex-fill">
+                    <div class="fw-medium fs-13 mb-1">تردد خودروها</div>
+                    <div class="fs-22 fw-semibold mb-0" id="vehicleTrafficToday">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-xxl-3 col-md-6">
+    <div class="card custom-card overflow-hidden main-custom-card">
+        <div class="card-body">
+            <div class="d-flex gap-3 align-items-center">
+                <div class="avatar avatar-md warning">
+                    <i class="ri-group-line fs-20"></i>
+                </div>
+                <div class="flex-fill">
+                    <div class="fw-medium fs-13 mb-1">تردد افراد</div>
+                    <div class="fs-22 fw-semibold mb-0" id="peopleTrafficToday">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-xxl-3 col-md-6">
+    <div class="card custom-card overflow-hidden main-custom-card">
+        <div class="card-body">
+            <div class="d-flex gap-3 align-items-center">
+                <div class="avatar avatar-md danger">
+                    <i class="ri-file-chart-line fs-20"></i>
+                </div>
+                <div class="flex-fill">
+                    <div class="fw-medium fs-13 mb-1">گزارش‌های امروز</div>
+                    <div class="fs-22 fw-semibold mb-0" id="reportsCountToday">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End::stat cards -->
+<!-- Start::weekly chart + system status -->
+<div class="col-xxl-8">
+    <div class="card custom-card">
+        <div class="card-header justify-content-between">
+            <div class="card-title">روند تردد هفت روز اخیر</div>
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <button class="btn btn-light border btn-sm">
+                    خروجی
+                    <i class="ri-share-forward-line ms-1"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body pb-0">
+            <div id="weeklyTrafficChart"></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-xxl-4">
+    <div class="card custom-card">
+        <div class="card-header justify-content-between">
+            <div class="card-title">وضعیت سامانه</div>
+        </div>
+        <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-sm avatar-rounded bg-success-transparent">
+                            <i class="ri-cloud-line fs-16"></i>
+                        </span>
+                        <span class="fw-medium">وب سرویس تردد</span>
+                    </div>
+                    <span class="badge bg-success-transparent">فعال</span>
+                </li>
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-sm avatar-rounded bg-success-transparent">
+                            <i class="ri-database-2-line fs-16"></i>
+                        </span>
+                        <span class="fw-medium">پایگاه داده</span>
+                    </div>
+                    <span class="badge bg-success-transparent">فعال</span>
+                </li>
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-sm avatar-rounded bg-primary-transparent">
+                            <i class="ri-time-line fs-16"></i>
+                        </span>
+                        <span class="fw-medium">آخرین بروزرسانی</span>
+                    </div>
+                    <span class="badge bg-primary-transparent" id="lastUpdated">09:42</span>
+                </li>
+                <li class="list-group-item d-flex align-items-center justify-content-between border-bottom-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-sm avatar-rounded bg-info-transparent">
+                            <i class="ri-git-branch-line fs-16"></i>
+                        </span>
+                        <span class="fw-medium">نسخه سامانه</span>
+                    </div>
+                    <span class="badge bg-info-transparent">1.0.0</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<!-- End::weekly chart + system status -->
+<!-- Start::quick access -->
+<div class="col-xl-12">
+    <div class="card custom-card">
+        <div class="card-header pb-2 justify-content-between">
+            <div class="card-title">دسترسی سریع به گزارش‌ها</div>
+        </div>
+        <div class="card-body">
+            <div class="row gy-3">
+                <div class="col-lg col-md-4 col-6">
+                    <a asp-area="AccessControlReports" asp-controller="Report" asp-action="GetDataReport" class="text-decoration-none">
+                        <div class="p-3 border border-dashed rounded main-custom-card text-center h-100">
+                            <div class="lh-1 mb-2">
+                                <span class="avatar avatar-md avatar-rounded primary mx-auto">
+                                    <i class="ri-list-check-2 fs-20"></i>
+                                </span>
+                            </div>
+                            <h6 class="mb-0 fs-14">خلاصه تردد</h6>
                         </div>
-                    <div class="avatar bg-success-transparent">
-                        <i class="fe fe-truck"></i>
-                    </div>
+                    </a>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-lg-6">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="text-muted">تردد افراد</h6>
-                        <h2 id="peopleTrafficToday">-</h2>
-                    </div>
-                    <div class="avatar bg-info-transparent">
-                        <i class="fe fe-users"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-lg-6">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="text-muted">گزارش‌های امروز</h6>
-                        <h2 id="reportsCountToday">-</h2>
+                <div class="col-lg col-md-4 col-6">
+                    <a asp-area="AccessControlReports" asp-controller="Report" asp-action="GetSumReport" class="text-decoration-none">
+                        <div class="p-3 border border-dashed rounded main-custom-card text-center h-100">
+                            <div class="lh-1 mb-2">
+                                <span class="avatar avatar-md avatar-rounded secondary mx-auto">
+                                    <i class="ri-stack-line fs-20"></i>
+                                </span>
+                            </div>
+                            <h6 class="mb-0 fs-14">گزارش تجمیعی</h6>
                         </div>
-                    <div class="avatar bg-warning-transparent">
-                        <i class="fe fe-file-text"></i>
-                    </div>
+                    </a>
+                </div>
+                <div class="col-lg col-md-4 col-6">
+                    <a asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByTypeReport" class="text-decoration-none">
+                        <div class="p-3 border border-dashed rounded main-custom-card text-center h-100">
+                            <div class="lh-1 mb-2">
+                                <span class="avatar avatar-md avatar-rounded warning mx-auto">
+                                    <i class="ri-truck-line fs-20"></i>
+                                </span>
+                            </div>
+                            <h6 class="mb-0 fs-14">نوع تردد</h6>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg col-md-4 col-6">
+                    <a asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByPlatesReport" class="text-decoration-none">
+                        <div class="p-3 border border-dashed rounded main-custom-card text-center h-100">
+                            <div class="lh-1 mb-2">
+                                <span class="avatar avatar-md avatar-rounded info mx-auto">
+                                    <i class="ri-bank-card-line fs-20"></i>
+                                </span>
+                            </div>
+                            <h6 class="mb-0 fs-14">پلاک</h6>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg col-md-4 col-6">
+                    <a asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByNationalIDReport" class="text-decoration-none">
+                        <div class="p-3 border border-dashed rounded main-custom-card text-center h-100">
+                            <div class="lh-1 mb-2">
+                                <span class="avatar avatar-md avatar-rounded danger mx-auto">
+                                    <i class="ri-user-line fs-20"></i>
+                                </span>
+                            </div>
+                            <h6 class="mb-0 fs-14">کد ملی</h6>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Chart -->
-    <div class="col-xl-8">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title"> روند تردد هفت روز اخیر</h3>
-            </div>
-            <div class="card-body"> <div id="weeklyTrafficChart"></div> </div>
+</div>
+<!-- End::quick access -->
+<!-- Start::traffic types + recent reports -->
+<div class="col-xl-5">
+    <div class="card custom-card">
+        <div class="card-header justify-content-between">
+            <div class="card-title">انواع تردد</div>
+        </div>
+        <div class="card-body">
+            <div id="trafficTypesChart"></div>
         </div>
     </div>
+</div>
 
-    <!-- Status -->
-    <div class="col-xl-4">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">وضعیت سامانه</h3>
-            </div>
-
-            <div class="card-body">
-                <div class="mb-4">🟢 وب سرویس تردد</div>
-                <div class="mb-4">🟢 پایگاه داده</div>
-                <div class="mb-4">🟢 آخرین بروزرسانی<br>09:42</div>
-                <div>🔵 نسخه سامانه<br> 1.0.0</div>
-            </div>
+<div class="col-xl-7">
+    <div class="card custom-card recent-transactions">
+        <div class="card-header justify-content-between">
+            <div class="card-title">آخرین گزارش‌های مشاهده شده</div>
         </div>
-    </div>
-
-    <!-- Quick Access -->
-    <div class="col-xl-12">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">دسترسی سریع به گزارش‌ها</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-lg col-md-4 col-6">
-                        <a asp-area="AccessControlReports"asp-controller="Report"asp-action="GetDataReport">
-                            <div class="card border text-center">
-                                <div class="card-body">
-                                    <i class="fe fe-list fs-30 text-primary"></i>
-                                    <h6 class="mt-3"> خلاصه تردد</h6>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-
-                    <div class="col-lg col-md-4 col-6">
-                        <a asp-area="AccessControlReports"asp-controller="Report"asp-action="GetSumReport">
-                            <div class="card border text-center">
-                                <div class="card-body">
-                                    <i class="fe fe-layers fs-30 text-success"></i>
-                                    <h6 class="mt-3"> گزارش تجمیعی</h6>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-
-                    <div class="col-lg col-md-4 col-6">
-                        <a asp-area="AccessControlReports"asp-controller="Report" asp-action="TrafficByTypeReport">
-                            <div class="card border text-center">
-                                <div class="card-body">
-                                    <i class="fe fe-truck fs-30 text-warning"></i>
-                                    <h6 class="mt-3">نوع تردد</h6>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-
-                    <div class="col-lg col-md-4 col-6">
-                        <a asp-area="AccessControlReports"asp-controller="Report"asp-action="TrafficByPlatesReport">
-                            <div class="card border text-center">
-                                <div class="card-body">
-                                    <i class="fe fe-credit-card fs-30 text-info"></i>
-                                    <h6 class="mt-3"> پلاک</h6>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-
-                    <div class="col-lg col-md-4 col-6">
-                        <a asp-area="AccessControlReports"asp-controller="Report"asp-action="TrafficByNationalIDReport">
-                            <div class="card border text-center">
-                                <div class="card-body">
-                                    <i class="fe fe-user fs-30 text-danger"></i>
-                                    <h6 class="mt-3">کد ملی</h6>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom -->
-    <div class="col-xl-5">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">انواع تردد</h3>
-            </div>
-            <div class="card-body"> <div id="trafficTypesChart"></div> </div>
-        </div>
-    </div>
-
-    <div class="col-xl-7">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">آخرین گزارش‌های مشاهده شده</h3>
-            </div>
-
-            <div class="card-body">
-                <table class="table table-bordered">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table text-nowrap">
                     <thead>
                         <tr>
                             <th>عنوان گزارش</th>
@@ -203,19 +286,40 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>گزارش پلاک</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="avatar avatar-md avatar-rounded bg-primary-transparent">
+                                        <i class="ri-bank-card-line fs-16"></i>
+                                    </span>
+                                    <span class="fw-semibold">گزارش پلاک</span>
+                                </div>
+                            </td>
                             <td>1405/05/12</td>
                             <td>مدیر سیستم</td>
                         </tr>
                         <tr>
-                            <td>گزارش کد ملی</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="avatar avatar-md avatar-rounded bg-secondary-transparent">
+                                        <i class="ri-user-line fs-16"></i>
+                                    </span>
+                                    <span class="fw-semibold">گزارش کد ملی</span>
+                                </div>
+                            </td>
                             <td>1405/05/12</td>
                             <td>کارشناس</td>
                         </tr>
                         <tr>
-                            <td>گزارش خالصه تردد</td>
-                            <td>1405/05/11</td>
-                            <td>مدیر</td>
+                            <td class="border-bottom-0">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="avatar avatar-md avatar-rounded bg-warning-transparent">
+                                        <i class="ri-list-check-2 fs-16"></i>
+                                    </span>
+                                    <span class="fw-semibold">گزارش خلاصه تردد</span>
+                                </div>
+                            </td>
+                            <td class="border-bottom-0">1405/05/11</td>
+                            <td class="border-bottom-0">مدیر</td>
                         </tr>
                     </tbody>
                 </table>
@@ -223,117 +327,136 @@
         </div>
     </div>
 </div>
-
+<!-- End::traffic types + recent reports -->
 @section Scripts {
-<script src="~/assets/js/apexcharts.js"></script>
+    <script src="~/assets/js/apexcharts.js"></script>
 
-<script>
-    $(document).ready(function () {
-        $.ajax({
-            url: '@Url.Action("GetDashboardAjax", "Report", new { area = "AccessControlReports" })',
-            type: 'POST',
-            success: function (response) {
-                if (!response.success) {
-                    console.error(response.message || 'خطا در دریافت اطلاعات داشبورد');
-                    return;
-                }
+    <script>
+        $(document).ready(function () {
+            loadDashboard();
 
-                const data = response.data;
-
-                $('#totalTrafficToday').text(
-                    Number(data.totalTrafficToday || 0).toLocaleString('fa-IR')
-                );
-
-                $('#vehicleTrafficToday').text(
-                    Number(data.vehicleTrafficToday || 0).toLocaleString('fa-IR')
-                );
-
-                $('#peopleTrafficToday').text(
-                    Number(data.peopleTrafficToday || 0).toLocaleString('fa-IR')
-                );
-
-                $('#reportsCountToday').text(
-                    Number(data.reportsCountToday || 0).toLocaleString('fa-IR')
-                );
-
-                $('#lastUpdated').text(data.lastUpdated || '-');
-
-                renderWeeklyTrafficChart(data.weeklyTraffic || []);
-                renderTrafficTypesChart(data.trafficTypes || []);
-            },
-            error: function (xhr) {
-                console.error(
-                    xhr.responseJSON?.message ||
-                    'خطا در دریافت اطلاعات داشبورد'
-                );
-            }
+            $('#refreshDashboardBtn').on('click', function () {
+                loadDashboard();
+            });
         });
-    });
 
-    function renderWeeklyTrafficChart(items) {
-        const chartElement = document.querySelector('#weeklyTrafficChart');
+        function loadDashboard() {
+            $.ajax({
+                url: '@Url.Action("GetDashboardAjax", "Report", new { area = "AccessControlReports" })',
+                type: 'POST',
+                success: function (response) {
+                    if (!response.success) {
+                        console.error(response.message || 'خطا در دریافت اطلاعات داشبورد');
+                        return;
+                    }
 
-        if (!chartElement) {
-            return;
+                    const data = response.data;
+
+                    $('#totalTrafficToday').text(
+                        Number(data.totalTrafficToday || 0).toLocaleString('fa-IR')
+                    );
+
+                    $('#vehicleTrafficToday').text(
+                        Number(data.vehicleTrafficToday || 0).toLocaleString('fa-IR')
+                    );
+
+                    $('#peopleTrafficToday').text(
+                        Number(data.peopleTrafficToday || 0).toLocaleString('fa-IR')
+                    );
+
+                    $('#reportsCountToday').text(
+                        Number(data.reportsCountToday || 0).toLocaleString('fa-IR')
+                    );
+
+                    $('#lastUpdated').text(data.lastUpdated || '-');
+
+                    renderWeeklyTrafficChart(data.weeklyTraffic || []);
+                    renderTrafficTypesChart(data.trafficTypes || []);
+                },
+                error: function (xhr) {
+                    console.error(
+                        xhr.responseJSON?.message ||
+                        'خطا در دریافت اطلاعات داشبورد'
+                    );
+                }
+            });
         }
 
-        const options = {
-            chart: {
-                type: 'line',
-                height: 350,
-                toolbar: {
-                    show: false
-                }
-            },
-            series: [
-                {
-                    name: 'تعداد تردد',
-                    data: items.map(x => x.value)
-                }
-            ],
-            xaxis: {
-                categories: items.map(x => x.label)
-            },
-            stroke: {
-                curve: 'smooth',
-                width: 3
-            },
-            dataLabels: {
-                enabled: false
-            },
-            noData: {
-                text: 'داده‌ای برای نمایش وجود ندارد'
+        let weeklyChartInstance = null;
+        let trafficTypesChartInstance = null;
+
+        function renderWeeklyTrafficChart(items) {
+            const chartElement = document.querySelector('#weeklyTrafficChart');
+            if (!chartElement) return;
+
+            const options = {
+                chart: {
+                    type: 'area',
+                    height: 320,
+                    toolbar: { show: false },
+                    fontFamily: 'inherit'
+                },
+                series: [
+                    {
+                        name: 'تعداد تردد',
+                        data: items.map(x => x.value)
+                    }
+                ],
+                colors: ['#845adf'],
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.35,
+                        opacityTo: 0.05,
+                        stops: [0, 90, 100]
+                    }
+                },
+                xaxis: {
+                    categories: items.map(x => x.label)
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                dataLabels: { enabled: false },
+                grid: { strokeDashArray: 4 },
+                noData: { text: 'داده‌ای برای نمایش وجود ندارد' }
+            };
+
+            if (weeklyChartInstance) {
+                weeklyChartInstance.destroy();
             }
-        };
-
-        const chart = new ApexCharts(chartElement, options);
-        chart.render();
-    }
-
-    function renderTrafficTypesChart(items) {
-        const chartElement = document.querySelector('#trafficTypesChart');
-
-        if (!chartElement) {
-            return;
+            weeklyChartInstance = new ApexCharts(chartElement, options);
+            weeklyChartInstance.render();
         }
 
-        const options = {
-            chart: {
-                type: 'donut',
-                height: 280
-            },
-            series: items.map(x => x.value),
-            labels: items.map(x => x.label),
-            legend: {
-                position: 'bottom'
-            },
-            noData: {
-                text: 'داده‌ای برای نمایش وجود ندارد'
-            }
-        };
+        function renderTrafficTypesChart(items) {
+            const chartElement = document.querySelector('#trafficTypesChart');
+            if (!chartElement) return;
 
-        const chart = new ApexCharts(chartElement, options);
-        chart.render();
-    }
-</script>
+            const options = {
+                chart: {
+                    type: 'donut',
+                    height: 280,
+                    fontFamily: 'inherit'
+                },
+                series: items.map(x => x.value),
+                labels: items.map(x => x.label),
+                colors: ['#845adf', '#e58a00', '#01a3ae', '#dc3545'],
+                legend: {
+                    position: 'bottom',
+                    fontFamily: 'inherit'
+                },
+                dataLabels: { enabled: false },
+                noData: { text: 'داده‌ای برای نمایش وجود ندارد' }
+            };
+
+            if (trafficTypesChartInstance) {
+                trafficTypesChartInstance.destroy();
+            }
+            trafficTypesChartInstance = new ApexCharts(chartElement, options);
+            trafficTypesChartInstance.render();
+        }
+    </script>
 }

@@ -74,7 +74,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 {
                     success = true,
                     redirectUrl = Url.Action(
-                        "GetDataReport",
+                        "Dashboard",
                         "Report",
                         new { area = "AccessControlReports" })
                 });
@@ -478,6 +478,12 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
             return View(userInfo);
         }
 
-        #endregion
-    }
+		#endregion
+
+		[AllowAnonymous]
+		public IActionResult ForgotPassword()
+		{
+			return View();
+		}
+	}
 }

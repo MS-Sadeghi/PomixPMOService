@@ -72,6 +72,16 @@
     </div>
     <div class="card-body">
         <form id="reportForm">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">پلاک وسیله نقلیه</label>
+                <div class="d-flex align-items-center gap-2">
+                    <input name="P1" class="form-control text-center" maxlength="2" autocomplete="off" style="max-width:70px;" />
+                    <input name="P2" class="form-control text-center" maxlength="1" placeholder="مثال: ج" autocomplete="off" style="max-width:70px;" />
+                    <input name="P3" class="form-control text-center" maxlength="3" autocomplete="off" style="max-width:90px;" />
+                    <span class="fw-bold">ایران</span>
+                    <input name="P4" class="form-control text-center" maxlength="2" autocomplete="off" style="max-width:70px;" />
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-3 mb-3">
                     <label class="form-label">از تاریخ</label>
@@ -94,16 +104,6 @@
                 <div class="col-md-2 mb-3">
                     <label class="form-label">تا ساعت</label>
                     <input name="EndTime" type="time" class="form-control" />
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">پلاک وسیله نقلیه</label>
-                    <div class="d-flex align-items-center gap-2">
-                        <input name="P1" class="form-control text-center" maxlength="2" autocomplete="off" style="max-width:70px;" />
-                        <input name="P2" class="form-control text-center" maxlength="1" placeholder="مثال: ج" autocomplete="off" style="max-width:70px;" />
-                        <input name="P3" class="form-control text-center" maxlength="3" autocomplete="off" style="max-width:90px;" />
-                        <span class="fw-bold">ایران</span>
-                        <input name="P4" class="form-control text-center" maxlength="2" autocomplete="off" style="max-width:70px;" />
-                    </div>
                 </div>
                 <div class="col-md-12 text-end">
                     <button type="button" id="btnSearch" class="btn btn-primary"><i class="ti ti-search"></i> دریافت گزارش</button>

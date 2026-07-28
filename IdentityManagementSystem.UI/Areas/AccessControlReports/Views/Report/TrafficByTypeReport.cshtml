@@ -108,6 +108,26 @@
     <div class="card-body">
         <form id="reportForm">
             <div class="row">
+                <div class="col-md-2 mb-3">
+                    <label class="form-label">نوع تردد</label>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-outline-info dropdown-toggle w-100 text-end" id="trafficTypeBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="انتخاب کنید">
+                            <span class="dropdown-toggle-text">انتخاب کنید</span>
+                        </button>
+                        <ul class="dropdown-menu w-100 p-2" id="trafficTypeMenu" aria-labelledby="trafficTypeBtn">
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="trafficTypeAll">
+                                    <label class="form-check-label" for="trafficTypeAll">همه</label>
+                                </div>
+                                <hr class="dropdown-divider" />
+                            </li>
+                            <li><div class="form-check"><input class="form-check-input traffic-type-checkbox" type="checkbox" value="1" id="trafficType1"><label class="form-check-label" for="trafficType1">سواری رو</label></div></li>
+                            <li><div class="form-check"><input class="form-check-input traffic-type-checkbox" type="checkbox" value="2" id="trafficType2"><label class="form-check-label" for="trafficType2">کامیون رو</label></div></li>
+                            <li><div class="form-check"><input class="form-check-input traffic-type-checkbox" type="checkbox" value="3" id="trafficType3"><label class="form-check-label" for="trafficType3">نفر رو</label></div></li>
+                        </ul>
+                    </div>
+                </div>
                 <div class="col-md-3 mb-3">
                     <label class="form-label">از تاریخ</label>
                     <div class="input-group">
@@ -129,26 +149,6 @@
                 <div class="col-md-2 mb-3">
                     <label class="form-label">تا ساعت</label>
                     <input name="EndTime" type="time" class="form-control" />
-                </div>
-                <div class="col-md-2 mb-3">
-                    <label class="form-label">نوع تردد</label>
-                    <div class="dropdown">
-                        <button type="button" class="btn btn-outline-info dropdown-toggle w-100 text-end" id="trafficTypeBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="انتخاب کنید">
-                            <span class="dropdown-toggle-text">انتخاب کنید</span>
-                        </button>
-                        <ul class="dropdown-menu w-100 p-2" id="trafficTypeMenu" aria-labelledby="trafficTypeBtn">
-                            <li>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="trafficTypeAll">
-                                    <label class="form-check-label" for="trafficTypeAll">همه</label>
-                                </div>
-                                <hr class="dropdown-divider" />
-                            </li>
-                            <li><div class="form-check"><input class="form-check-input traffic-type-checkbox" type="checkbox" value="1" id="trafficType1"><label class="form-check-label" for="trafficType1">سواری رو</label></div></li>
-                            <li><div class="form-check"><input class="form-check-input traffic-type-checkbox" type="checkbox" value="2" id="trafficType2"><label class="form-check-label" for="trafficType2">کامیون رو</label></div></li>
-                            <li><div class="form-check"><input class="form-check-input traffic-type-checkbox" type="checkbox" value="3" id="trafficType3"><label class="form-check-label" for="trafficType3">نفر رو</label></div></li>
-                        </ul>
-                    </div>
                 </div>
                 <div class="col-md-12 text-end">
                     <button type="button" id="btnSearch" class="btn btn-primary"><i class="ti ti-search"></i> دریافت گزارش</button>

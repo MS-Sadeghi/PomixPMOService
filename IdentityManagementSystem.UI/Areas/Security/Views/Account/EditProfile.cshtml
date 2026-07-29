@@ -103,7 +103,6 @@
 
                                 <div class="text-end mt-4">
                                     <button type="submit" class="btn btn-primary">ثبت</button>
-                                    <a href="/AccessControlReports/Report/GetDataReport" class="btn btn-danger">انصراف</a>
                                 </div>
                             </li>
                         </ul>
@@ -116,6 +115,15 @@
 
 @section Scripts {
     <script>
+        function showToast(msg, isSuccess) {
+            Toastify({
+                text: msg,
+                duration: 3000,
+                gravity: "top",
+                position: "left",
+                style: { background: isSuccess ? "#28a745" : "#dc3545" }
+            }).showToast();
+        }
         $(document).ready(function () {
             $("#changePasswordForm").submit(function (e) {
                 e.preventDefault();
@@ -124,33 +132,38 @@
                     url: form.attr("action"),
                     type: "POST",
                     data: form.serialize(),
+                    dataType: "json",
                     success: function (response) {
-                        if (response.success) {
-                            toastr.success(response.message);
+                        if (response && response.success) {
+                            showToast(response.message || "رمز عبور با موفقیت تغییر کرد", true);
                             form[0].reset();
                         } else {
-                            toastr.error(response.message);
+                            showToast(response?.message || "خطا در تغییر رمز عبور", false);
                         }
                     },
                     error: function (xhr) {
-                        toastr.error(xhr.responseJSON?.message ?? xhr.responseText);
+                        var msg = "خطا در ارتباط با سرور";
+                        try {
+                            var res = xhr.responseJSON || JSON.parse(xhr.responseText);
+                            msg = res?.message || msg;
+                        } catch (e) {}
+                        showToast(msg, false);
                     }
                 });
             });
         });
         document.querySelectorAll('.toggle-password').forEach(element => {
-                element.addEventListener('click', function() {
-                    const input = this.closest('.input-group').querySelector('input');
-                    const icon = this.querySelector('i');
-
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        icon.className = 'ti ti-eye-off';
-                    } else {
-                        input.type = 'password';
-                        icon.className = 'ti ti-eye';
-                    }
-                });
+            element.addEventListener('click', function () {
+                const input = this.closest('.input-group').querySelector('input');
+                const icon = this.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'ti ti-eye-off';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'ti ti-eye';
+                }
+            });
         });
     </script>
 }

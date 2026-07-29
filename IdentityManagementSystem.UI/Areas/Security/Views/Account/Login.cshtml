@@ -494,110 +494,74 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        function showToast(msg, isSuccess) {
+            Toastify({
+                text: msg,
+                duration: 3000,
+                gravity: "top",
+                position: "left",
+                style: { background: isSuccess ? "#28a745" : "#dc3545" }
+            }).showToast();
+        }
         $('#loginForm').submit(function (e) {
-
             e.preventDefault();
-
             const btn = $("#loginBtn");
             const spinner = $("#loginSpinner");
             const text = $("#loginText");
-
             btn.prop("disabled", true);
-
             spinner.removeClass("d-none");
-
             text.text("در حال ورود...");
-
             $.ajax({
-
                 url: '/Security/Account/Login',
-
                 type: 'POST',
-
                 data: $(this).serialize(),
-
                 success: function (res) {
-
                     if (res.success) {
-
                         text.text("ورود موفق");
-
                         window.location.href = res.redirectUrl;
-                    }
-                    else {
-
+                    } else {
                         spinner.addClass("d-none");
-
                         text.text("ورود");
-
                         btn.prop("disabled", false);
-
-                        toastr.error(res.message);
+                        showToast("نام کاربری یا رمز عبور اشتباه است", false);
+                        $('.captcha-refresh').click();
+                        $('.captchaInput').val('');
                     }
                 },
-
-                error: function (xhr) {
-
+                error: function () {
                     spinner.addClass("d-none");
-
                     text.text("ورود");
-
                     btn.prop("disabled", false);
-
-                    toastr.error("خطای سرور");
+                    showToast("خطای سرور", false);
+                    $('.captcha-refresh').click();
+                    $('.captchaInput').val('');
                 }
-
             });
-
         });
         @if (TempData["SuccessLogoutMessage"] != null)
         {
-                    @:toastr.options = {
-                    @:"closeButton": true,
-                    @:"progressBar": true,
-                    @:"positionClass": "toast-top-left",
-                    @:"timeOut": "3000",
-                    @:"rtl": true
-                    @:};
-                    @:toastr.success('@TempData["SuccessLogoutMessage"]');
+                @:showToast(@Html.Raw(Json.Serialize(TempData["SuccessLogoutMessage"])), true);
         }
-
-                const jwtToken = '@ViewBag.JwtToken';
+        const jwtToken = '@ViewBag.JwtToken';
         if (jwtToken) {
             localStorage.setItem('jwtToken', jwtToken);
             window.location.href = '/JudiciaryInquiry/Cartable/Index';
         }
-
         document.addEventListener('DOMContentLoaded', function () {
-            toastr.options = {
-                "closeButton": true,
-                "progressBar": true,
-                "positionClass": "toast-top-left",
-                "timeOut": "5000",
-                "rtl": true
-            };
-
             const shownMessages = new Set();
-
-            document.querySelectorAll(
-                '.field-validation-error, .validation-summary-errors'
-            ).forEach(function (element) {
+            document.querySelectorAll('.field-validation-error, .validation-summary-errors').forEach(function (element) {
                 const message = element.textContent.trim();
-
                 if (message && !shownMessages.has(message)) {
                     shownMessages.add(message);
-                    toastr.error(message);
+                    showToast(message, false);
                 }
             });
-
             if ('@(!string.IsNullOrEmpty(ViewBag.ErrorMessage) ? ViewBag.ErrorMessage : "")' !== '') {
-                toastr.error('@(!string.IsNullOrEmpty(ViewBag.ErrorMessage) ? ViewBag.ErrorMessage : "")');
+                showToast('@(!string.IsNullOrEmpty(ViewBag.ErrorMessage) ? ViewBag.ErrorMessage : "")', false);
             }
-
             const toggle = document.getElementById('Password-toggle');
             const icon = toggle.querySelector('i');
             const input = toggle.querySelector('input');
-
             toggle.addEventListener('click', function (e) {
                 if (e.target.closest('span.input-group-text')) {
                     if (input.type === 'password') {
@@ -612,6 +576,5 @@
                 }
             });
         });
-
     </script>
 }

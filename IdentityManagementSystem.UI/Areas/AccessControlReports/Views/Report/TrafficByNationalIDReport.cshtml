@@ -29,6 +29,50 @@
             margin-left: auto;
         }
 
+    .expand-btn {
+        background: none;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        color: #495057;
+        padding: 0;
+        margin: 0 auto;
+    }
+
+        .expand-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .expand-btn.expanded {
+            background: #0d6efd;
+            border-color: #0d6efd;
+            color: white;
+        }
+
+    .detail-row td {
+        padding: 0 !important;
+        background-color: #f8f9fa;
+    }
+
+    .detail-content {
+        padding: 15px 20px;
+        text-align: right;
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+    }
+
+        .detail-content p {
+            margin: 0 0 5px 0;
+        }
+
     #customExportButtons {
         margin-bottom: 1rem;
     }
@@ -140,6 +184,40 @@
             document.getElementById('grid-loading').classList.toggle('show', show);
         }
 
+        function toggleRow(buttonElement) {
+            const mainRow = buttonElement.closest('tr');
+            if (!mainRow) return;
+
+            let detailRow = mainRow.nextElementSibling;
+
+            if (!detailRow || !detailRow.classList.contains('detail-row')) {
+                const td = document.createElement('td');
+                td.colSpan = 6;
+                td.innerHTML = `<div class="detail-content">
+                    <p><strong>جزئیات کامل تردد</strong></p>
+                    <p><strong>نام و نام خانوادگی:</strong> ${mainRow.querySelector('td:nth-child(3)')?.textContent || ''}</p>
+                    <p><strong>کد ملی:</strong> ${mainRow.querySelector('td:nth-child(4)')?.textContent || ''}</p>
+                    <p><strong>تاریخ و ساعت:</strong> ${mainRow.querySelector('td:nth-child(5)')?.textContent || ''}</p>
+                    <p><strong>نوع تردد:</strong> ${mainRow.querySelector('td:nth-child(6)')?.textContent || ''}</p>
+                    <hr />
+                    <p>اطلاعات تکمیلی بیشتر می‌تواند در این بخش نمایش داده شود.</p>
+                    <p>مانند: شماره تماس، آدرس، سمت سازمانی و ...</p>
+                </div>`;
+
+                detailRow = document.createElement('tr');
+                detailRow.className = 'detail-row';
+                detailRow.style.display = 'none';
+                detailRow.appendChild(td);
+
+                mainRow.parentElement.insertBefore(detailRow, mainRow.nextSibling);
+            }
+
+            const isExpanded = detailRow.style.display !== 'none';
+            detailRow.style.display = isExpanded ? 'none' : 'table-row';
+            buttonElement.textContent = isExpanded ? '+' : '−';
+            buttonElement.classList.toggle('expanded', !isExpanded);
+        }
+
         function initGrid() {
             if (typeof gridjs === 'undefined') return;
             const container = document.getElementById('grid-report');
@@ -148,6 +226,15 @@
 
             gridInstance = new gridjs.Grid({
                 columns: [
+                    {
+                        id: 'expand',
+                        name: '',
+                        width: '60px',
+                        sort: false,
+                        formatter: (cell, row) => {
+                            return gridjs.html(`<button class="expand-btn" onclick="toggleRow(this)">+</button>`);
+                        }
+                    },
                     { id: 'rowNumber', name: 'ردیف', width: '80px', sort: false },
                     { id: 'fullName', name: 'نام و نام خانوادگی' },
                     { id: 'nationalId', name: 'کد ملی', width: '140px' },
@@ -172,13 +259,17 @@
         }
 
         function updateGrid(rows) {
+            document.querySelectorAll('.detail-row').forEach(row => row.remove());
+
             gridData = rows.map((item, i) => [
+                i + 1,
                 item.rowNumber || (i + 1),
                 item.fullName || '',
                 item.nationalId || '',
                 item.logDateTimePersian || '',
                 item.entranceType || ''
             ]);
+
             if (gridInstance) {
                 gridInstance.updateConfig({ data: gridData }).forceRender();
             } else {
@@ -195,7 +286,8 @@
             if (typeof $.fn.persianDatepicker !== "undefined") {
                 $(".fc-datepicker").persianDatepicker({
                     format: "YYYY/MM/DD",
-                    autoClose: true
+                    autoClose: true,
+                    initialValue: false
                 });
             }
 
@@ -212,7 +304,7 @@
             $("input[name='StartTime']").val("07:00");
             $("input[name='EndTime']").val(String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0'));
 
-            initGrid(); // جدول خالی با پیام «داده‌ای وجود ندارد»
+            initGrid();
         });
 
         $("#btnSearch").on("click", function () {
@@ -254,7 +346,7 @@
         $("#btnExcel").on("click", function () {
             if (!gridData.length) return;
             let csv = "ردیف,نام و نام خانوادگی,کد ملی,تاریخ و ساعت تردد,نوع تردد\n";
-            gridData.forEach(r => { csv += `${r[0]},${r[1]},${r[2]},'${r[3]},${r[4]}\n`; });
+            gridData.forEach(r => { csv += `${r[1]},${r[2]},${r[3]},${r[4]},${r[5]}\n`; });
             const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);

@@ -166,7 +166,10 @@
                         <button type="button" class="btn btn-outline-info dropdown-toggle w-100 text-end" id="entranceTypeBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="انتخاب کنید">
                             <span class="dropdown-toggle-text">انتخاب کنید</span>
                         </button>
-                        <ul class="dropdown-menu w-100 p-2" id="entranceTypeMenu" aria-labelledby="entranceTypeBtn">
+                        <ul class="dropdown-menu w-100 p-2" id="entranceTypeMenu" aria-labelledby="entranceTypeBtn" style="max-height:300px;overflow-y:auto;">
+                            <li class="px-2 pb-2">
+                                <input type="search" class="form-control form-control-sm" id="entranceTypeSearch" placeholder="جستجو..." autocomplete="off">
+                            </li>
                             <li>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="entranceTypeAll">
@@ -174,11 +177,32 @@
                                 </div>
                                 <hr class="dropdown-divider" />
                             </li>
-                            <li><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="1" id="entranceType1"><label class="form-check-label" for="entranceType1">درب شرقی ورود مسیر 1</label></div></li>
-                            <li><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="2" id="entranceType2"><label class="form-check-label" for="entranceType2">درب شرقی ورود مسیر 2</label></div></li>
-                            <li><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="3" id="entranceType3"><label class="form-check-label" for="entranceType3">درب شرقی ورود مسیر 3</label></div></li>
-                            <li><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="4" id="entranceType4"><label class="form-check-label" for="entranceType4">درب غربی خروج</label></div></li>
-                            <li><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="5" id="entranceType5"><label class="form-check-label" for="entranceType5">درب غربی ورود</label></div></li>
+                            <li class="dropdown-header-item" data-group="east"><h6 class="dropdown-header">درب شرقی</h6></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="1" id="entranceType1"><label class="form-check-label" for="entranceType1">درب شرقی مسیر 1</label></div></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="2" id="entranceType2"><label class="form-check-label" for="entranceType2">درب شرقی مسیر 2</label></div></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="11" id="entranceType11"><label class="form-check-label" for="entranceType11">درب شرقی مسیر 3</label></div></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="120" id="entranceType120"><label class="form-check-label" for="entranceType120">درب شرقی مسیر 4</label></div></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="13" id="entranceType13"><label class="form-check-label" for="entranceType13">درب شرقی مسیر 5</label></div></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="140" id="entranceType140"><label class="form-check-label" for="entranceType140">درب شرقی مسیر 6</label></div></li>
+                            <hr class="dropdown-divider" />
+                            <li class="dropdown-header-item" data-group="west"><h6 class="dropdown-header">درب غربی</h6></li>
+                            <li class="option-item" data-group="west"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="4" id="entranceType4"><label class="form-check-label" for="entranceType4">درب غربی مسیر 1</label></div></li>
+                            <li class="option-item" data-group="west"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="5" id="entranceType5"><label class="form-check-label" for="entranceType5">درب غربی مسیر 2</label></div></li>
+                            <li class="option-item" data-group="west"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="3" id="entranceType3"><label class="form-check-label" for="entranceType3">درب غربی مسیر 3</label></div></li>
+                            <li class="option-item" data-group="west"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="7" id="entranceType7"><label class="form-check-label" for="entranceType7">درب غربی مسیر 4</label></div></li>
+                            <hr class="dropdown-divider" />
+                            <li class="dropdown-header-item" data-group="bijak"><h6 class="dropdown-header">بیجک</h6></li>
+                            <li class="option-item" data-group="bijak"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="19" id="entranceType19"><label class="form-check-label" for="entranceType19">بیجک مسیر 8 درب شرقی</label></div></li>
+                            <li class="option-item" data-group="bijak"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="22" id="entranceType22"><label class="form-check-label" for="entranceType22">بیجک مسیر 9 درب شرقی</label></div></li>
+                            <li class="option-item" data-group="bijak"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="23" id="entranceType23"><label class="form-check-label" for="entranceType23">بیجک مسیر 10 درب شرقی</label></div></li>
+                            <li class="option-item" data-group="bijak"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="12" id="entranceType12"><label class="form-check-label" for="entranceType12">بیجک مسیر 6 درب غربی</label></div></li>
+                            <li class="option-item" data-group="bijak"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="14" id="entranceType14"><label class="form-check-label" for="entranceType14">بیجک Xray درب غربی</label></div></li>
+                            <hr class="dropdown-divider" />
+                            <li class="dropdown-header-item" data-group="other"><h6 class="dropdown-header">سایر</h6></li>
+                            <li class="option-item" data-group="other"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="نفر رو ورودی" id="entranceTypePedIn"><label class="form-check-label" for="entranceTypePedIn">نفر رو ورودی</label></div></li>
+                            <li class="option-item" data-group="other"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="نفر رو خروجی" id="entranceTypePedOut"><label class="form-check-label" for="entranceTypePedOut">نفر رو خروجی</label></div></li>
+                            <li class="option-item" data-group="other"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="سواری رو ورود" id="entranceTypeCarIn"><label class="form-check-label" for="entranceTypeCarIn">سواری رو ورودی</label></div></li>
+                            <li class="option-item" data-group="other"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="سواری رو خروج" id="entranceTypeCarOut"><label class="form-check-label" for="entranceTypeCarOut">سواری رو خروجی</label></div></li>
                         </ul>
                     </div>
                 </div>
@@ -229,7 +253,6 @@
     <script>
         let gridInstance = null;
         let gridData = [];
-        let expandedRows = new Set();
 
         function padDate(d) {
             if (!d) return d;
@@ -260,19 +283,36 @@
             return formatter.format(new Date()).replace(/\//g, '/');
         }
 
-        function toggleRow(rowIndex) {
-            if (expandedRows.has(rowIndex)) expandedRows.delete(rowIndex);
-            else expandedRows.add(rowIndex);
+        function toggleRow(buttonElement) {
+            const mainRow = buttonElement.closest('tr');
+            if (!mainRow) return;
 
-            document.querySelectorAll('.expand-btn').forEach((btn, index) => {
-                if (index === rowIndex) {
-                    btn.classList.toggle('expanded', expandedRows.has(rowIndex));
-                    btn.textContent = expandedRows.has(rowIndex) ? '−' : '+';
-                }
-            });
-            document.querySelectorAll('.detail-row').forEach((row, index) => {
-                if (index === rowIndex) row.style.display = expandedRows.has(rowIndex) ? 'table-row' : 'none';
-            });
+            // پیدا کردن سطر جزئیات بعد از سطر اصلی
+            let detailRow = mainRow.nextElementSibling;
+
+            // اگر سطر جزئیات وجود ندارد یا سطر بعدی جزئیات نیست، آن را ایجاد کن
+            if (!detailRow || !detailRow.classList.contains('detail-row')) {
+                const td = document.createElement('td');
+                td.colSpan = 5; // تعداد ستون‌ها
+                td.innerHTML = `<div class="detail-content">
+                    <p><strong>جزئیات</strong></p>
+                    <p>اطلاعات تکمیلی اینجا نمایش داده می‌شود.</p>
+                </div>`;
+
+                detailRow = document.createElement('tr');
+                detailRow.className = 'detail-row';
+                detailRow.style.display = 'none';
+                detailRow.appendChild(td);
+
+                // درج سطر جزئیات بعد از سطر اصلی
+                mainRow.parentElement.insertBefore(detailRow, mainRow.nextSibling);
+            }
+
+            // تغییر وضعیت نمایش
+            const isExpanded = detailRow.style.display !== 'none';
+            detailRow.style.display = isExpanded ? 'none' : 'table-row';
+            buttonElement.textContent = isExpanded ? '+' : '−';
+            buttonElement.classList.toggle('expanded', !isExpanded);
         }
 
         function showGridLoading(show) {
@@ -287,15 +327,24 @@
 
             gridInstance = new gridjs.Grid({
                 columns: [
-                    { id: 'expand', name: '', width: '60px', sort: false, formatter: (cell, row) => {
-                        const rowIndex = row.cells[0].data - 1;
-                        const isExpanded = expandedRows.has(rowIndex);
-                        return gridjs.html(`<button class="expand-btn ${isExpanded ? 'expanded' : ''}" onclick="toggleRow(${rowIndex})">${isExpanded ? '−' : '+'}</button>`);
-                    }},
+                    {
+                        id: 'expand',
+                        name: '',
+                        width: '60px',
+                        sort: false,
+                        formatter: (cell, row) => {
+                            return gridjs.html(`<button class="expand-btn" onclick="toggleRow(this)">+</button>`);
+                        }
+                    },
                     { id: 'rowNumber', name: 'ردیف', width: '80px', sort: false },
                     { id: 'date', name: 'تاریخ', width: '150px' },
                     { id: 'entranceType', name: 'مسیر تردد', width: 'auto' },
-                    { id: 'count', name: 'تعداد', width: '100px', formatter: (cell) => gridjs.html(`<span class="badge rounded-pill bg-dark-transparent fs-12">${cell}</span>`) }
+                    {
+                        id: 'count',
+                        name: 'تعداد',
+                        width: '100px',
+                        formatter: (cell) => gridjs.html(`<span class="badge rounded-pill bg-dark-transparent fs-12">${cell}</span>`)
+                    }
                 ],
                 data: gridData,
                 language: {
@@ -311,32 +360,24 @@
                 resizable: true,
                 className: { table: 'table table-bordered table-hover', th: 'table-light' }
             });
-            gridInstance.render(container);
-            setTimeout(addDetailRows, 100);
-        }
 
-        function addDetailRows() {
-            const table = document.querySelector('.gridjs-table tbody');
-            if (!table) return;
-            document.querySelectorAll('.detail-row').forEach(r => r.remove());
-            table.querySelectorAll('tr:not(.detail-row)').forEach((row, index) => {
-                const detailRow = document.createElement('tr');
-                detailRow.className = 'detail-row';
-                detailRow.style.display = expandedRows.has(index) ? 'table-row' : 'none';
-                const td = document.createElement('td');
-                td.colSpan = 5;
-                td.innerHTML = `<div class="detail-content"><p><strong>جزئیات سطر ${index + 1}</strong></p><p>اطلاعات تکمیلی اینجا نمایش داده می‌شود.</p></div>`;
-                detailRow.appendChild(td);
-                table.appendChild(detailRow);
-            });
+            gridInstance.render(container);
         }
 
         function updateGrid(rows) {
-            expandedRows.clear();
-            gridData = rows.map((item, i) => [i + 1, i + 1, item.reportDate || '', item.entranceType || '', item.recordCount || 0]);
+            // حذف سطرهای جزئیات قدیمی
+            document.querySelectorAll('.detail-row').forEach(row => row.remove());
+
+            gridData = rows.map((item, i) => [
+                i + 1,
+                i + 1,
+                item.reportDate || '',
+                item.entranceType || '',
+                item.recordCount || 0
+            ]);
+
             if (gridInstance) {
                 gridInstance.updateConfig({ data: gridData }).forceRender();
-                setTimeout(addDetailRows, 100);
             } else {
                 initGrid();
             }
@@ -350,18 +391,20 @@
 
             if (typeof $.fn.persianDatepicker !== "undefined") {
                 $(".fc-datepicker").persianDatepicker({
-                    format: "YYYY/0M/0D",
-                    autoClose: true
+                    format: "YYYY/MM/DD",
+                    autoClose: true,
+                    initialValue: false
                 });
             }
 
-            $("#startDateIcon").on("click", function () {
+            $("#startDateIcon").click(function () {
                 $("input[name='StartDate']").focus();
-                if ($("input[name='StartDate']").data('persianDatepicker')) $("input[name='StartDate']").data('persianDatepicker').show();
+                $("input[name='StartDate']").data("persianDatepicker").show();
             });
-            $("#endDateIcon").on("click", function () {
+
+            $("#endDateIcon").click(function () {
                 $("input[name='EndDate']").focus();
-                if ($("input[name='EndDate']").data('persianDatepicker')) $("input[name='EndDate']").data('persianDatepicker').show();
+                $("input[name='EndDate']").data("persianDatepicker").show();
             });
 
             const now = new Date();
@@ -374,6 +417,7 @@
                 updateEntranceTypeButtonText();
                 $("#entranceTypeBtn").removeClass("is-invalid");
             });
+
             $(document).on("change", ".entrance-type-checkbox", function () {
                 const total = $(".entrance-type-checkbox").length;
                 $("#entranceTypeAll").prop("checked", $(".entrance-type-checkbox:checked").length === total);
@@ -381,7 +425,8 @@
                 $("#entranceTypeBtn").removeClass("is-invalid");
             });
 
-            initGrid(); // جدول خالی با پیام «داده‌ای وجود ندارد»
+            // راه‌اندازی جدول خالی
+            initGrid();
         });
 
         $("#btnSearch").on("click", function () {
@@ -427,15 +472,34 @@
         });
 
         $("#btnPrint").on("click", () => window.print());
+
         $("#btnExcel").on("click", function () {
             if (!gridData.length) return;
             let csv = "ردیف,تاریخ,مسیر تردد,تعداد\n";
-            gridData.forEach(r => { csv += `${r[1]},${r[2]},${r[3]},${r[4]}\n`; });
+            gridData.forEach(r => {
+                csv += `${r[1]},${r[2]},${r[3]},${r[4]}\n`;
+            });
             const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
             link.download = "گزارش_تردد.csv";
             link.click();
+        });
+
+        document.getElementById('entranceTypeSearch').addEventListener('input', function () {
+          const q = this.value.trim().toLowerCase();
+          const menu = document.getElementById('entranceTypeMenu');
+          const groups = {};
+          menu.querySelectorAll('.option-item').forEach(li => {
+            const text = li.querySelector('label').textContent.toLowerCase();
+            const match = !q || text.includes(q);
+            li.style.display = match ? '' : 'none';
+            const g = li.dataset.group;
+            if (match) groups[g] = true;
+          });
+          menu.querySelectorAll('.dropdown-header-item').forEach(h => {
+            h.style.display = groups[h.dataset.group] ? '' : 'none';
+          });
         });
     </script>
 }

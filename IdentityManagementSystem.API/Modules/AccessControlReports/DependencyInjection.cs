@@ -1,4 +1,5 @@
 using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
+using IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard;
 using IdentityManagementSystem.API.Modules.AccessControlReports.GetData;
 using IdentityManagementSystem.API.Modules.AccessControlReports.GetSum;
 using IdentityManagementSystem.API.Modules.AccessControlReports.TrafficByNationalId;
@@ -27,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<TrafficByTypeHandler>();
         services.AddScoped<TrafficByPlatesHandler>();
         services.AddScoped<TrafficByNationalIdHandler>();
+        services.AddScoped<DashboardHandler>();
 
         return services;
     }

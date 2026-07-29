@@ -2,6 +2,33 @@
     ViewData["Title"] = "داشبورد";
 }
 
+<style>
+    .dashboard-filter-item.active {
+        background-color: var(--bs-primary);
+        color: #fff;
+    }
+
+        .dashboard-filter-item.active::after {
+            content: "\2713";
+            float: left;
+        }
+
+    #periodIndicator {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    @@media print {
+        .page-header-breadcrumb .dropdown,
+        #refreshDashboardBtn,
+        #printDashboardBtn,
+        .recent-transactions,
+        #btnExportWeekly {
+            display: none !important;
+        }
+    }
+</style>
+
 <!-- Start::page-header -->
 <div class="col-xl-12">
     <div class="d-flex align-items-center justify-content-between my-3 page-header-breadcrumb flex-wrap gap-2">
@@ -12,24 +39,25 @@
                     <li aria-current="page" class="breadcrumb-item active">داشبورد آماری</li>
                 </ol>
             </nav>
+            <div id="periodIndicator">نمایش آمار برای: <span id="periodIndicatorText">امروز</span></div>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <div class="dropdown">
                 <button aria-expanded="false" class="btn btn-primary btn-wave" data-bs-auto-close="outside" data-bs-toggle="dropdown" id="dashboardFilterDropdown" type="button">
-                    فیلتر بر اساس
+                    فیلتر: امروز
                     <i class="ri-arrow-down-s-fill ms-1"></i>
                 </button>
-                <ul aria-labelledby="dashboardFilterDropdown" class="dropdown-menu">
-                    <li><a class="dropdown-item" href="javascript:void(0);">امروز</a></li>
-                    <li><a class="dropdown-item" href="javascript:void(0);">دیروز</a></li>
-                    <li><a class="dropdown-item" href="javascript:void(0);">۷ روز گذشته</a></li>
-                    <li><a class="dropdown-item" href="javascript:void(0);">۳۰ روز گذشته</a></li>
+                <ul aria-labelledby="dashboardFilterDropdown" class="dropdown-menu" id="dashboardFilterMenu">
+                    <li><a class="dropdown-item dashboard-filter-item active" href="javascript:void(0);" data-period="today">امروز</a></li>
+                    <li><a class="dropdown-item dashboard-filter-item" href="javascript:void(0);" data-period="yesterday">دیروز</a></li>
+                    <li><a class="dropdown-item dashboard-filter-item" href="javascript:void(0);" data-period="last7">۷ روز گذشته</a></li>
+                    <li><a class="dropdown-item dashboard-filter-item" href="javascript:void(0);" data-period="last30">۳۰ روز گذشته</a></li>
                 </ul>
             </div>
             <button class="btn btn-secondary btn-icon btn-wave" data-bs-placement="top" data-bs-title="بروزرسانی" data-bs-toggle="tooltip" id="refreshDashboardBtn">
                 <i class="ti ti-refresh"></i>
             </button>
-            <button class="btn btn-light border btn-icon btn-wave" data-bs-placement="top" data-bs-title="چاپ" data-bs-toggle="tooltip">
+            <button class="btn btn-light border btn-icon btn-wave" data-bs-placement="top" data-bs-title="چاپ" data-bs-toggle="tooltip" id="printDashboardBtn">
                 <i class="ti ti-printer"></i>
             </button>
         </div>
@@ -62,7 +90,7 @@
                     <i class="ri-pulse-line fs-20"></i>
                 </div>
                 <div class="flex-fill">
-                    <div class="fw-medium fs-13 mb-1">کل تردد امروز</div>
+                    <div class="fw-medium fs-13 mb-1">کل تردد</div>
                     <div class="fs-22 fw-semibold mb-0" id="totalTrafficToday">-</div>
                 </div>
             </div>
@@ -110,7 +138,7 @@
                     <i class="ri-file-chart-line fs-20"></i>
                 </div>
                 <div class="flex-fill">
-                    <div class="fw-medium fs-13 mb-1">گزارش‌های امروز</div>
+                    <div class="fw-medium fs-13 mb-1">گزارش‌ها</div>
                     <div class="fs-22 fw-semibold mb-0" id="reportsCountToday">-</div>
                 </div>
             </div>
@@ -124,7 +152,7 @@
         <div class="card-header justify-content-between">
             <div class="card-title">روند تردد هفت روز اخیر</div>
             <div class="d-flex align-items-center flex-wrap gap-2">
-                <button class="btn btn-light border btn-sm">
+                <button class="btn btn-light border btn-sm" id="btnExportWeekly">
                     خروجی
                     <i class="ri-share-forward-line ms-1"></i>
                 </button>
@@ -150,7 +178,7 @@
                         </span>
                         <span class="fw-medium">وب سرویس تردد</span>
                     </div>
-                    <span class="badge bg-success-transparent">فعال</span>
+                    <span class="badge bg-success-transparent" id="serviceStatusBadge">فعال</span>
                 </li>
                 <li class="list-group-item d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-2">
@@ -168,7 +196,7 @@
                         </span>
                         <span class="fw-medium">آخرین بروزرسانی</span>
                     </div>
-                    <span class="badge bg-primary-transparent" id="lastUpdated">09:42</span>
+                    <span class="badge bg-primary-transparent" id="lastUpdated">-</span>
                 </li>
                 <li class="list-group-item d-flex align-items-center justify-content-between border-bottom-0">
                     <div class="d-flex align-items-center gap-2">
@@ -329,28 +357,80 @@
 </div>
 <!-- End::traffic types + recent reports -->
 @section Scripts {
-    <script src="~/assets/js/apexcharts.js"></script>
-
+    <!-- Apex Charts JS -->
+    <script src="~/assets/libs/apexcharts/apexcharts.min.js">
+    </script>
+    <!-- Used In Zoomable TIme Series Chart -->
+    <script src="~/assets/js/dataseries.js">
+    </script>
+    <!---Used In Annotations Chart-->
+    <script src="~/assets/js/apexcharts-stock-prices.js">
+    </script>
+    <!-- Internal Apex Line Charts JS -->
+    <script src="~/assets/js/apexcharts-line.js">
+    </script>
     <script>
+        let weeklyChartInstance = null;
+        let trafficTypesChartInstance = null;
+        let currentPeriod = 'today';
+        let lastDashboardData = null;
+
+        const periodLabels = {
+            today: 'امروز',
+            yesterday: 'دیروز',
+            last7: '۷ روز گذشته',
+            last30: '۳۰ روز گذشته'
+        };
+
         $(document).ready(function () {
             loadDashboard();
 
             $('#refreshDashboardBtn').on('click', function () {
                 loadDashboard();
             });
+
+            $('#printDashboardBtn').on('click', function () {
+                window.print();
+            });
+
+            $(document).on('click', '.dashboard-filter-item', function () {
+                const period = $(this).data('period');
+                currentPeriod = period;
+
+                $('.dashboard-filter-item').removeClass('active');
+                $(this).addClass('active');
+
+                updateFilterButtonText(period);
+                loadDashboard();
+            });
+
+            $('#btnExportWeekly').on('click', function () {
+                exportWeeklyTrafficCsv();
+            });
         });
+
+        function updateFilterButtonText(period) {
+            const label = periodLabels[period] || 'امروز';
+            $('#dashboardFilterDropdown').html('فیلتر: ' + label + ' <i class="ri-arrow-down-s-fill ms-1"></i>');
+            $('#periodIndicatorText').text(label);
+        }
 
         function loadDashboard() {
             $.ajax({
                 url: '@Url.Action("GetDashboardAjax", "Report", new { area = "AccessControlReports" })',
                 type: 'POST',
+                data: { period: currentPeriod },
                 success: function (response) {
                     if (!response.success) {
                         console.error(response.message || 'خطا در دریافت اطلاعات داشبورد');
+                        $('#serviceStatusBadge').removeClass('bg-success-transparent').addClass('bg-danger-transparent').text('خطا');
                         return;
                     }
 
+                    $('#serviceStatusBadge').removeClass('bg-danger-transparent').addClass('bg-success-transparent').text('فعال');
+
                     const data = response.data;
+                    lastDashboardData = data;
 
                     $('#totalTrafficToday').text(
                         Number(data.totalTrafficToday || 0).toLocaleString('fa-IR')
@@ -378,12 +458,10 @@
                         xhr.responseJSON?.message ||
                         'خطا در دریافت اطلاعات داشبورد'
                     );
+                    $('#serviceStatusBadge').removeClass('bg-success-transparent').addClass('bg-danger-transparent').text('قطع');
                 }
             });
         }
-
-        let weeklyChartInstance = null;
-        let trafficTypesChartInstance = null;
 
         function renderWeeklyTrafficChart(items) {
             const chartElement = document.querySelector('#weeklyTrafficChart');
@@ -435,13 +513,15 @@
             const chartElement = document.querySelector('#trafficTypesChart');
             if (!chartElement) return;
 
+            const hasData = items.some(x => Number(x.value) > 0);
+
             const options = {
                 chart: {
                     type: 'donut',
                     height: 280,
                     fontFamily: 'inherit'
                 },
-                series: items.map(x => x.value),
+                series: hasData ? items.map(x => x.value) : [],
                 labels: items.map(x => x.label),
                 colors: ['#845adf', '#e58a00', '#01a3ae', '#dc3545'],
                 legend: {
@@ -457,6 +537,23 @@
             }
             trafficTypesChartInstance = new ApexCharts(chartElement, options);
             trafficTypesChartInstance.render();
+        }
+
+        function exportWeeklyTrafficCsv() {
+            if (!lastDashboardData || !lastDashboardData.weeklyTraffic || !lastDashboardData.weeklyTraffic.length) {
+                return;
+            }
+
+            let csv = "روز,تعداد تردد\n";
+            lastDashboardData.weeklyTraffic.forEach(item => {
+                csv += `${item.label},${item.value}\n`;
+            });
+
+            const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "روند_تردد_هفت_روز_اخیر.csv";
+            link.click();
         }
     </script>
 }

@@ -150,31 +150,31 @@ namespace IdentityManagementSystem.UI.Controllers
         {
             return View();
         }
-        [HttpPost]
-        public async Task<IActionResult> GetDashboardAjax()
-        {
-            try
-            {
-                var result = await _service.GetDashboardAsync();
+		[HttpPost]
+		public async Task<IActionResult> GetDashboardAjax(string period = "today")
+		{
+			try
+			{
+				var result = await _service.GetDashboardAsync(period);
 
-                return Json(new
-                {
-                    success = true,
-                    data = result
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = ex.Message
-                });
-            }
-        }
-        #endregion
+				return Json(new
+				{
+					success = true,
+					data = result
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new
+				{
+					success = false,
+					message = ex.Message
+				});
+			}
+		}
+		#endregion
 
-        private async Task<IActionResult> ExecuteReportAsync<T>(Func<Task<List<T>>> action)
+		private async Task<IActionResult> ExecuteReportAsync<T>(Func<Task<List<T>>> action)
         {
             try
             {

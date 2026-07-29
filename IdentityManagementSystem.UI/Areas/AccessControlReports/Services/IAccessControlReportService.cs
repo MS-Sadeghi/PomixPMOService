@@ -10,6 +10,6 @@ namespace IdentityManagementSystem.UI.Areas.AccessControlReports.Services
         Task<List<TrafficByTypeReportViewModel>> TrafficByTypeAsync(TrafficByTypeFilterViewModel filter);
         Task<List<TrafficByPlatesReportViewModel>> TrafficByPlatesAsync(TrafficByPlatesFilterViewModel filter);
         Task<List<TrafficByNationalIdReportViewModel>> TrafficByNationalIdAsync(TrafficByNationalIdFilterViewModel filter);
-		Task<DashboardResponseViewModel> GetDashboardAsync();
+		Task<DashboardResponseViewModel> GetDashboardAsync(string period);
 	}
 }

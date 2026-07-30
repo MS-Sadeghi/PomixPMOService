@@ -40,16 +40,21 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 
 			var periodData = await GetTrafficAsync(rangeStart, rangeEnd, AllEntranceTypes);
 
-			// روند تردد ۷ روز اخیر - همیشه ثابت است و مستقل از فیلتر بالای صفحه
+			// روند تردد روزانه - بازه و طول نمودار بر اساس فیلتر انتخابی تغییر می‌کند
+			var trendAnchor = period == "yesterday" ? today.AddDays(-1) : today;
+			var trendDays = period == "last30" ? 30 : 7;
+
 			var weeklyTraffic = new List<ChartItemResponse>();
-			for (var i = 6; i >= 0; i--)
+			for (var i = trendDays - 1; i >= 0; i--)
 			{
-				var date = today.AddDays(-i);
+				var date = trendAnchor.AddDays(-i);
 				var dayData = await GetTrafficAsync(date, date, AllEntranceTypes);
 
 				weeklyTraffic.Add(new ChartItemResponse
 				{
-					Label = date.ToString("dddd", new CultureInfo("fa-IR")),
+					Label = trendDays <= 7
+						? date.ToString("dddd", new CultureInfo("fa-IR"))
+						: ToPersianShortLabel(date),
 					Value = dayData.Sum(x => x.RecordCount)
 				});
 			}
@@ -142,6 +147,13 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 			return $"{persianCalendar.GetYear(date):0000}/" +
 				   $"{persianCalendar.GetMonth(date):00}/" +
 				   $"{persianCalendar.GetDayOfMonth(date):00}";
+		}
+
+		private static string ToPersianShortLabel(DateTime date)
+		{
+			var persianCalendar = new PersianCalendar();
+
+			return $"{persianCalendar.GetMonth(date):00}/{persianCalendar.GetDayOfMonth(date):00}";
 		}
 	}
 }

@@ -18,6 +18,96 @@
         color: #6c757d;
     }
 
+    #weeklyTrafficChart {
+        min-height: 320px;
+    }
+
+    #trafficTypesChart {
+        min-height: 280px;
+    }
+
+    .chart-card-body {
+        position: relative;
+    }
+
+    .chart-loading-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        background: rgba(255, 255, 255, .75);
+        z-index: 5;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity .15s ease;
+    }
+
+        .chart-loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .chart-loading-overlay .spinner-border {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .chart-loading-overlay .loading-text {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+    .stat-value.is-loading {
+        color: transparent !important;
+        position: relative;
+        display: inline-block;
+        min-width: 48px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+        .stat-value.is-loading::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #e9ecef 25%, #f1f3f5 37%, #e9ecef 63%);
+            background-size: 400% 100%;
+            animation: dashboard-skeleton 1.4s ease infinite;
+        }
+
+    @@keyframes dashboard-skeleton {
+        0% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0 50%;
+        }
+    }
+
+    #refreshDashboardBtn.is-loading i {
+        animation: dashboard-spin .8s linear infinite;
+    }
+
+    @@keyframes dashboard-spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .dashboard-filter-item.disabled {
+        pointer-events: none;
+        opacity: .6;
+    }
+
     @@media print {
         .page-header-breadcrumb .dropdown,
         #refreshDashboardBtn,
@@ -91,7 +181,7 @@
                 </div>
                 <div class="flex-fill">
                     <div class="fw-medium fs-13 mb-1">کل تردد</div>
-                    <div class="fs-22 fw-semibold mb-0" id="totalTrafficToday">-</div>
+                    <div class="fs-22 fw-semibold mb-0 stat-value" id="totalTrafficToday">-</div>
                 </div>
             </div>
         </div>
@@ -107,7 +197,7 @@
                 </div>
                 <div class="flex-fill">
                     <div class="fw-medium fs-13 mb-1">تردد خودروها</div>
-                    <div class="fs-22 fw-semibold mb-0" id="vehicleTrafficToday">-</div>
+                    <div class="fs-22 fw-semibold mb-0 stat-value" id="vehicleTrafficToday">-</div>
                 </div>
             </div>
         </div>
@@ -123,7 +213,7 @@
                 </div>
                 <div class="flex-fill">
                     <div class="fw-medium fs-13 mb-1">تردد افراد</div>
-                    <div class="fs-22 fw-semibold mb-0" id="peopleTrafficToday">-</div>
+                    <div class="fs-22 fw-semibold mb-0 stat-value" id="peopleTrafficToday">-</div>
                 </div>
             </div>
         </div>
@@ -139,7 +229,7 @@
                 </div>
                 <div class="flex-fill">
                     <div class="fw-medium fs-13 mb-1">گزارش‌ها</div>
-                    <div class="fs-22 fw-semibold mb-0" id="reportsCountToday">-</div>
+                    <div class="fs-22 fw-semibold mb-0 stat-value" id="reportsCountToday">-</div>
                 </div>
             </div>
         </div>
@@ -150,7 +240,7 @@
 <div class="col-xxl-8">
     <div class="card custom-card">
         <div class="card-header justify-content-between">
-            <div class="card-title">روند تردد هفت روز اخیر</div>
+            <div class="card-title" id="weeklyTrafficChartTitle">روند تردد هفت روز اخیر</div>
             <div class="d-flex align-items-center flex-wrap gap-2">
                 <button class="btn btn-light border btn-sm" id="btnExportWeekly">
                     خروجی
@@ -158,8 +248,12 @@
                 </button>
             </div>
         </div>
-        <div class="card-body pb-0">
+        <div class="card-body pb-0 chart-card-body">
             <div id="weeklyTrafficChart"></div>
+            <div class="chart-loading-overlay" id="weeklyTrafficChartLoading">
+                <div class="spinner-border text-primary" role="status"><span class="visually-hidden">در حال بارگذاری...</span></div>
+                <div class="loading-text">در حال دریافت اطلاعات ...</div>
+            </div>
         </div>
     </div>
 </div>
@@ -290,9 +384,14 @@
     <div class="card custom-card">
         <div class="card-header justify-content-between">
             <div class="card-title">انواع تردد</div>
+            <span class="fs-12 text-muted" id="trafficTypesPeriodLabel">امروز</span>
         </div>
-        <div class="card-body">
+        <div class="card-body chart-card-body">
             <div id="trafficTypesChart"></div>
+            <div class="chart-loading-overlay" id="trafficTypesChartLoading">
+                <div class="spinner-border text-primary" role="status"><span class="visually-hidden">در حال بارگذاری...</span></div>
+                <div class="loading-text">در حال دریافت اطلاعات ...</div>
+            </div>
         </div>
     </div>
 </div>
@@ -374,6 +473,7 @@
         let trafficTypesChartInstance = null;
         let currentPeriod = 'today';
         let lastDashboardData = null;
+        let isDashboardLoading = false;
 
         const periodLabels = {
             today: 'امروز',
@@ -386,7 +486,8 @@
             loadDashboard();
 
             $('#refreshDashboardBtn').on('click', function () {
-                loadDashboard();
+                if (isDashboardLoading) return;
+                loadDashboard({ showToast: true });
             });
 
             $('#printDashboardBtn').on('click', function () {
@@ -394,6 +495,8 @@
             });
 
             $(document).on('click', '.dashboard-filter-item', function () {
+                if (isDashboardLoading) return;
+
                 const period = $(this).data('period');
                 currentPeriod = period;
 
@@ -401,7 +504,7 @@
                 $(this).addClass('active');
 
                 updateFilterButtonText(period);
-                loadDashboard();
+                loadDashboard({ showToast: true });
             });
 
             $('#btnExportWeekly').on('click', function () {
@@ -410,20 +513,52 @@
         });
 
         function updateFilterButtonText(period) {
-            const label = periodLabels[period] || 'امروز';
+            const label = periodLabels[period] || periodLabels.today;
             $('#dashboardFilterDropdown').html('فیلتر: ' + label + ' <i class="ri-arrow-down-s-fill ms-1"></i>');
             $('#periodIndicatorText').text(label);
+            $('#trafficTypesPeriodLabel').text(label);
+            $('#weeklyTrafficChartTitle').text(period === 'last30' ? 'روند تردد ۳۰ روز اخیر' : 'روند تردد هفت روز اخیر');
         }
 
-        function loadDashboard() {
+        function showDashboardToast(message, isError) {
+            if (typeof Toastify !== 'function') return;
+
+            Toastify({
+                text: message,
+                duration: 4000,
+                close: true,
+                gravity: 'top',
+                position: 'left',
+                stopOnFocus: true,
+                style: {
+                    background: isError ? '#dc3545' : '#198754'
+                }
+            }).showToast();
+        }
+
+        function setDashboardLoading(loading) {
+            isDashboardLoading = loading;
+
+            $('.stat-value').toggleClass('is-loading', loading);
+            $('#weeklyTrafficChartLoading, #trafficTypesChartLoading').toggleClass('show', loading);
+            $('#refreshDashboardBtn').toggleClass('is-loading', loading).prop('disabled', loading);
+            $('#dashboardFilterDropdown').prop('disabled', loading);
+            $('.dashboard-filter-item').toggleClass('disabled', loading);
+        }
+
+        function loadDashboard(options) {
+            const showToast = !!(options && options.showToast);
+
+            setDashboardLoading(true);
+
             $.ajax({
                 url: '@Url.Action("GetDashboardAjax", "Report", new { area = "AccessControlReports" })',
                 type: 'POST',
                 data: { period: currentPeriod },
                 success: function (response) {
                     if (!response.success) {
-                        console.error(response.message || 'خطا در دریافت اطلاعات داشبورد');
                         $('#serviceStatusBadge').removeClass('bg-success-transparent').addClass('bg-danger-transparent').text('خطا');
+                        showDashboardToast(response.message || 'خطا در دریافت اطلاعات داشبورد', true);
                         return;
                     }
 
@@ -452,13 +587,20 @@
 
                     renderWeeklyTrafficChart(data.weeklyTraffic || []);
                     renderTrafficTypesChart(data.trafficTypes || []);
+
+                    if (showToast) {
+                        showDashboardToast('داشبورد بروزرسانی شد', false);
+                    }
                 },
                 error: function (xhr) {
-                    console.error(
-                        xhr.responseJSON?.message ||
-                        'خطا در دریافت اطلاعات داشبورد'
-                    );
                     $('#serviceStatusBadge').removeClass('bg-success-transparent').addClass('bg-danger-transparent').text('قطع');
+                    showDashboardToast(
+                        xhr.responseJSON?.message || 'خطا در دریافت اطلاعات داشبورد',
+                        true
+                    );
+                },
+                complete: function () {
+                    setDashboardLoading(false);
                 }
             });
         }
@@ -503,10 +645,11 @@
             };
 
             if (weeklyChartInstance) {
-                weeklyChartInstance.destroy();
+                weeklyChartInstance.updateOptions(options);
+            } else {
+                weeklyChartInstance = new ApexCharts(chartElement, options);
+                weeklyChartInstance.render();
             }
-            weeklyChartInstance = new ApexCharts(chartElement, options);
-            weeklyChartInstance.render();
         }
 
         function renderTrafficTypesChart(items) {
@@ -533,10 +676,11 @@
             };
 
             if (trafficTypesChartInstance) {
-                trafficTypesChartInstance.destroy();
+                trafficTypesChartInstance.updateOptions(options);
+            } else {
+                trafficTypesChartInstance = new ApexCharts(chartElement, options);
+                trafficTypesChartInstance.render();
             }
-            trafficTypesChartInstance = new ApexCharts(chartElement, options);
-            trafficTypesChartInstance.render();
         }
 
         function exportWeeklyTrafficCsv() {

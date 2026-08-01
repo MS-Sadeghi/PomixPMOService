@@ -179,11 +179,11 @@ namespace IdentityManagementSystem.UI.Controllers
 			return View();
 		}
 		[HttpPost]
-		public async Task<IActionResult> GetDashboardAjax(string period = "today")
+		public async Task<IActionResult> GetDashboardAjax(string period = "today", bool forceRefresh = false)
 		{
 			try
 			{
-				var result = await _service.GetDashboardAsync(period);
+				var result = await _service.GetDashboardAsync(period, forceRefresh);
 
 				return Json(new
 				{

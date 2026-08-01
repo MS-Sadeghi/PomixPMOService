@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
 using IdentityManagementSystem.API.Modules.AccessControlReports.GetData;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 {
@@ -8,6 +9,11 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 	{
 		private readonly IPomixClient _pomixClient;
 		private readonly IConfiguration _configuration;
+		private readonly IMemoryCache _cache;
+
+		// سرویس Pomix سقف درخواست ساعتی دارد؛ کش کردن پاسخ داشبورد باعث می‌شود
+		// رفرش‌های پشت‌سرهم/بازدید چند کاربر از یک فیلتر، درخواست تازه‌ای به Pomix نزنند.
+		private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
 		private static readonly List<string> AllEntranceTypes = new()
 		{
@@ -25,39 +31,50 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 
 		public DashboardHandler(
 			IPomixClient pomixClient,
-			IConfiguration configuration)
+			IConfiguration configuration,
+			IMemoryCache cache)
 		{
 			_pomixClient = pomixClient;
 			_configuration = configuration;
+			_cache = cache;
 		}
 
 		public async Task<DashboardResponse> HandleAsync(DashboardRequest request)
 		{
 			var period = NormalizePeriod(request?.Period);
+			var cacheKey = $"dashboard-{period}";
+
+			if (request?.ForceRefresh != true &&
+				_cache.TryGetValue(cacheKey, out DashboardResponse? cached) &&
+				cached is not null)
+			{
+				return cached;
+			}
+
+			var response = await BuildDashboardAsync(period);
+			_cache.Set(cacheKey, response, CacheDuration);
+
+			return response;
+		}
+
+		private async Task<DashboardResponse> BuildDashboardAsync(string period)
+		{
 			var today = DateTime.Now.Date;
 
 			var (rangeStart, rangeEnd) = GetRange(period, today);
 
 			var periodData = await GetTrafficAsync(rangeStart, rangeEnd, AllEntranceTypes);
 
-			// روند تردد روزانه - بازه و طول نمودار بر اساس فیلتر انتخابی تغییر می‌کند
+			// روند تردد - بازه و طول نمودار بر اساس فیلتر انتخابی تغییر می‌کند.
+			// برای بازه‌ی ۳۰ روزه به‌جای یک درخواست به ازای هر روز (۳۰ درخواست)،
+			// بازه به تکه‌های هفتگی تقسیم می‌شود (حداکثر ۵ درخواست) تا فشار کمتری
+			// به سقف درخواست ساعتی Pomix وارد شود.
 			var trendAnchor = period == "yesterday" ? today.AddDays(-1) : today;
 			var trendDays = period == "last30" ? 30 : 7;
 
-			var weeklyTraffic = new List<ChartItemResponse>();
-			for (var i = trendDays - 1; i >= 0; i--)
-			{
-				var date = trendAnchor.AddDays(-i);
-				var dayData = await GetTrafficAsync(date, date, AllEntranceTypes);
-
-				weeklyTraffic.Add(new ChartItemResponse
-				{
-					Label = trendDays <= 7
-						? date.ToString("dddd", new CultureInfo("fa-IR"))
-						: ToPersianShortLabel(date),
-					Value = dayData.Sum(x => x.RecordCount)
-				});
-			}
+			var weeklyTraffic = trendDays <= 7
+				? await BuildDailyTrendAsync(trendAnchor, trendDays)
+				: await BuildWeeklyTrendAsync(trendAnchor, trendDays);
 
 			var vehicleCount = periodData
 				.Where(x => !PersonEntranceTypes.Contains(x.EntranceType))
@@ -87,6 +104,52 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 
 				LastUpdated = DateTime.Now.ToString("HH:mm")
 			};
+		}
+
+		private async Task<List<ChartItemResponse>> BuildDailyTrendAsync(DateTime trendAnchor, int trendDays)
+		{
+			var items = new List<ChartItemResponse>();
+
+			for (var i = trendDays - 1; i >= 0; i--)
+			{
+				var date = trendAnchor.AddDays(-i);
+				var dayData = await GetTrafficAsync(date, date, AllEntranceTypes);
+
+				items.Add(new ChartItemResponse
+				{
+					Label = date.ToString("dddd", new CultureInfo("fa-IR")),
+					Value = dayData.Sum(x => x.RecordCount)
+				});
+			}
+
+			return items;
+		}
+
+		private async Task<List<ChartItemResponse>> BuildWeeklyTrendAsync(DateTime trendAnchor, int trendDays)
+		{
+			var items = new List<ChartItemResponse>();
+			var bucketStart = trendAnchor.AddDays(-(trendDays - 1));
+
+			while (bucketStart <= trendAnchor)
+			{
+				var bucketEnd = bucketStart.AddDays(6);
+				if (bucketEnd > trendAnchor)
+					bucketEnd = trendAnchor;
+
+				var bucketData = await GetTrafficAsync(bucketStart, bucketEnd, AllEntranceTypes);
+
+				items.Add(new ChartItemResponse
+				{
+					Label = bucketStart == bucketEnd
+						? ToPersianShortLabel(bucketStart)
+						: ToPersianShortLabel(bucketStart) + " تا " + ToPersianShortLabel(bucketEnd),
+					Value = bucketData.Sum(x => x.RecordCount)
+				});
+
+				bucketStart = bucketEnd.AddDays(1);
+			}
+
+			return items;
 		}
 
 		private static string NormalizePeriod(string? period)

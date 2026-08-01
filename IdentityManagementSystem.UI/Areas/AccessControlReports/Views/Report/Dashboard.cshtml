@@ -465,9 +465,6 @@
     <!---Used In Annotations Chart-->
     <script src="~/assets/js/apexcharts-stock-prices.js">
     </script>
-    <!-- Internal Apex Line Charts JS -->
-    <script src="~/assets/js/apexcharts-line.js">
-    </script>
     <script>
         let weeklyChartInstance = null;
         let trafficTypesChartInstance = null;
@@ -487,7 +484,7 @@
 
             $('#refreshDashboardBtn').on('click', function () {
                 if (isDashboardLoading) return;
-                loadDashboard({ showToast: true });
+                loadDashboard({ showToast: true, forceRefresh: true });
             });
 
             $('#printDashboardBtn').on('click', function () {
@@ -548,13 +545,14 @@
 
         function loadDashboard(options) {
             const showToast = !!(options && options.showToast);
+            const forceRefresh = !!(options && options.forceRefresh);
 
             setDashboardLoading(true);
 
             $.ajax({
                 url: '@Url.Action("GetDashboardAjax", "Report", new { area = "AccessControlReports" })',
                 type: 'POST',
-                data: { period: currentPeriod },
+                data: { period: currentPeriod, forceRefresh: forceRefresh },
                 success: function (response) {
                     if (!response.success) {
                         $('#serviceStatusBadge').removeClass('bg-success-transparent').addClass('bg-danger-transparent').text('خطا');

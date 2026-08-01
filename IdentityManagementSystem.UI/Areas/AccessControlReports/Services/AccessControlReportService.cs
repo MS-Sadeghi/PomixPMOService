@@ -135,13 +135,13 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
 				   ?? new List<TrafficByNationalIdReportViewModel>();
 		}
 
-		public async Task<DashboardResponseViewModel> GetDashboardAsync(string period)
+		public async Task<DashboardResponseViewModel> GetDashboardAsync(string period, bool forceRefresh = false)
 		{
 			var client = _factory.CreateClient("PomixApi");
 
 			var response = await client.PostAsJsonAsync(
 				"access-control-reports/dashboard",
-				new { period }
+				new { period, forceRefresh }
 			);
 
 			if (!response.IsSuccessStatusCode)

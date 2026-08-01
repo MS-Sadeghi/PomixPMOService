@@ -416,35 +416,35 @@ if (document.querySelector("#switcher-canvas")) {
   //new SimpleBar(myHeaderCart, { autoHide: true });
   /* header dropdowns scroll */
 
-  const autoCompleteJS = new autoComplete({
-    selector: "#header-search",
-    data: {
-      src: [
-        "What is the meaning of life?",
-        "How does gravity work?",
-        "Why is the sky blue?",
-        "What is the capital of France?",
-        "Who painted the Mona Lisa?",
-        "What is the speed of light?",
-        "Why do we dream?",
-        "How do birds fly?",
-        "What is the largest mammal?",
-        "Why do leaves change color in the fall?"
-      ],
-      cache: true,
-    },
-    resultItem: {
-      highlight: true
-    },
-    events: {
-      input: {
-        selection: (event) => {
-          const selection = event.detail.selection.value;
-          autoCompleteJS.input.value = selection;
-        }
-      }
-    }
-  });
+  //const autoCompleteJS = new autoComplete({
+  //  selector: "#header-search",
+  //  data: {
+  //    src: [
+  //      "What is the meaning of life?",
+  //      "How does gravity work?",
+  //      "Why is the sky blue?",
+  //      "What is the capital of France?",
+  //      "Who painted the Mona Lisa?",
+  //      "What is the speed of light?",
+  //      "Why do we dream?",
+  //      "How do birds fly?",
+  //      "What is the largest mammal?",
+  //      "Why do leaves change color in the fall?"
+  //    ],
+  //    cache: true,
+  //  },
+  //  resultItem: {
+  //    highlight: true
+  //  },
+  //  events: {
+  //    input: {
+  //      selection: (event) => {
+  //        const selection = event.detail.selection.value;
+  //        autoCompleteJS.input.value = selection;
+  //      }
+  //    }
+  //  }
+  //});
 })();
 
 /* full screen */

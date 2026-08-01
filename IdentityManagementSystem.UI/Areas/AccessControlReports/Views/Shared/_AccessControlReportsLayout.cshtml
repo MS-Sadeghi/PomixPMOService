@@ -1,295 +1,457 @@
-﻿<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+﻿@{
+    var userName = Context.Session.GetString("UserName");
+    var lastName = Context.Session.GetString("UserLastName");
+}
+<!DOCTYPE html>
+<html dir="rtl" data-header-styles="light" data-menu-styles="dark" data-nav-layout="vertical" data-theme-mode="light" data-toggled="close" data-width="fullwidth" lang="fa">
 <head>
+    <!-- Meta Data -->
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ServiceUIPMO</title>
-
-    <!-- BOOTSTRAP RTL CSS -->
-    <a href="~/assets/plugins/bootstrap/css/bootstrap.rtl.css.map"></a>
-    <link href="~/assets/plugins/bootstrap/css/bootstrap.rtl.min.css" rel="stylesheet" />
-    <link href="~/assets/plugins/bootstrap/css/bootstrap.rtl.css" rel="stylesheet" />
-    <link href="~/assets/plugins/bootstrap/css/bootstrap.rtl.min.css" rel="stylesheet" />
-
-    <!-- STYLE CSS -->
-    <link href="~/assets/css/style.css" rel="stylesheet" />@*
-    <link href="~/assets/css/dark-style.css" rel="stylesheet" />
-    <link href="~/assets/css/transparent-style.css" rel="stylesheet" />
-    <link href="~/assets/css/skin-modes.css" rel="stylesheet" /> *@
-
-    <!-- FONT-ICONS CSS -->
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+    <title>@ViewData["Title"] - سامانه تردد</title>
+    <!-- Favicon -->
+    <link href="~/assets/images/brand-logos/favicon.ico" rel="icon" type="image/x-icon" />
+    <!-- Start::Styles -->
+    <script src="~/assets/libs/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script src="~/assets/js/main.js"></script>
+    <link href="~/assets/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/assets/libs/bootstrap/css/bootstrap.rtl.min.css" rel="stylesheet" />
+    <link href="~/assets/css/styles.css" rel="stylesheet" />
     <link href="~/assets/css/icons.css" rel="stylesheet" />
-    <link href="~/assets/iconfonts/bootstrapicons/bootstrap-icons.css" rel="stylesheet" />
-    <link href="~/assets/iconfonts/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
-    <link href="~/assets/iconfonts/ionicons/ionicons.css" rel="stylesheet" />
-   @*  <link rel="preload" href="~/assets/iconfonts/feather/fonts/feather-webfont.woff" as="font" type="font/woff" crossorigin>
-    <link rel="preload" href="~/assets/iconfonts/font-awesome/fonts/fontawesome-webfont.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="~/assets/iconfonts/materialdesignicons/fonts/Material-Design-Iconic-Font.woff2" as="font" type="font/woff2" crossorigin>
- *@
-    <!-- COLOR SKIN CSS -->
-    <link id="theme" rel="stylesheet" type="text/css" media="all" href="~/assets/colors/color1.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/toastr.min.css" />
-    <!-- SITE CUSTOM CSS -->
-    <link rel="stylesheet" href="~/css/AccessControlReportSite.css" asp-append-version="true" />
+    <link href="~/assets/libs/node-waves/waves.min.css" rel="stylesheet" />
+    <link href="~/assets/libs/simplebar/simplebar.min.css" rel="stylesheet" />
+    <link href="~/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" />
+    <link href="~/assets/libs/%40simonwep/pickr/themes/nano.min.css" rel="stylesheet" />
+    <link href="~/assets/libs/choices.js/public/assets/styles/choices.min.css" rel="stylesheet" />
+    <link href="~/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" />
+    <link href="~/assets/libs/%40tarekraafat/autocomplete.js/css/autoComplete.css" rel="stylesheet" />
+    <link href="~/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" />
+    <style>
+        /* استایل مدال */
+        .support-modal .modal-header {
+            border-bottom: none;
+            padding: 20px 25px;
+        }
 
+            .support-modal .modal-header .btn-close {
+                color: white;
+                opacity: 0.8;
+            }
+
+                .support-modal .modal-header .btn-close:hover {
+                    opacity: 1;
+                }
+
+        .support-modal .modal-title {
+            font-weight: 600;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .support-modal .modal-title i {
+                font-size: 24px;
+            }
+
+        .support-modal .modal-body {
+            padding: 30px 25px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 16px;
+        }
+
+            .support-modal .modal-body .empty-state {
+                text-align: center;
+            }
+
+                .support-modal .modal-body .empty-state i {
+                    font-size: 48px;
+                    color: #dee2e6;
+                    margin-bottom: 15px;
+                    display: block;
+                }
+
+        .support-numbers {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .support-number-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 18px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s;
+        }
+
+            .support-number-item:hover {
+                background: #e9ecef;
+                border-color: #dee2e6;
+            }
+
+            .support-number-item i {
+                font-size: 20px;
+                color: #0d6efd;
+                width: 30px;
+                text-align: center;
+            }
+
+            .support-number-item .number {
+                font-weight: 600;
+                color: #212529;
+                direction: ltr;
+                font-size: 14px;
+                letter-spacing: 1px;
+            }
+
+            .support-number-item .label {
+                color: #6c757d;
+                font-size: 13px;
+            }
+    </style>
     @RenderSection("Styles", required: false)
 </head>
-
-<body class="app sidebar-mini rtl">
-
-    <!-- PAGE -->
-    <div class="page">
-        <div class="page-main">
-
-            <!-- app-Header -->
-            <div class="app-header header sticky">
-                <div class="container-fluid main-container">
-                    <div class="d-flex">
-                        <a aria-label="Hide Sidebar" class="app-sidebar__toggle" data-bs-toggle="sidebar" href="javascript:void(0)"></a>
-                        <!-- sidebar-toggle-->
-                        <a asp-area="AccessControlReports"
-                           asp-controller="Report"
-                           asp-action="GetDataReport"
-                           class="logo-horizontal ">
-                            <img src="~/assets/images/brand/logo.png" class="header-brand-img desktop-logo" alt="logo">
-                            <img src="~/assets/images/brand/logotaradod.png" class="header-brand-img light-logo1" alt="logo">
+<body>
+    <div id="loader"></div>
+    <!-- ========== HEADER ========== -->
+    <header class="app-header sticky" id="header">
+        <div class="main-header-container container-fluid px-0">
+            <!-- Start::header-content-left -->
+            <div class="header-content-left">
+                <!-- Start::header-element - Toggle Sidebar -->
+                <div class="header-element mx-lg-0 mx-2">
+                    <a aria-label="Hide Sidebar" class="sidemenu-toggle header-link animated-arrow hor-toggle horizontal-navtoggle" data-bs-toggle="sidebar" href="javascript:void(0);">
+                        <span></span>
+                    </a>
+                </div>
+                <!-- End::header-element -->
+                <!-- Start::header-element - Logo -->
+                <div class="header-element">
+                    <div class="horizontal-logo">
+                        <a class="header-logo" asp-area="AccessControlReports" asp-controller="Report" asp-action="Dashboard">
+                            <span class="desktop-logo fw-bold fs-5 text-white">
+                                سامانه تردد
+                            </span>
+                            <img alt="لوگو" class="toggle-logo" src="~/assets/images/brand-logos/toggle-logo.png">
+                            <span class="desktop-dark fw-bold fs-5 text-white">
+                                سامانه تردد
+                            </span>
+                            <img alt="لوگو" class="toggle-dark" src="~/assets/images/brand-logos/toggle-dark.png">
                         </a>
-                        <!-- LOGO -->
-                        <div class="d-flex order-lg-2 ms-auto header-right-icons">
-                            <div class="navbar navbar-collapse responsive-navbar p-0">
-                                <div class="collapse navbar-collapse" id="navbarSupportedContent-4">
-                                    <div class="d-flex order-lg-2">
-                                        <a class="nav-link icon full-screen-link nav-link-bg">
-                                            <i class="fe fe-minimize fullscreen-button"></i>
-                                        </a>
-                                        <!-- FULL-SCREEN -->
-                                        <div class="dropdown d-flex profile-1">
-                                            <a href="javascript:void(0)" data-bs-toggle="dropdown" class="nav-link leading-none d-flex">
-                                                <img src="~/assets/images/users/22.jfif" alt="profile-user" class="avatar  profile-user brround cover-image">
-                                            </a>
-                                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                                                <div class="dropdown-divider m-0"></div>
-                                                <a class="dropdown-item" href="/Security/Account/EditProfile">
-                                                    <i class="dropdown-icon fe fe-user"></i>
-                                                    پروفایل
-                                                </a>
-
-                                                <form id="logout-form"
-                                                      action="/Security/Account/Logout"
-                                                      method="post"
-                                                      class="d-none">
-                                                    @Html.AntiForgeryToken()
-                                                </form>
-
-                                                <a class="dropdown-item"
-                                                   href="javascript:void(0);"
-                                                   onclick="document.getElementById('logout-form').submit();">
-                                                    <i class="dropdown-icon fe fe-log-out"></i>
-                                                    خروج
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                    </div>
+                </div>
+                <!-- End::header-element -->
+            </div>
+            <!-- End::header-content-left -->
+            <!-- Start::header-content-right -->
+            <ul class="header-content-right">
+                <!-- Start::header-element - Theme Mode -->
+                <li class="header-element header-theme-mode">
+                    <a class="header-link layout-setting" href="javascript:void(0);">
+                        <span class="light-layout">
+                            <svg class="header-link-icon" height="1em" viewBox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg">
+                                <path color="currentColor" d="M21.5 14.078A8.557 8.557 0 0 1 9.922 2.5C5.668 3.497 2.5 7.315 2.5 11.873a9.627 9.627 0 0 0 9.627 9.627c4.558 0 8.376-3.168 9.373-7.422" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path>
+                            </svg>
+                        </span>
+                        <span class="dark-layout">
+                            <svg class="header-link-icon" height="1em" viewBox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg">
+                                <path color="currentColor" d="M17 12a5 5 0 1 1-10 0a5 5 0 0 1 10 0M12 2v1.5m0 17V22m7.07-2.929l-1.06-1.06M5.99 5.989L4.928 4.93M22 12h-1.5m-17 0H2m17.071-7.071l-1.06 1.06M5.99 18.011l-1.06 1.06" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path>
+                            </svg>
+                        </span>
+                    </a>
+                </li>
+                <!-- End::header-element -->
+                <!-- Start::header-element - Fullscreen -->
+                <li class="header-element header-fullscreen">
+                    <!-- Start::header-link -->
+                    <a class="header-link" href="javascript:void(0);" onclick="openFullscreen();">
+                        <svg class="full-screen-open header-link-icon" height="1em" viewBox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg">
+                            <path color="currentColor" d="m12.567 7.934l2.742.1c.407.015.73.35.73.758v2.615m-5.5 2.027l5.044-5.018M2 17c0-1.886 0-2.828.586-3.414S4.114 13 6 13h1c1.886 0 2.828 0 3.414.586S11 15.114 11 17v1c0 1.886 0 2.828-.586 3.414S8.886 22 7 22H6c-1.886 0-2.828 0-3.414-.586S2 19.886 2 18zm0-8.5v2M14 2h-4m12 12v-4m-8.5 12h2M2.06 5.5c.154-1.066.453-1.821 1.036-2.404S4.434 2.214 5.5 2.06m13 0c1.066.154 1.821.453 2.404 1.036c.582.583.882 1.338 1.036 2.404m0 13c-.154 1.066-.454 1.821-1.036 2.404c-.583.582-1.338.882-2.404 1.036" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+                            </path>
+                        </svg>
+                        <svg class="full-screen-close header-link-icon d-none" height="1em" viewBox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg">
+                            <g color="currentColor" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+                                <path d="M2 10.002c.029-3.414.218-5.296 1.46-6.537C4.924 2 7.282 2 11.997 2s7.073 0 8.538 1.465S22 7.287 22 12.003c0 4.715 0 7.073-1.465 8.537c-1.241 1.242-3.123 1.431-6.537 1.46">
+                                </path>
+                                <path d="M4.999 13c-1.17.035-1.868.165-2.351.648s-.613 1.18-.648 2.35M8.001 13c1.17.035 1.868.165 2.351.648s.613 1.18.648 2.35m0 3.003c-.035 1.17-.165 1.868-.648 2.351s-1.18.613-2.35.648m-3.003 0c-1.17-.035-1.868-.165-2.351-.648s-.613-1.18-.648-2.35m14.413-7.996l-2.903-.066c-.432-.01-.777-.345-.782-.757l-.031-2.644m7.331-3.773l-6.747 6.601">
+                                </path>
+                            </g>
+                        </svg>
+                    </a>
+                    <!-- End::header-link -->
+                </li>
+                <!-- End::header-element -->
+                <!-- Start::header-element - Profile Dropdown -->
+                <li class="header-element dropdown">
+                    <a class="header-link dropdown-toggle" data-bs-auto-close="outside" data-bs-toggle="dropdown" href="javascript:void(0);" id="mainHeaderProfile">
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <img alt="img" class="avatar avatar-xs" src="~/assets/images/faces/21.jpg">
+                            </div>
+                        </div>
+                    </a>
+                    <ul aria-labelledby="mainHeaderProfile" class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="/Security/Account/EditProfile">
+                                <i class="ti ti-user me-2 fs-16"></i>
+                                @(userName ?? "نام کاربر") @(lastName ?? "")
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#supportModal">
+                                <i class="ti ti-headset me-2 fs-16"></i>پشتیبانی
+                            </a>
+                        </li>
+                        <li>
+                            <form id="logout-form" action="/Security/Account/Logout" method="post" class="d-none">
+                                @Html.AntiForgeryToken()
+                            </form>
+                            <a class="dropdown-item d-flex align-items-center" href="javascript:void(0);" onclick="document.getElementById('logout-form').submit();">
+                                <i class="ti ti-logout me-2 fs-16"></i>از سیستم خارج شوید
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- End::header-element -->
+            </ul>
+            <!-- End::header-content-right -->
+        </div>
+    </header>
+    <!-- ========== END HEADER ========== -->
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="app-sidebar sticky" id="sidebar">
+        <!-- Start::main-sidebar-header -->
+        <div class="main-sidebar-header">
+            <a class="header-logo" asp-area="AccessControlReports" asp-controller="Report" asp-action="Dashboard">
+                <span class="desktop-logo fw-bold fs-5 text-white">
+                    سامانه تردد
+                </span>
+                <img alt="لوگو" class="toggle-dark" src="~/assets/images/brand-logos/toggle-dark.png">
+                <span class="desktop-dark fw-bold fs-5 text-white">
+                    سامانه تردد
+                </span>
+                <img alt="لوگو" class="toggle-logo" src="~/assets/images/brand-logos/toggle-logo.png">
+            </a>
+        </div>
+        <!-- End::main-sidebar-header -->
+        <!-- Start::main-sidebar -->
+        <div class="main-sidebar" id="sidebar-scroll">
+            <!-- Start::nav -->
+            <nav class="main-menu-container nav nav-pills flex-column sub-open">
+                <div class="slide-left" id="slide-left">
+                    <svg fill="#7b8191" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"></path>
+                    </svg>
+                </div>
+                <ul class="main-menu">
+                    <li class="slide__category">
+                        <span class="category-name">داشبورد</span>
+                    </li>
+                    <li class="slide">
+                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="Dashboard">
+                            <svg class="side-menu__icon" height="1em" viewBox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg">
+                                <g color="currentColor" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+                                    <path d="m9 22l-.251-3.509a3.259 3.259 0 1 1 6.501 0L15 22"></path>
+                                    <path d="M2.352 13.214c-.354-2.298-.53-3.446-.096-4.465s1.398-1.715 3.325-3.108L7.021 4.6C9.418 2.867 10.617 2 12.001 2c1.382 0 2.58.867 4.978 2.6l1.44 1.041c1.927 1.393 2.89 2.09 3.325 3.108c.434 1.019.258 2.167-.095 4.464l-.301 1.96c-.5 3.256-.751 4.884-1.919 5.856S16.554 22 13.14 22h-2.28c-3.415 0-5.122 0-6.29-.971c-1.168-.972-1.418-2.6-1.918-5.857z"></path>
+                                </g>
+                            </svg>
+                            <span class="side-menu__label">داشبورد آماری</span>
+                        </a>
+                    </li>
+                    <!-- Start::slide__category -->
+                    <li class="slide__category">
+                        <span class="category-name">گزارش‌ها</span>
+                    </li>
+                    <!-- End::slide__category -->
+                    <!-- Start::slide - Report items -->
+                    <li class="slide">
+                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="GetDataReport">
+                            <i class="ri-layout-line side-menu__icon" aria-hidden="true"></i>
+                            <span class="side-menu__label">گزارش تردد مسیر</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="GetSumReport">
+                            <i class="ri-stack-line side-menu__icon" aria-hidden="true"></i>
+                            <span class="side-menu__label">گزارش مجموع نوع تردد</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByTypeReport">
+                            <i class="ri-truck-line side-menu__icon" aria-hidden="true"></i>
+                            <span class="side-menu__label">گزارش تفکیک نوع تردد</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByPlatesReport">
+                            <i class="ri-bank-card-line side-menu__icon" aria-hidden="true"></i>
+                            <span class="side-menu__label">گزارش بر اساس پلاک</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByNationalIDReport">
+                            <i class="ri-user-line side-menu__icon" aria-hidden="true"></i>
+                            <span class="side-menu__label">گزارش بر اساس کد ملی</span>
+                        </a>
+                    </li>
+                    <!-- Start::slide - User Management with Submenu -->
+                    <li class="slide__category">
+                        <span class="category-name">مدیریت‌</span>
+                    </li>
+                    <li class="slide has-sub">
+                        <a class="side-menu__item" href="javascript:void(0);">
+                            <svg class="side-menu__icon" height="1em" viewBox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg">
+                                <path color="currentColor" d="M20.5 15.828c-2.501 5.928-10.636 7.656-15.299 3.036C.63 14.334 2.045 6.13 8.057 3.5"></path>
+                                <path color="currentColor" d="M17.683 12.5c1.888 0 2.832 0 3.441-.845c.023-.032.06-.088.081-.121c.548-.887.266-1.568-.299-2.93a10.18 10.18 0 0 0-5.51-5.51c-1.362-.565-2.043-.847-2.93-.3c-.033.021-.09.06-.121.082c-.845.61-.845 1.553-.845 3.44v2.111c0 1.92 0 2.88.596 3.477c.597.596 1.557.596 3.476.596z"></path>
+                            </svg>
+                            <span class="side-menu__label">مدیریت کاربران</span>
+                            <i class="ri-arrow-down-s-line side-menu__angle"></i>
+                        </a>
+                        <ul class="slide-menu child1">
+                            <li class="slide side-menu__label1">
+                                <a href="javascript:void(0)">مدیریت کاربران</a>
+                            </li>
+                            <li class="slide">
+                                <a class="side-menu__item" href="/Security/Account/Users">
+                                    لیست کاربران
+                                </a>
+                            </li>
+                            <li class="slide">
+                                <a class="side-menu__item" href="/Security/Account/EditProfile">
+                                    پروفایل
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <!-- End::slide -->
+                </ul>
+                <div class="slide-right" id="slide-right">
+                    <svg fill="#7b8191" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path>
+                    </svg>
+                </div>
+            </nav>
+            <!-- End::nav -->
+        </div>
+        <!-- End::main-sidebar -->
+    </aside>
+    <!-- ========== END SIDEBAR ========== -->
+    <!-- ========== MAIN CONTENT ========== -->
+    <div class="main-content app-content">
+        <div class="container-fluid">
+            <div class="row">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    <!-- ========== END MAIN CONTENT ========== -->
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer mt-auto py-3 bg-white text-center">
+        <div class="container">
+            <span class="text-muted">
+                <span id="year">۱۴۰۵</span>
+                <a class="text-dark fw-medium" href="javascript:void(0);">اداره کل بنادر و دریانوردی هرمزگان</a>
+                — طراحی و توسعه توسط
+                <a href="javascript:void(0);"><span class="fw-medium text-primary">تیم فناوری اطلاعات</span></a>
+                تمام حقوق محفوظ است
+            </span>
+        </div>
+    </footer>
+    <!-- ========== END FOOTER ========== -->
+    <!-- Support Modal -->
+    <div class="modal fade support-modal" id="supportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="ti ti-headset"></i>
+                        شماره‌های پشتیبانی
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="support-numbers">
+                        <div class="support-number-item">
+                            <i class="ti ti-phone"></i>
+                            <div>
+                                <div class="label">اداره فاوا واحد نرم‌افزار(ساعت اداری)</div>
+                                <div class="number">09940657753 خانم فاطمه صادقی</div>
+                            </div>
+                        </div>
+                        <div class="support-number-item">
+                            <i class="ti ti-phone"></i>
+                            <div>
+                                <div class="label">اداره فاوا واحد نرم‌افزار(ساعت اداری)</div>
+                                <div class="number">داخلی 4547</div>
+                            </div>
+                        </div>
+                        <div class="support-number-item">
+                            <i class="ti ti-mail"></i>
+                            <div>
+                                <div class="label">ایمیل پشتیبانی</div>
+                                <div class="number">sdi10fateme@gmail.com</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- /app-Header -->
-            <!--APP-SIDEBAR-->
-            <div class="sticky">
-                <div class="app-sidebar__overlay" data-bs-toggle="sidebar"></div>
-                <div class="app-sidebar">
-                    <div class="side-header">
-                        <a class="header-brand1" 
-                           asp-area="AccessControlReports"
-                           asp-controller="Report"
-                           asp-action="GetDataReport">
-                            <img src="~/assets/images/brand/logo.png" class="header-brand-img desktop-logo" alt="logo">
-                            <img src="~/assets/images/brand/Logo1.png" class="header-brand-img toggle-logo" alt="logo">
-                            <img src="~/assets/images/brand/Logo2.png" class="header-brand-img light-logo" alt="logo">
-                            <img src="~/assets/images/brand/logotaradod.png" class="header-brand-img light-logo1" alt="logo">
-                        </a>
-                    </div>
-                    <div class="main-sidemenu">
-                        <!-- Slide arrows -->
-                        <div class="slide-left disabled" id="slide-left">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24">
-                                <path d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z" />
-                            </svg>
-                        </div>
-                        <ul class="side-menu">
-                            @* <li class="sub-category">
-                                <h3>داشبورد</h3>
-                            </li> *@
-
-                            <!-- Dashboard -->
-                            @* <li class="slide">
-                                <a class="side-menu__item" asp-controller="Report" asp-action="Dashboard">
-                                    <i class="side-menu__icon fe fe-home"></i>
-                                    <span class="side-menu__label">داشبورد </span>
-                                </a>
-                            </li> *@
-                        </ul>
-
-                        <ul class="side-menu">
-                            <li class="sub-category">
-                                <h3>گزارش‌ها</h3>
-                            </li>
-
-                            <!-- گزارش تردد مسیر -->
-                            <li class="slide">
-                                <a class="side-menu__item" asp-controller="Report" asp-action="GetDataReport">
-                                    <i class="side-menu__icon fe fe-server"></i>
-                                    <span class="side-menu__label">گزارش تردد مسیر</span>
-                                </a>
-                            </li>
-
-                            <!-- گزارش مجموع نوع تردد -->
-                            <li class="slide">
-                                <a class="side-menu__item" asp-controller="Report" asp-action="GetSumReport">
-                                    <i class="side-menu__icon fe fe-bar-chart-2"></i>
-                                    <span class="side-menu__label">گزارش مجموع نوع تردد</span>
-                                </a>
-                            </li>
-
-                            <!-- گزارش تفکیک نوع تردد -->
-                            <li class="slide">
-                                <a class="side-menu__item" asp-controller="Report" asp-action="TrafficByTypeReport">
-                                    <i class="side-menu__icon fe fe-filter"></i>
-                                    <span class="side-menu__label">گزارش تفکیک نوع تردد</span>
-                                </a>
-                            </li>
-
-                            <!-- گزارش بر اساس پلاک -->
-                            <li class="slide">
-                                <a class="side-menu__item" asp-controller="Report" asp-action="TrafficByPlatesReport">
-                                    <i class="side-menu__icon fe fe-truck"></i>
-                                    <span class="side-menu__label">گزارش بر اساس پلاک</span>
-                                </a>
-                            </li>
-
-                            <!-- گزارش بر اساس کد ملی -->
-                            <li class="slide">
-                                <a class="side-menu__item" asp-controller="Report" asp-action="TrafficByNationalIDReport">
-                                    <i class="side-menu__icon fe fe-credit-card"></i>
-                                    <span class="side-menu__label">گزارش بر اساس کد ملی</span>
-                                </a>
-                            </li>
-
-                           @*  <li class="sub-category">
-                                <h3>مدیریت</h3>
-                            </li> *@
-
-                            <!-- مدیریت کاربران (فقط ادمین) -->
-                            @{
-                                var userRole = Context.Session.GetString("UserRole");
-                                var userRoleId = Context.Session.GetString("UserRoleId");
-                                var isAdmin = (userRole == "ادمین" || userRoleId == "3");
-                            }
-                            @if (isAdmin)
-                            {
-                                <li class="slide">
-                                    <a class="side-menu__item" data-bs-toggle="slide" href="javascript:void(0);">
-                                        <i class="side-menu__icon fe fe-users"></i>
-                                        <span class="side-menu__label">مدیریت کاربران</span>
-                                        <i class="angle fe fe-chevron-right"></i>
-                                    </a>
-                                    <ul class="slide-menu">
-                                        <li class="side-menu-label1"><a href="javascript:void(0);">کاربران سیستم</a></li>
-                                        <li>
-                                            <a href ="/Security/Account/Users" class="slide-item">لیست کاربران</a>
-                                        </li>
-                                        <li>
-                                            <a href="/Security/Account/EditProfile" class="slide-item">پروفایل</a>
-                                        </li>
-                                    </ul>
-                                </li>
-                            }
-                        </ul>
-
-                        <!-- Slide Right -->
-                        <div class="slide-right" id="slide-right">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24">
-                                <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!--/APP-SIDEBAR-->
         </div>
-        <div class="main-content app-content mt-8">
-            <div class="side-app">
-                <div class="main-container container-fluid">
-                    @RenderBody()
-                </div>
-            </div>
-        </div>
-    <!-- FOOTER -->
-        <footer class="footer">
-            <div class="container">
-                <div class="row align-items-center flex-row-reverse">
-                    <div class="col-md-12 text-center small text-muted">
-                        © <span id="year">۱۴۰۴</span>
-                        <a href="javascript:void(0)" class="text-dark fw-semibold">اداره کل بنادر و دریانوردی هرمزگان</a> —
-                        طراحی و توسعه توسط
-                        <a href="javascript:void(0)" class="text-primary fw-semibold">تیم فناوری اطلاعات</a>
-                    </div>
-                </div>
-            </div>
-        </footer>
-    <!-- FOOTER CLOSED -->
-</div>
-
-<!-- BACK-TO-TOP -->
-<a href="#top" id="back-to-top"><i class="fa fa-angle-up"></i></a>
-
-<!-- JQUERY JS -->
-<script src="~/assets/js/jquery.min.js"></script>
-
-<!-- Ajax Unobtrusive -->
-@* <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"></script> *@
-
-
-<!-- BOOTSTRAP JS -->
-<script src="~/assets/plugins/bootstrap/js/popper.min.js"></script>
-<script src="~/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
-    <script src="~/assets/plugins/select2/select2.full.min.js"></script>
-<!-- SIDE-MENU JS -->
-<script src="~/assets/plugins/sidemenu/sidemenu.js"></script>
-    
-    <!-- DATA TABLE JS-->
-    <script src="~/assets/plugins/datatable/js/jquery.dataTables.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/dataTables.bootstrap5.js"></script>
-    <script src="~/assets/plugins/datatable/js/dataTables.buttons.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/buttons.bootstrap5.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/jszip.min.js"></script>
-    <script src="~/assets/plugins/datatable/pdfmake/pdfmake.min.js"></script>
-    <script src="~/assets/plugins/datatable/pdfmake/vfs_fonts.js"></script>
-    <script src="~/assets/plugins/datatable/js/buttons.html5.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/buttons.print.min.js"></script>
-    <script src="~/assets/plugins/datatable/js/buttons.colVis.min.js"></script>
-    <script src="~/assets/plugins/datatable/dataTables.responsive.min.js"></script>
-    <script src="~/assets/plugins/datatable/responsive.bootstrap5.min.js"></script>
-    <script src="~/assets/js/table-data.js"></script>
-
-<!-- SIDEBAR JS -->
-<script src="~/assets/plugins/sidebar/sidebar.js"></script>
-
-<!-- Color Theme js -->
-	<script src="~/assets/js/themeColors.js"></script>
+    </div>
+    <!-- Scroll To Top -->
+    <div class="scrollToTop">
+        <span class="arrow lh-1">
+            <i class="ti ti-caret-up fs-20"></i>
+        </span>
+    </div>
+    <div id="responsive-overlay"></div>
+    <!-- ========== SCRIPTS ========== -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/assets/libs/%40popperjs/core/umd/popper.min.js"></script>
+    <script src="~/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/assets/js/defaultmenu.min.js"></script>
+    <script src="~/assets/libs/node-waves/waves.min.js"></script>
+    <script src="~/assets/js/sticky.js"></script>
+    <script src="~/assets/libs/%40simonwep/pickr/pickr.es5.min.js"></script>
+    <script src="~/assets/libs/flatpickr/flatpickr.min.js"></script>
+    <script src="~/assets/libs/prismjs/prism.js"></script>
+	<script src="~/assets/js/prism-custom.js"></script>
 	<script src="~/assets/js/custom.js"></script>
-
-<!-- Sticky js -->
-<script src="~/assets/js/sticky.js"></script>
-
-	<link href="~/assets/js/persian-datepicker.min.css" rel="stylesheet" />
-	<script src="~/assets/js/persian-date.min.js"></script>
-	<script src="~/assets/js/persian-datepicker.min.js"></script>
-
+    <script src="~/assets/js/date&time_pickers.js"></script>
+    <script src="~/assets/libs/gridjs/gridjs.umd.js"></script>
+	<link href="~/assets/libs/persian-datepicker/css/persian-datepicker.min.css" rel="stylesheet" />
+    <script src="~/assets/libs/persian-datepicker/index.global.min.js"></script>
+    <script src="~/assets/libs/persian-datepicker/persian-date.min.js"></script>
+    <script src="~/assets/libs/persian-datepicker/persian-datepicker.min.js"></script>
+    <script src="~/assets/libs/fullcalendar/index.global.min.js"></script>
+	<!-- Toastify JS -->
+	<link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" />
+    <script src="~/assets/libs/toastify-js/src/toastify.js">
+    </script>
+    <!-- Toast JS -->
+    <script src="~/assets/js/toasts.js">
+    </script>
+    <script>
+        function openFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
-
 </html>

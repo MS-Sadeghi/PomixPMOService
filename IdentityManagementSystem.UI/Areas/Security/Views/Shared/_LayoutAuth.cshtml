@@ -1,101 +1,55 @@
 ﻿<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html dir="rtl" data-header-styles="light" data-menu-styles="light" data-nav-layout="vertical" data-theme-mode="light" data-toggled="close" data-vertical-style="overlay" lang="fa">
 <head>
+    <!-- Meta Data -->
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="IE=edge" http-equiv="X-UA-Compatible" />
     <title>@ViewData["Title"] - ServicePMO</title>
-
-    <!-- BOOTSTRAP RTL CSS -->
-    <link href="~/assets/plugins/bootstrap/css/bootstrap.rtl.min.css" rel="stylesheet" />
-
-    <!-- STYLE CSS -->
-    <link href="~/assets/css/style.css" rel="stylesheet" />
-
-    <link href="~/lib/bootstrap/dist/css/toastr.min.css" rel="stylesheet" />
-
-    <!-- FONT-ICONS CSS -->
-    <link href="~/assets/css/icons.css" rel="stylesheet" />
-    <link href="~/assets/iconfonts/bootstrapicons/bootstrap-icons.css" rel="stylesheet" />
-    <link href="~/assets/iconfonts/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
-    <link href="~/assets/iconfonts/ionicons/ionicons.css" rel="stylesheet" />
-    @*
-    <link rel="preload" href="~/assets/iconfonts/feather/fonts/feather-webfont.woff" as="font" type="font/woff" crossorigin>
-    <link rel="preload" href="~/assets/iconfonts/font-awesome/fonts/fontawesome-webfont.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="~/assets/iconfonts/materialdesignicons/fonts/Material-Design-Iconic-Font.woff2" as="font" type="font/woff2" crossorigin>
- *@
-    <!-- COLOR SKIN CSS -->
-    <link id="theme" rel="stylesheet" type="text/css" media="all" href="~/assets/colors/color1.css" />
-
-    <!-- SITE CUSTOM CSS -->
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    @* <link rel="stylesheet" href="~/ServiceUIPMO.styles.css" asp-append-version="true" /> *@
-
-    <style>
-        body {
-            direction: rtl;
-            text-align: right;
-            overflow-x: hidden;
-            background-image: url('/assets/images/macos.jpg');
-            background-repeat: no-repeat;
-            background-size: cover;
-            background-position: center center;
-            background-attachment: fixed;
-        }
-
-    </style>
-
+    <!-- Favicon -->
+    <link href="~/assets/images/brand-logos/favicon.ico" rel="icon" type="image/x-icon" />
+    <!-- Start::custom-styles -->
+    <!-- Main Theme Js -->
+    <script src="~/assets/js/authentication-main.js">
+    </script>
+    <!-- Bootstrap Css -->
+    <link href="~/assets/libs/bootstrap/css/bootstrap.rtl.min.css" id="style" rel="stylesheet" />
+    <!-- Style Css -->
+    <link href="~/assets/css/styles.css" rel="stylesheet" />
+    <!-- Icons Css -->
+	<link href="~/assets/css/icons.css" rel="stylesheet" />
+	<link href="~/lib/bootstrap/dist/css/toastr.min.css" rel="stylesheet" />
+    <!-- End::custom-styles -->
     @RenderSection("Styles", required: false)
 </head>
-
-<body>
-    <!-- PAGE -->
-    <div class="page">
-        <div class="page-main">
-
-            <!-- /app-Header -->
-            <div class="container mt-6">
-                <main role="main" class="pb-3">
-                    @RenderBody()
-                </main>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- JQUERY JS -->
-    <script src="~/assets/js/jquery.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-
-    <!-- BOOTSTRAP JS -->
-    <script src="~/assets/plugins/bootstrap/js/popper.min.js"></script>
-    <script src="~/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
-
-    <!-- SPARKLINE JS-->
-    <script src="~/assets/js/jquery.sparkline.min.js"></script>
-
-    <!-- Sticky js -->
-    <script src="~/assets/js/sticky.js"></script>
-
-    <!-- Color Theme js -->
-    <script src="~/assets/js/themeColors.js"></script>
-
-    <!-- CUSTOM JS -->
-    <script src="~/assets/js/custom.js"></script>
-
-    <!-- INTERNAL SELECT2 JS -->
-    <script src="~/assets/plugins/select2/select2.full.min.js"></script>
-
-    <!-- SHOW PASSWORD JS -->
-    @* <script src="~/assets/js/show-password.min.js"></script> *@
-
-    <!-- GENERATE OTP JS -->
-    <script src="~/assets/js/generate-otp.js"></script>
-
-    <!-- INPUT MASK JS-->
-    <script src="~/assets/plugins/input-mask/jquery.mask.min.js"></script>
+<body class="authentication-background">
+    <main role="main" class="pb-3">
+        @RenderBody()
+    </main>
+    <!-- Start::custom-scripts -->
+	<!-- Bootstrap JS -->
+	<script src="~/lib/jquery/dist/jquery.min.js"></script>
+	<script src="~/lib/jquery/dist/jquery.js"></script>
+	<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+	<script src="~/lib/jquery-validation/dist/jquery.validate.js"></script>
+    <script src="~/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/assets/js/two-step-verification.js"> </script>
+    <!-- Show Password JS -->
+    <script src="~/assets/js/show-password.js"></script>
+    <!-- Animation-auth JS -->
+    <!-- <script src="~/assets/js/animation-auth.js"></script> -->
+	<!-- End::custom-scripts -->
+	<script src="~/lib/bootstrap/dist/js/toastr.min.js"></script>
+    @* <script src="~/assets/js/animation-auth.js"></script> *@
     <script src="~/lib/bootstrap/dist/js/toastr.min.js"></script>
     <script src="~/lib/jquery-ajax-unobtrusive/dist/jquery.unobtrusive-ajax.min.js"></script>
+	<!-- Toastify JS -->
+	<link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" />
+    <script src="~/assets/libs/toastify-js/src/toastify.js">
+    </script>
+    <!-- Toast JS -->
+    <script src="~/assets/js/toasts.js">
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

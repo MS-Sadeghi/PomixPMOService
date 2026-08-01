@@ -4,196 +4,224 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityManagementSystem.UI.Controllers
 {
-    [Area("AccessControlReports")]
-    public class ReportController : Controller
-    {
+	[Area("AccessControlReports")]
+	public class ReportController : Controller
+	{
 
-        private readonly IAccessControlReportService _service;
+		private readonly IAccessControlReportService _service;
 
-        public ReportController(IAccessControlReportService service)
-        {
-            _service = service;
-        }
+		public ReportController(IAccessControlReportService service)
+		{
+			_service = service;
+		}
 
-        #region GetData
+		#region GetData
 
-        [HttpGet]
-        public IActionResult GetDataReport()
-        {
-            return View(new GetDataReportPageViewModel());
-        }
+		[HttpGet]
+		public IActionResult GetDataReport()
+		{
+			return View(new GetDataReportPageViewModel());
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> GetDataReportAjax(GetDataFilterViewModel filter)
-        {
-            try
-            {
-                var result = await _service.GetDataAsync(filter);
+		[HttpPost]
+		public async Task<IActionResult> GetDataReportAjax(GetDataFilterViewModel filter)
+		{
+			try
+			{
+				var result = await _service.GetDataAsync(filter);
 
-                return Json(new
-                {
-                    success = true,
-                    data = result
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = ex.Message
-                });
-            }
-        }
+				return Json(new
+				{
+					success = true,
+					data = result
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new
+				{
+					success = false,
+					message = ex.Message
+				});
+			}
+		}
 
-        #endregion
+		#endregion
 
-        #region GetSum
+		#region GetSum
 
-        [HttpGet]
-        public IActionResult GetSumReport()
-        {
-            return View(new GetSumReportPageViewModel());
-        }
+		[HttpGet]
+		public IActionResult GetSumReport()
+		{
+			return View(new GetSumReportPageViewModel());
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> GetSumReport(GetSumReportPageViewModel model)
-        {
-            model.Reports = await _service.GetSumAsync(model.Filter);
+		[HttpPost]
+		public async Task<IActionResult> GetSumReport(GetSumReportPageViewModel model)
+		{
+			try
+			{
+				model.Reports = await _service.GetSumAsync(model.Filter);
+			}
+			catch (Exception ex)
+			{
+				ViewBag.ErrorMessage = ex.Message;
+			}
 
-            return View(model);
-        }
+			return View(model);
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> GetSumReportAjax(BaseReportFilterViewModel filter)
-        {
-            return await ExecuteReportAsync(() => _service.GetSumAsync(filter));
-        }
+		[HttpPost]
+		public async Task<IActionResult> GetSumReportAjax(BaseReportFilterViewModel filter)
+		{
+			return await ExecuteReportAsync(() => _service.GetSumAsync(filter));
+		}
 
-        #endregion
+		#endregion
 
-        #region TrafficByType
+		#region TrafficByType
 
-        [HttpGet]
-        public IActionResult TrafficByTypeReport()
-        {
-            return View(new TrafficByTypePageViewModel());
-        }
+		[HttpGet]
+		public IActionResult TrafficByTypeReport()
+		{
+			return View(new TrafficByTypePageViewModel());
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> TrafficByTypeReport(TrafficByTypePageViewModel model)
-        {
-            model.Reports = await _service.TrafficByTypeAsync(model.Filter);
+		[HttpPost]
+		public async Task<IActionResult> TrafficByTypeReport(TrafficByTypePageViewModel model)
+		{
+			try
+			{
+				model.Reports = await _service.TrafficByTypeAsync(model.Filter);
+			}
+			catch (Exception ex)
+			{
+				ViewBag.ErrorMessage = ex.Message;
+			}
 
-            return View(model);
-        }
+			return View(model);
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> TrafficByTypeReportAjax(TrafficByTypeFilterViewModel filter)
-        {
-            return await ExecuteReportAsync(() => _service.TrafficByTypeAsync(filter));
-        }
+		[HttpPost]
+		public async Task<IActionResult> TrafficByTypeReportAjax(TrafficByTypeFilterViewModel filter)
+		{
+			return await ExecuteReportAsync(() => _service.TrafficByTypeAsync(filter));
+		}
 
-        #endregion
+		#endregion
 
-        #region TrafficByPlates
+		#region TrafficByPlates
 
-        [HttpGet]
-        public IActionResult TrafficByPlatesReport()
-        {
-            return View(new TrafficByPlatesPageViewModel());
-        }
+		[HttpGet]
+		public IActionResult TrafficByPlatesReport()
+		{
+			return View(new TrafficByPlatesPageViewModel());
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> TrafficByPlatesReport(TrafficByPlatesPageViewModel model)
-        {
-            model.Reports = await _service.TrafficByPlatesAsync(model.Filter);
+		[HttpPost]
+		public async Task<IActionResult> TrafficByPlatesReport(TrafficByPlatesPageViewModel model)
+		{
+			try
+			{
+				model.Reports = await _service.TrafficByPlatesAsync(model.Filter);
+			}
+			catch (Exception ex)
+			{
+				ViewBag.ErrorMessage = ex.Message;
+			}
 
-            return View(model);
-        }
+			return View(model);
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> TrafficByPlatesReportAjax(TrafficByPlatesFilterViewModel filter)
-        {
-            return await ExecuteReportAsync(() => _service.TrafficByPlatesAsync(filter));
-        }
+		[HttpPost]
+		public async Task<IActionResult> TrafficByPlatesReportAjax(TrafficByPlatesFilterViewModel filter)
+		{
+			return await ExecuteReportAsync(() => _service.TrafficByPlatesAsync(filter));
+		}
 
-        #endregion
+		#endregion
 
-        #region TrafficByNationalId
+		#region TrafficByNationalId
 
-        [HttpGet]
-        public IActionResult TrafficByNationalIDReport()
-        {
-            return View(new TrafficByNationalIdPageViewModel());
-        }
+		[HttpGet]
+		public IActionResult TrafficByNationalIDReport()
+		{
+			return View(new TrafficByNationalIdPageViewModel());
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> TrafficByNationalIDReport(TrafficByNationalIdPageViewModel model)
-        {
-            model.Reports = await _service.TrafficByNationalIdAsync(model.Filter);
+		[HttpPost]
+		public async Task<IActionResult> TrafficByNationalIDReport(TrafficByNationalIdPageViewModel model)
+		{
+			try
+			{
+				model.Reports = await _service.TrafficByNationalIdAsync(model.Filter);
+			}
+			catch (Exception ex)
+			{
+				ViewBag.ErrorMessage = ex.Message;
+			}
 
-            return View(model);
-        }
+			return View(model);
+		}
 
-        [HttpPost]
-        public async Task<IActionResult> TrafficByNationalIDReportAjax(TrafficByNationalIdFilterViewModel filter)
-        {
-            return await ExecuteReportAsync(() => _service.TrafficByNationalIdAsync(filter));
-        }
+		[HttpPost]
+		public async Task<IActionResult> TrafficByNationalIDReportAjax(TrafficByNationalIdFilterViewModel filter)
+		{
+			return await ExecuteReportAsync(() => _service.TrafficByNationalIdAsync(filter));
+		}
 
-        #endregion
+		#endregion
 
-        #region Dashboard
-        [HttpGet]
-        public IActionResult Dashboard()
-        {
-            return View();
-        }
-        [HttpPost]
-        public async Task<IActionResult> GetDashboardAjax()
-        {
-            try
-            {
-                var result = await _service.GetDashboardAsync();
+		#region Dashboard
+		[HttpGet]
+		public IActionResult Dashboard()
+		{
+			return View();
+		}
+		[HttpPost]
+		public async Task<IActionResult> GetDashboardAjax(string period = "today", bool forceRefresh = false)
+		{
+			try
+			{
+				var result = await _service.GetDashboardAsync(period, forceRefresh);
 
-                return Json(new
-                {
-                    success = true,
-                    data = result
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = ex.Message
-                });
-            }
-        }
-        #endregion
+				return Json(new
+				{
+					success = true,
+					data = result
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new
+				{
+					success = false,
+					message = ex.Message
+				});
+			}
+		}
+		#endregion
 
-        private async Task<IActionResult> ExecuteReportAsync<T>(Func<Task<List<T>>> action)
-        {
-            try
-            {
-                var result = await action();
+		private async Task<IActionResult> ExecuteReportAsync<T>(Func<Task<List<T>>> action)
+		{
+			try
+			{
+				var result = await action();
 
-                return Json(new
-                {
-                    success = true,
-                    data = result
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = ex.Message
-                });
-            }
-        }
-    }
+				return Json(new
+				{
+					success = true,
+					data = result
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new
+				{
+					success = false,
+					message = ex.Message
+				});
+			}
+		}
+	}
 }

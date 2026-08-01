@@ -129,7 +129,8 @@ app.Use(async (context, next) =>
 
     // مسیرهای آزاد
     if (path.StartsWith("/security/account/login") ||
-        path.StartsWith("/api") ||
+	    path.StartsWith("/security/account/forgotpassword") ||
+		path.StartsWith("/api") ||
         path.StartsWith("/swagger") ||
         path.Contains("captcha") ||
         path.StartsWith("/css") ||

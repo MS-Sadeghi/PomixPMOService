@@ -2,6 +2,8 @@
 {
 	public class DashboardResponseViewModel
 	{
+		public string Period { get; set; } = "today";
+
 		public int TotalTrafficToday { get; set; }
 		public int VehicleTrafficToday { get; set; }
 		public int PeopleTrafficToday { get; set; }

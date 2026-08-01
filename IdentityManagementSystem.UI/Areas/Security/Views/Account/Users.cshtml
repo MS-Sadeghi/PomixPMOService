@@ -3,37 +3,40 @@
 @model IEnumerable<UserViewModel>
 @{
     ViewData["Title"] = "کاربران";
-    var module = Context.Session.GetString("CurrentModule");
-
-    Layout = module switch
-    {
-        "AccessControlReports" =>
-            "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml",
-
-        "JudiciaryInquiry" =>
-            "~/Areas/JudiciaryInquiry/Views/Shared/_JudiciaryInquiryLayout.cshtml",
-
-        _ =>
-            "~/Views/Shared/_Layout.cshtml"
-    };
+    Layout = "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml";
 }
+
+<div class="my-4 page-header-breadcrumb d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+        <nav>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="javascript:void(0);">مدیریت کاربران</a></li>
+                <li aria-current="page" class="breadcrumb-item active">لیست کاربران</li>
+            </ol>
+        </nav>
+    </div>
+</div>
 
 @if (ViewBag.ErrorMessage != null)
 {
     <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
 }
 
-<div class="input-group mb-5">
-    <input type="text" class="form-control" placeholder="جستجو" id="searchInput">
-    <button class="btn btn-primary" id="searchButton">
-        <i class="fa fa-search" aria-hidden="true"></i> جستجو
-    </button>
-</div>
-
-<div class="card">
-    <div class="card-header d-flex align-items-center">
-        <h2 class="card-title">کاربران</h2>
-        <button id="AddUser" type="button" class="btn btn-primary btn-pill left-btn">افزودن کاربر</button>
+<div class="card custom-card">
+    <div class="card-header d-block">
+        <div class="input-group w-100 mb-3">
+            <input type="text" class="form-control" placeholder="جستجو" id="searchInput">
+            <button class="btn btn-light border" id="searchButton">
+                <i class="ti ti-search"></i>
+            </button>
+        </div>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="card-title mb-0">لیست کاربران</div>
+            <button id="AddUser" type="button" class="btn btn-primary btn-wave">
+                <i class="ti ti-plus me-1"></i>
+                افزودن کاربر
+            </button>
+        </div>
     </div>
     <div class="card-body">
         @if (!string.IsNullOrEmpty(ViewBag.SuccessMessage))
@@ -45,11 +48,10 @@
             <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
         }
         <div class="table-responsive">
-            <table class="table table-bordered border text-nowrap mb-0" id="usersTable">
+            <table class="table text-nowrap mb-0" id="usersTable">
                 <thead>
                     <tr>
-                        <th>نام</th>
-                        <th>نام خانوادگی</th>
+                        <th>کاربر</th>
                         <th>موقعیت</th>
                         <th>نام کاربری</th>
                         <th>تاریخ ثبت</th>
@@ -63,25 +65,35 @@
                         foreach (var user in Model)
                         {
                             <tr data-user-id="@user.UserId">
-                                <td>@user.Name</td>
-                                <td>@user.LastName</td>
-                                <td>@user.Role</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="avatar avatar-md avatar-rounded bg-primary-transparent">
+                                            <i class="ti ti-user fs-16"></i>
+                                        </span>
+                                        <div>
+                                            <span class="d-block fw-semibold">@user.Name @user.LastName</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-info-transparent fs-12">@user.Role</span></td>
                                 <td>@user.Username</td>
                                 <td>
-                                    <span class="block">@user.CreatedAt.ToPersianTime()</span>
-                                    <span class="block text-muted">@user.CreatedAt.ToPersianDate()</span>
+                                    <span class="d-block fw-semibold">@user.CreatedAt.ToPersianTime()</span>
+                                    <span class="d-block fs-13 text-muted">@user.CreatedAt.ToPersianDate()</span>
                                 </td>
                                 <td>
-                                    <span class="block">@user.LastLogin.ToPersianTime()</span>
-                                    <span class="block text-muted">@user.LastLogin.ToPersianDate()</span>
+                                    <span class="d-block fw-semibold">@user.LastLogin.ToPersianTime()</span>
+                                    <span class="d-block fs-13 text-muted">@user.LastLogin.ToPersianDate()</span>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-info btn-edit" data-id="@user.UserId">
-                                        <i class="fa fa-edit"></i> 
-                                    </button>
-                                    <button class="btn btn-sm btn-danger btn-delete" data-id="@user.UserId">
-                                        <i class="fa fa-trash"></i> 
-                                    </button>
+                                    <div class="btn-list">
+                                        <button class="btn btn-primary-light btn-icon btn-sm btn-edit" data-id="@user.UserId" data-bs-placement="top" data-bs-toggle="tooltip" title="ویرایش">
+                                            <i class="ti ti-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger-light btn-icon btn-sm btn-delete" data-id="@user.UserId" data-bs-placement="top" data-bs-toggle="tooltip" title="حذف">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -89,7 +101,7 @@
                     else
                     {
                         <tr id="noDataRow">
-                            <td colspan="7" class="text-center">هیچ کاربری یافت نشد.</td>
+                            <td colspan="6" class="text-center">هیچ کاربری یافت نشد.</td>
                         </tr>
                     }
                 </tbody>
@@ -101,7 +113,7 @@
 <!-- Modal افزودن کاربر  -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content modal-content-demo">
+        <div class="modal-content">
             <div class="modal-header">
                 <h6 class="modal-title" id="addUserModalLabel">افزودن کاربر جدید</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"><span aria-hidden="true">×</span></button>
@@ -109,39 +121,39 @@
             <div class="modal-body">
                 <form id="createUserForm" asp-controller="Home" asp-action="CreateUser" method="post" class="needs-validation" novalidate>
                     @Html.AntiForgeryToken()
-                    <div class="form-row">
+                    <div class="row">
                         <div class="col-xl-6 mb-3">
-                            <label for="Name">نام</label>
+                            <label class="form-label" for="Name">نام</label>
                             <input class="form-control" id="Name" name="Name" required>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً نام را وارد کنید.</div>
                         </div>
                         <div class="col-xl-6 mb-3">
-                            <label for="LastName">نام خانوادگی</label>
+                            <label class="form-label" for="LastName">نام خانوادگی</label>
                             <input class="form-control" id="LastName" name="LastName" required>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً نام خانوادگی را وارد کنید.</div>
                         </div>
                     </div>
 
-                    <div class="form-row">
+                    <div class="row">
                         <div class="col-xl-6 mb-3">
-                            <label for="Username">نام کاربری</label>
+                            <label class="form-label" for="Username">نام کاربری</label>
                             <input class="form-control" id="Username" name="Username" required>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً نام کاربری را وارد کنید.</div>
                         </div>
                         <div class="col-xl-6 mb-3">
-                            <label for="NationalId">کد ملی</label>
+                            <label class="form-label" for="NationalId">کد ملی</label>
                             <input class="form-control" id="NationalId" name="NationalId" required maxlength="10">
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً کد ملی را وارد کنید.</div>
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="col-xl-6 mb-3">
-                            <label for="RoleId">نقش کاربر</label>
+                    <div class="row">
+                        <div class="col-xl-12 mb-3">
+                            <label class="form-label" for="RoleId">نقش کاربر</label>
                             <select class="form-control" id="RoleId" name="RoleId" required>
                                 <option value="">در حال بارگذاری...</option>
                             </select>
@@ -150,25 +162,25 @@
                         </div>
                     </div>
 
-                    <div class="form-row">
+                    <div class="row">
                         <div class="col-xl-6 mb-3">
-                            <label for="Password">رمز عبور</label>
-                            <div class="wrap-input100 validate-input input-group" id="Password-toggle1">
-                                <a href="javascript:void(0)" class="input-group-text bg-white text-muted toggle-password">
-                                    <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
-                                </a>
-                                <input class="input100 form-control" type="password" id="Password" name="Password" placeholder="رمز عبور" autocomplete="new-password" required minlength="6">
+                            <label class="form-label" for="Password">رمز عبور</label>
+                            <div class="input-group" id="Password-toggle1">
+                                <span class="input-group-text toggle-password-icon" style="cursor:pointer;">
+                                    <i class="ti ti-eye"></i>
+                                </span>
+                                <input class="form-control toggle-password-input" type="password" id="Password" name="Password" placeholder="رمز عبور" autocomplete="new-password" required minlength="6">
                             </div>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً رمز عبور را وارد کنید (حداقل 6 کاراکتر).</div>
                         </div>
                         <div class="col-xl-6 mb-3">
-                            <label for="ConfirmPassword">تأیید رمز عبور</label>
-                            <div class="wrap-input100 validate-input input-group" id="Password-toggle2">
-                                <a href="javascript:void(0)" class="input-group-text bg-white text-muted toggle-password">
-                                    <i class="zmdi zmdi-eye text-muted" aria-hidden="true"></i>
-                                </a>
-                                <input class="input100 form-control" type="password" id="ConfirmPassword" name="ConfirmPassword" placeholder="تأیید رمز عبور" autocomplete="new-password" required>
+                            <label class="form-label" for="ConfirmPassword">تأیید رمز عبور</label>
+                            <div class="input-group" id="Password-toggle2">
+                                <span class="input-group-text toggle-password-icon" style="cursor:pointer;">
+                                    <i class="ti ti-eye"></i>
+                                </span>
+                                <input class="form-control toggle-password-input" type="password" id="ConfirmPassword" name="ConfirmPassword" placeholder="تأیید رمز عبور" autocomplete="new-password" required>
                             </div>
                             <div class="valid-feedback">معتبر است!</div>
                             <div class="invalid-feedback">لطفاً تأیید رمز عبور را وارد کنید.</div>
@@ -177,8 +189,8 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button class="btn btn-primary" type="submit">ثبت کاربر</button>
-                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">بستن</button>
+                        <button class="btn btn-light border btn-wave" type="button" data-bs-dismiss="modal">بستن</button>
+                        <button class="btn btn-primary btn-wave" type="submit">ثبت کاربر</button>
                     </div>
                 </form>
             </div>
@@ -189,7 +201,7 @@
 <!-- Modal ویرایش کاربر -->
 <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content modal-content-demo">
+        <div class="modal-content">
             <div class="modal-header">
                 <h6 class="modal-title" id="editUserModalLabel">ویرایش کاربر</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
@@ -198,56 +210,66 @@
                 <form id="editUserForm" asp-controller="Home" asp-action="UpdateUser" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="editUserId" name="UserId" />
-                    
-                    <div class="form-row">
+
+                    <div class="row">
                         <div class="col-xl-6 mb-3">
-                            <label for="editName">نام</label>
-                            <input class="form-control" id="editName" name="Name" >
+                            <label class="form-label" for="editName">نام</label>
+                            <input class="form-control" id="editName" name="Name">
                         </div>
                         <div class="col-xl-6 mb-3">
-                            <label for="editLastName">نام خانوادگی</label>
-                            <input class="form-control" id="editLastName" name="LastName" >
+                            <label class="form-label" for="editLastName">نام خانوادگی</label>
+                            <input class="form-control" id="editLastName" name="LastName">
                         </div>
                     </div>
 
-                    <div class="form-row">
+                    <div class="row">
                         <div class="col-xl-6 mb-3">
-                            <label for="editUsername">نام کاربری</label>
-                            <input class="form-control" id="editUsername" name="Username" >
+                            <label class="form-label" for="editUsername">نام کاربری</label>
+                            <input class="form-control" id="editUsername" name="Username">
                         </div>
                         <div class="col-xl-6 mb-3">
-                            <label for="editNationalId">کد ملی</label>
-                            <input class="form-control" id="editNationalId" name="NationalId"  maxlength="10">
+                            <label class="form-label" for="editNationalId">کد ملی</label>
+                            <input class="form-control" id="editNationalId" name="NationalId" maxlength="10">
                         </div>
                     </div>
 
-                    <div class="form-row">
+                    <div class="row">
                         <div class="col-xl-6 mb-3">
-                            <label for="editRoleId">نقش کاربر</label>
+                            <label class="form-label" for="editRoleId">نقش کاربر</label>
                             <select class="form-control" id="editRoleId" name="RoleId">
                                 <option value="">انتخاب کنید</option>
                             </select>
                         </div>
                         <div class="col-xl-6 mb-3">
-                            <label for="editMobileNumber">شماره موبایل</label>
+                            <label class="form-label" for="editMobileNumber">شماره موبایل</label>
                             <input class="form-control" id="editMobileNumber" name="MobileNumber">
                         </div>
                     </div>
 
-                    <div class="form-row">
+                    <div class="row">
                         <div class="col-xl-6 mb-3">
-                            <label for="editPassword">رمز عبور جدید</label>
-                            <input class="form-control" type="password" id="editPassword" name="Password" minlength="6">
+                            <label class="form-label" for="editPassword">رمز عبور جدید</label>
+                            <div class="input-group">
+                                <span class="input-group-text toggle-password-icon" style="cursor:pointer;">
+                                    <i class="ti ti-eye"></i>
+                                </span>
+                                <input class="form-control toggle-password-input" type="password" id="editPassword" name="Password" minlength="6">
+                            </div>
                         </div>
                         <div class="col-xl-6 mb-3">
-                            <label for="editConfirmPassword">تأیید رمز عبور</label>
-                            <input class="form-control" type="password" id="editConfirmPassword" name="ConfirmPassword">
+                            <label class="form-label" for="editConfirmPassword">تأیید رمز عبور</label>
+                            <div class="input-group">
+                                <span class="input-group-text toggle-password-icon" style="cursor:pointer;">
+                                    <i class="ti ti-eye"></i>
+                                </span>
+                                <input class="form-control toggle-password-input" type="password" id="editConfirmPassword" name="ConfirmPassword">
+                            </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
-                        <button class="btn btn-primary" type="submit">به‌روزرسانی</button>
-                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">بستن</button>
+                        <button class="btn btn-light border btn-wave" type="button" data-bs-dismiss="modal">بستن</button>
+                        <button class="btn btn-primary btn-wave" type="submit">به‌روزرسانی</button>
                     </div>
                 </form>
             </div>
@@ -256,26 +278,32 @@
 </div>
 
 <script>
-    // استفاده از vanilla JavaScript به جای jQuery
     document.addEventListener('DOMContentLoaded', function() {
         let addModal, editModal;
 
-        // مقداردهی مودال‌ها
         addModal = new bootstrap.Modal(document.getElementById('addUserModal'));
         editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
 
-        // بارگذاری نقش‌ها برای مودال افزودن
+        document.querySelectorAll('.toggle-password-icon').forEach(function (el) {
+            el.addEventListener('click', function () {
+                var input = this.closest('.input-group').querySelector('.toggle-password-input');
+                var icon = this.querySelector('i');
+                var isPassword = input.getAttribute('type') === 'password';
+                input.setAttribute('type', isPassword ? 'text' : 'password');
+                icon.classList.toggle('ti-eye');
+                icon.classList.toggle('ti-eye-off');
+            });
+        });
+
         loadRolesForModal('RoleId');
         loadRolesForModal('editRoleId');
 
-        // دکمه افزودن کاربر
         document.getElementById('AddUser').addEventListener('click', function() {
             document.getElementById('createUserForm').reset();
             document.getElementById('createUserForm').classList.remove('was-validated');
             addModal.show();
         });
 
-        // جستجو
         function filterTable() {
             var searchText = document.getElementById('searchInput').value.toLowerCase();
             var rows = document.querySelectorAll('#usersTableBody tr');
@@ -295,7 +323,6 @@
         document.getElementById('searchInput').addEventListener('keyup', filterTable);
         document.getElementById('searchButton').addEventListener('click', filterTable);
 
-        // ویرایش کاربر
         document.querySelectorAll('.btn-edit').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var userId = this.dataset.id;
@@ -330,7 +357,6 @@
             });
         });
 
-        // حذف کاربر
         document.querySelectorAll('.btn-delete').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var userId = this.dataset.id;
@@ -365,14 +391,12 @@
             });
         });
 
-    // ارسال فرم ویرایش
     document.getElementById('editUserForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
         var password = document.getElementById('editPassword').value;
         var confirmPassword = document.getElementById('editConfirmPassword').value;
 
-        // فقط بررسی رمز عبور در صورتی که پر شده باشد
         if (password && password !== confirmPassword) {
             alert('رمز عبور و تأیید رمز عبور یکسان نیستند');
             return;
@@ -409,7 +433,6 @@
         });
     });
 
-        // ارسال فرم ایجاد کاربر
         document.getElementById('createUserForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -452,7 +475,6 @@
             });
         });
 
-        // بستن مودال‌ها
         document.getElementById('addUserModal').addEventListener('hidden.bs.modal', function() {
             document.getElementById('createUserForm').reset();
             document.getElementById('createUserForm').classList.remove('was-validated');
@@ -463,7 +485,6 @@
         });
     });
 
-    // تابع بارگذاری نقش‌ها
     function loadRolesForModal(selectId) {
         fetch('@Url.Action("GetRoles", "Home")', {
             method: 'GET',
@@ -491,5 +512,3 @@
         });
     }
 </script>
-<script src="~/assets/plugins/bootstrap5-typehead/autocomplete.js"></script>
-<script src="~/assets/js/typehead.js"></script>

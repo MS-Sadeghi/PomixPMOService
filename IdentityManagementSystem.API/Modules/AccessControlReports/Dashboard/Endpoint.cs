@@ -14,9 +14,9 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> Execute()
+		public async Task<IActionResult> Execute([FromBody] DashboardRequest? request)
 		{
-			var result = await _handler.HandleAsync();
+			var result = await _handler.HandleAsync(request ?? new DashboardRequest());
 
 			return Ok(result);
 		}

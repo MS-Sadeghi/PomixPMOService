@@ -1,162 +1,162 @@
-using IdentityManagementSystem.UI.Areas.AccessControlReports.Services;
+﻿using IdentityManagementSystem.UI.Areas.AccessControlReports.Services;
 using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel;
 using IdentityManagementSystem.UI.ViewModels;
 
 namespace IdentityManagementSystem.API.Services.AccessControlReports
 {
-    public class AccessControlReportService : IAccessControlReportService
-    {
-        private readonly IHttpClientFactory _factory;
+	public class AccessControlReportService : IAccessControlReportService
+	{
+		private readonly IHttpClientFactory _factory;
 
-        public AccessControlReportService(IHttpClientFactory factory)
-        {
-            _factory = factory;
-        }
+		public AccessControlReportService(IHttpClientFactory factory)
+		{
+			_factory = factory;
+		}
 
-        public async Task<List<GetDataReportViewModel>> GetDataAsync(GetDataFilterViewModel filter)
-        {
-            var client = _factory.CreateClient("PomixApi");
+		public async Task<List<GetDataReportViewModel>> GetDataAsync(GetDataFilterViewModel filter)
+		{
+			var client = _factory.CreateClient("PomixApi");
 
-            var request = new
-            {
-                StartDate = filter.StartDate,
-                EndDate = filter.EndDate,
-                StartTime = filter.StartTime,
-                EndTime = filter.EndTime,
-                EntranceTypes = filter.EntranceTypes
-            };
+			var request = new
+			{
+				StartDate = filter.StartDate,
+				EndDate = filter.EndDate,
+				StartTime = filter.StartTime,
+				EndTime = filter.EndTime,
+				EntranceTypes = filter.EntranceTypes
+			};
 
-            var response = await client.PostAsJsonAsync(
-                "access-control-reports/get-data",
-                request);
+			var response = await client.PostAsJsonAsync(
+				"access-control-reports/get-data",
+				request);
 
-            var responseContent =
-                    await response.Content.ReadAsStringAsync();
+			if (!response.IsSuccessStatusCode)
+				await ThrowForFailedResponseAsync(response, "خلاصه تردد");
 
-            var content = await response.Content.ReadAsStringAsync();
+			return await response.Content.ReadFromJsonAsync<List<GetDataReportViewModel>>()
+				   ?? new List<GetDataReportViewModel>();
+		}
 
-            if (!response.IsSuccessStatusCode)
-                return new List<GetDataReportViewModel>();
+		public async Task<List<GetSumReportViewModel>> GetSumAsync(BaseReportFilterViewModel filter)
+		{
+			var client = _factory.CreateClient("PomixApi");
 
-            return await response.Content.ReadFromJsonAsync<List<GetDataReportViewModel>>()
-                   ?? new List<GetDataReportViewModel>();
-        }
+			var request = new
+			{
+				StartDate = filter.StartDate,
+				EndDate = filter.EndDate,
+				StartTime = filter.StartTime,
+				EndTime = filter.EndTime
+			};
 
-        public async Task<List<GetSumReportViewModel>> GetSumAsync(BaseReportFilterViewModel filter)
-        {
-            var client = _factory.CreateClient("PomixApi");
+			var response = await client.PostAsJsonAsync(
+				"access-control-reports/get-sum",
+				request);
 
-            var request = new
-            {
-                StartDate = filter.StartDate,
-                EndDate = filter.EndDate,
-                StartTime = filter.StartTime,
-                EndTime = filter.EndTime
-            };
+			if (!response.IsSuccessStatusCode)
+				await ThrowForFailedResponseAsync(response, "گزارش تجمیعی");
 
-            var response = await client.PostAsJsonAsync(
-                "access-control-reports/get-sum",
-                request);
+			return await response.Content.ReadFromJsonAsync<List<GetSumReportViewModel>>()
+				   ?? new List<GetSumReportViewModel>();
+		}
 
-            if (!response.IsSuccessStatusCode)
-                return new List<GetSumReportViewModel>();
+		public async Task<List<TrafficByTypeReportViewModel>> TrafficByTypeAsync(TrafficByTypeFilterViewModel filter)
+		{
+			var client = _factory.CreateClient("PomixApi");
 
-            return await response.Content.ReadFromJsonAsync<List<GetSumReportViewModel>>()
-                   ?? new List<GetSumReportViewModel>();
-        }
+			var request = new
+			{
+				StartDate = filter.StartDate,
+				EndDate = filter.EndDate,
+				StartTime = filter.StartTime,
+				EndTime = filter.EndTime,
+				TrafficTypes = filter.TrafficTypes
+			};
 
-        public async Task<List<TrafficByTypeReportViewModel>> TrafficByTypeAsync(TrafficByTypeFilterViewModel filter)
-        {
-            var client = _factory.CreateClient("PomixApi");
+			var response = await client.PostAsJsonAsync(
+				"access-control-reports/traffic-by-type",
+				request);
 
-            var request = new
-            {
-                StartDate = filter.StartDate,
-                EndDate = filter.EndDate,
-                StartTime = filter.StartTime,
-                EndTime = filter.EndTime,
-                TrafficTypes = filter.TrafficTypes
-            };
+			if (!response.IsSuccessStatusCode)
+				await ThrowForFailedResponseAsync(response, "تفکیک نوع تردد");
 
-            var response = await client.PostAsJsonAsync(
-                "access-control-reports/traffic-by-type",
-                request);
+			return await response.Content.ReadFromJsonAsync<List<TrafficByTypeReportViewModel>>()
+				   ?? new List<TrafficByTypeReportViewModel>();
+		}
 
-            if (!response.IsSuccessStatusCode)
-                return new List<TrafficByTypeReportViewModel>();
+		public async Task<List<TrafficByPlatesReportViewModel>> TrafficByPlatesAsync(TrafficByPlatesFilterViewModel filter)
+		{
+			var client = _factory.CreateClient("PomixApi");
 
-            return await response.Content.ReadFromJsonAsync<List<TrafficByTypeReportViewModel>>()
-                   ?? new List<TrafficByTypeReportViewModel>();
-        }
+			var request = new
+			{
+				StartDate = filter.StartDate,
+				EndDate = filter.EndDate,
+				StartTime = filter.StartTime,
+				EndTime = filter.EndTime,
+				P1 = filter.P1,
+				P2 = filter.P2,
+				P3 = filter.P3,
+				P4 = filter.P4
+			};
 
-        public async Task<List<TrafficByPlatesReportViewModel>> TrafficByPlatesAsync(TrafficByPlatesFilterViewModel filter)
-        {
-            var client = _factory.CreateClient("PomixApi");
+			var response = await client.PostAsJsonAsync(
+				"access-control-reports/traffic-by-plates",
+				request);
 
-            var request = new
-            {
-                StartDate = filter.StartDate,
-                EndDate = filter.EndDate,
-                StartTime = filter.StartTime,
-                EndTime = filter.EndTime,
-                P1 = filter.P1,
-                P2 = filter.P2,
-                P3 = filter.P3,
-                P4 = filter.P4
-            };
+			if (!response.IsSuccessStatusCode)
+				await ThrowForFailedResponseAsync(response, "تردد بر اساس پلاک");
 
-            var response = await client.PostAsJsonAsync(
-                "access-control-reports/traffic-by-plates",
-                request);
+			return await response.Content.ReadFromJsonAsync<List<TrafficByPlatesReportViewModel>>()
+				   ?? new List<TrafficByPlatesReportViewModel>();
+		}
 
-            if (!response.IsSuccessStatusCode)
-                return new List<TrafficByPlatesReportViewModel>();
+		public async Task<List<TrafficByNationalIdReportViewModel>> TrafficByNationalIdAsync(TrafficByNationalIdFilterViewModel filter)
+		{
+			var client = _factory.CreateClient("PomixApi");
 
-            return await response.Content.ReadFromJsonAsync<List<TrafficByPlatesReportViewModel>>()
-                   ?? new List<TrafficByPlatesReportViewModel>();
-        }
+			var request = new
+			{
+				StartDate = filter.StartDate,
+				EndDate = filter.EndDate,
+				StartTime = filter.StartTime,
+				EndTime = filter.EndTime,
+				NationalId = filter.NationalId
+			};
 
-        public async Task<List<TrafficByNationalIdReportViewModel>> TrafficByNationalIdAsync(TrafficByNationalIdFilterViewModel filter)
-        {
-            var client = _factory.CreateClient("PomixApi");
+			var response = await client.PostAsJsonAsync(
+				"access-control-reports/traffic-by-nationalid",
+				request);
 
-            var request = new
-            {
-                StartDate = filter.StartDate,
-                EndDate = filter.EndDate,
-                StartTime = filter.StartTime,
-                EndTime = filter.EndTime,
-                NationalId = filter.NationalId
-            };
+			if (!response.IsSuccessStatusCode)
+				await ThrowForFailedResponseAsync(response, "تردد بر اساس کد ملی");
 
-            var response = await client.PostAsJsonAsync(
-                "access-control-reports/traffic-by-nationalid",
-                request);
+			return await response.Content.ReadFromJsonAsync<List<TrafficByNationalIdReportViewModel>>()
+				   ?? new List<TrafficByNationalIdReportViewModel>();
+		}
 
-            if (!response.IsSuccessStatusCode)
-                return new List<TrafficByNationalIdReportViewModel>();
+		public async Task<DashboardResponseViewModel> GetDashboardAsync(string period, bool forceRefresh = false)
+		{
+			var client = _factory.CreateClient("PomixApi");
 
-            return await response.Content.ReadFromJsonAsync<List<TrafficByNationalIdReportViewModel>>()
-                   ?? new List<TrafficByNationalIdReportViewModel>();
-        }
-        public async Task<DashboardResponseViewModel> GetDashboardAsync()
-        {
-            var client = _factory.CreateClient("PomixApi");
+			var response = await client.PostAsJsonAsync(
+				"access-control-reports/dashboard",
+				new { period, forceRefresh }
+			);
 
-            var response = await client.PostAsync(
-                "access-control-reports/dashboard",
-                null
-            );
+			if (!response.IsSuccessStatusCode)
+				await ThrowForFailedResponseAsync(response, "داشبورد");
 
-            if (!response.IsSuccessStatusCode)
-            {
-                return new DashboardResponseViewModel();
-            }
+			return await response.Content
+				.ReadFromJsonAsync<DashboardResponseViewModel>()
+				?? new DashboardResponseViewModel();
+		}
 
-            return await response.Content
-                .ReadFromJsonAsync<DashboardResponseViewModel>()
-                ?? new DashboardResponseViewModel();
-        }
-
-    }
+		private static async Task ThrowForFailedResponseAsync(HttpResponseMessage response, string reportName)
+		{
+			var errorContent = await response.Content.ReadAsStringAsync();
+			throw new InvalidOperationException(
+				$"دریافت گزارش «{reportName}» با خطا مواجه شد ({(int)response.StatusCode}): {errorContent}");
+		}
+	}
 }

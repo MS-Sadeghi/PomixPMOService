@@ -525,6 +525,9 @@
     <script src="~/assets/js/toasts.js">
     </script>
     <script>
+         // بروزرسانی سال شمسی
+        document.getElementById("year").textContent = new Date().toLocaleDateString("fa-IR", { year: "numeric" });
+
         function openFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen();

@@ -36,12 +36,12 @@ namespace IdentityManagementSystem.UI.Controllers
 					data = result
 				});
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return BadRequest(new
 				{
 					success = false,
-					message = ex.Message
+					message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
 				});
 			}
 		}
@@ -63,9 +63,9 @@ namespace IdentityManagementSystem.UI.Controllers
 			{
 				model.Reports = await _service.GetSumAsync(model.Filter);
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
-				ViewBag.ErrorMessage = ex.Message;
+				ViewBag.ErrorMessage = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.";
 			}
 
 			return View(model);
@@ -94,9 +94,9 @@ namespace IdentityManagementSystem.UI.Controllers
 			{
 				model.Reports = await _service.TrafficByTypeAsync(model.Filter);
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
-				ViewBag.ErrorMessage = ex.Message;
+				ViewBag.ErrorMessage = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.";
 			}
 
 			return View(model);
@@ -125,9 +125,9 @@ namespace IdentityManagementSystem.UI.Controllers
 			{
 				model.Reports = await _service.TrafficByPlatesAsync(model.Filter);
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
-				ViewBag.ErrorMessage = ex.Message;
+				ViewBag.ErrorMessage = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.";
 			}
 
 			return View(model);
@@ -156,9 +156,9 @@ namespace IdentityManagementSystem.UI.Controllers
 			{
 				model.Reports = await _service.TrafficByNationalIdAsync(model.Filter);
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
-				ViewBag.ErrorMessage = ex.Message;
+				ViewBag.ErrorMessage = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.";
 			}
 
 			return View(model);
@@ -191,12 +191,12 @@ namespace IdentityManagementSystem.UI.Controllers
 					data = result
 				});
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return BadRequest(new
 				{
 					success = false,
-					message = ex.Message
+					message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
 				});
 			}
 		}
@@ -214,12 +214,12 @@ namespace IdentityManagementSystem.UI.Controllers
 					data = result
 				});
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return BadRequest(new
 				{
 					success = false,
-					message = ex.Message
+					message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
 				});
 			}
 		}

@@ -2,6 +2,7 @@
 using IdentityManagementSystem.API.Services.AccessControlReports;
 using IdentityManagementSystem.UI.Areas.AccessControlReports.Services;
 using IdentityManagementSystem.UI.Filters;
+using IdentityManagementSystem.UI.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -94,9 +95,10 @@ builder.Services.AddCors();
 var app = builder.Build();
 
 // ================= Pipeline =================
+app.UseGlobalExceptionHandling();
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
@@ -116,11 +118,6 @@ app.UseCors(policy =>
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
 
 // ================= FIXED AUTH MIDDLEWARE =================
 app.Use(async (context, next) =>

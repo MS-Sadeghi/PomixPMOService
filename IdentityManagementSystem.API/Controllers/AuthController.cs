@@ -422,7 +422,7 @@ namespace IdentityManagementSystem.API.Controllers
             catch (Exception ex)
             {
                 await LogAction(0, "GetCurrentUser_Error", null, ex.Message);
-                return StatusCode(500, "خطا در سرور: " + ex.Message);
+                return StatusCode(500, new { message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 
@@ -441,9 +441,9 @@ namespace IdentityManagementSystem.API.Controllers
 
                 return Ok(roles);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new { message = $"خطا در دریافت نقش‌ها: {ex.Message}" });
+                return StatusCode(500, new { message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 
@@ -461,9 +461,8 @@ namespace IdentityManagementSystem.API.Controllers
                 });
                 await _context.SaveChangesAsync();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                //Console.WriteLine($"Error saving UserLog: {ex}");
             }
         }
     }

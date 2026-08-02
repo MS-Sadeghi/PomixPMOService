@@ -50,7 +50,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 if (!response.IsSuccessStatusCode)
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = error });
+                    return Json(new { success = false, message = "نام کاربری یا رمز عبور نامعتبر است." });
                 }
 
                 var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
@@ -79,9 +79,9 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                         new { area = "AccessControlReports" })
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { success = false, message = ex.Message });
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
         #endregion
@@ -115,10 +115,9 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 TempData["SuccessLogoutMessage"] = "شما با موفقیت از سیستم خارج شدید.";
                 return RedirectToAction("Login");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                //Console.WriteLine($"Logout error: {ex.Message}");
-                ViewBag.ErrorMessage = "خطا در خروج از سیستم: " + ex.Message;
+                ViewBag.ErrorMessage = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.";
                 return RedirectToAction("Login");
             }
         }
@@ -147,13 +146,13 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    TempData["ErrorMessage"] = $"خطا در دریافت کاربران: {error}";
+                    TempData["ErrorMessage"] = "خطا در دریافت کاربران.";
                     return View(new List<UserViewModel>());
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                TempData["ErrorMessage"] = $"خطا در ارتباط با سرور: {ex.Message}";
+                TempData["ErrorMessage"] = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.";
                 return View(new List<UserViewModel>());
             }
         }
@@ -200,12 +199,12 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = $"خطا در ایجاد کاربر: {errorContent}" });
+                    return Json(new { success = false, message = "خطا در ایجاد کاربر." });
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 
@@ -245,9 +244,9 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 }
                 return Json(new { success = false, message = "خطا در دریافت اطلاعات کاربر" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { success = false, message = ex.Message });
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 
@@ -291,12 +290,12 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = $"خطا در به‌روزرسانی کاربر: {errorContent}" });
+                    return Json(new { success = false, message = "خطا در به‌روزرسانی کاربر." });
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 
@@ -324,12 +323,12 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = $"خطا در غیرفعال کردن کاربر: {error}" });
+                    return Json(new { success = false, message = "خطا در غیرفعال کردن کاربر." });
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 
@@ -355,12 +354,12 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = $"خطا در فعال‌سازی کاربر: {errorContent}" });
+                    return Json(new { success = false, message = "خطا در فعال‌سازی کاربر." });
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 
@@ -393,9 +392,9 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
 
                 return Json(new { success = false, message = "خطا در دریافت اطلاعات کاربر" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return Json(new { success = false, message = ex.Message });
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 
@@ -419,7 +418,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
 
                 return Ok(new List<RoleViewModel>()); // لیست خالی
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Ok(new List<RoleViewModel>());
             }
@@ -454,7 +453,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
 
             var error = await response.Content.ReadAsStringAsync();
             var errorObj = JsonConvert.DeserializeObject<dynamic>(error);
-            return Json(new { success = false, message = errorObj?.message ?? $"خطا در تغییر رمز عبور: {error}" });
+            return Json(new { success = false, message = "خطا در تغییر رمز عبور." });
         }
 
         [HttpGet]

@@ -1,5 +1,6 @@
 ﻿using IdentityManagementSystem.API.Controllers;
 using IdentityManagementSystem.API.Data;
+using IdentityManagementSystem.API.Infrastructure;
 using IdentityManagementSystem.API.Modules.AccessControlReports;
 using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
 using IdentityManagementSystem.API.Services;
@@ -111,6 +112,8 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // --- Middleware ---
+app.UseGlobalExceptionHandling();
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -119,11 +122,6 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseRouting();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
 
 app.UseCors("AllowUI");
 

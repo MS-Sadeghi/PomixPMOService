@@ -9,6 +9,9 @@
 		public int PeopleTrafficToday { get; set; }
 		public int ReportsCountToday { get; set; }
 
+		public int CarTrafficToday { get; set; }
+		public int TruckTrafficToday { get; set; }
+
 		public List<DashboardChartItemViewModel> WeeklyTraffic { get; set; } = new();
 		public List<DashboardChartItemViewModel> TrafficTypes { get; set; } = new();
 

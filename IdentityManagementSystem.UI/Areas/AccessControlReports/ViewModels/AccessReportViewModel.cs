@@ -151,4 +151,46 @@ namespace IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel
     }
 
     #endregion
+
+    #region AllTraffic
+
+    public class AllTrafficFilterViewModel : BaseReportFilterViewModel
+    {
+        public List<string> EntranceTypes { get; set; } = new();
+        public List<int> TrafficTypes { get; set; } = new();
+
+        public string P1 { get; set; }
+        public string P2 { get; set; }
+        public string P3 { get; set; }
+        public string P4 { get; set; }
+
+        public string NationalId { get; set; }
+    }
+
+    public class AllTrafficDailyRowViewModel
+    {
+        public string ReportDate { get; set; }
+        public int CarCount { get; set; }
+        public int TruckCount { get; set; }
+        public int PedestrianCount { get; set; }
+        public int Total { get; set; }
+    }
+
+    public class AllTrafficResponseViewModel
+    {
+        // "types" | "lanes" | "plates" | "nationalid"
+        public string Mode { get; set; } = "types";
+
+        public List<AllTrafficDailyRowViewModel> DailyRows { get; set; } = new();
+        public List<GetDataReportViewModel> LaneRows { get; set; } = new();
+        public List<TrafficByPlatesReportViewModel> PlateRows { get; set; } = new();
+        public List<TrafficByNationalIdReportViewModel> NationalIdRows { get; set; } = new();
+    }
+
+    public class AllTrafficPageViewModel
+    {
+        public AllTrafficFilterViewModel Filter { get; set; } = new();
+    }
+
+    #endregion
 }

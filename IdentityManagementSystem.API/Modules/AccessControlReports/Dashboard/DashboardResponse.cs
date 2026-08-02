@@ -9,6 +9,9 @@
 		public int PeopleTrafficToday { get; set; }
 		public int ReportsCountToday { get; set; }
 
+		public int CarTrafficToday { get; set; }
+		public int TruckTrafficToday { get; set; }
+
 		public List<ChartItemResponse> WeeklyTraffic { get; set; } = new();
 		public List<ChartItemResponse> TrafficTypes { get; set; } = new();
 

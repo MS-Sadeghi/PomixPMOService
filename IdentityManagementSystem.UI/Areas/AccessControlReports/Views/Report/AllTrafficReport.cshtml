@@ -1,0 +1,741 @@
+@using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel
+@model AllTrafficPageViewModel
+@{
+    ViewData["Title"] = "گزارش همه ترددها";
+}
+<link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/assets/libs/gridjs/theme/mermaid.min.css" />
+<style>
+    #entranceTypeMenu {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    #entranceTypeBtn.is-invalid, #trafficTypeBtn.is-invalid {
+        border-color: #dc3545;
+    }
+
+    #entranceTypeBtn, #trafficTypeBtn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+        #entranceTypeBtn .dropdown-toggle-text, #trafficTypeBtn .dropdown-toggle-text {
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+    #customExportButtons {
+        margin-bottom: 1rem;
+    }
+
+    .gridjs-table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+        .gridjs-table th, .gridjs-table td {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+
+    .gridjs-pagination {
+        justify-content: flex-start !important;
+    }
+
+        .gridjs-pagination .gridjs-summary {
+            margin-right: 0;
+            margin-left: auto;
+        }
+
+    #grid-loading {
+        text-align: center;
+        padding: 15px 0;
+        display: none;
+    }
+
+        #grid-loading.show {
+            display: block;
+        }
+
+        #grid-loading .spinner-border {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+
+        #grid-loading .loading-text {
+            margin-top: 8px;
+            font-size: 15px;
+            color: #495057;
+        }
+
+    #printArea {
+        display: none;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden !important;
+        }
+
+        #printArea, #printArea * {
+            visibility: visible !important;
+        }
+
+        @@page {
+            size: landscape;
+            margin: 12mm 10mm;
+        }
+
+        #printArea {
+            display: block !important;
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            width: 100%;
+            direction: rtl;
+            font-family: Tahoma, Arial, sans-serif;
+            color: #1f2937;
+        }
+
+        #printArea .print-header {
+            display: flex !important;
+            align-items: baseline;
+            justify-content: space-between;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+
+        #printArea .print-header h4 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        #printArea .print-header .print-date {
+            font-size: 12px;
+            color: #555;
+        }
+
+        #printArea .print-meta {
+            font-size: 12.5px;
+            color: #333;
+            margin-bottom: 16px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px 14px;
+        }
+
+        #printArea .print-meta div {
+            display: flex !important;
+            gap: 6px;
+            margin-bottom: 5px;
+        }
+
+        #printArea .print-meta div:last-child {
+            margin-bottom: 0;
+        }
+
+        #printArea .print-meta .meta-label {
+            font-weight: 700;
+            color: #111;
+            white-space: nowrap;
+        }
+
+        #printArea table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        #printArea th, #printArea td {
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+            text-align: center;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        #printArea th {
+            background: #f1f3f5;
+            font-weight: 700;
+        }
+
+        #printArea tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        #printArea .print-footer {
+            margin-top: 14px;
+            font-size: 11px;
+            color: #777;
+            text-align: center;
+        }
+    }
+</style>
+@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
+{
+    <div class="col-xl-12">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @ViewBag.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+}
+<div class="my-4 page-header-breadcrumb d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+        <nav>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="javascript:void(0);">گزارش‌ها</a></li>
+                <li aria-current="page" class="breadcrumb-item active">همه ترددها</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="card custom-card">
+    <div class="card-header">
+        <div class="card-title">گزارش همه ترددها</div>
+    </div>
+    <div class="card-body">
+        <form id="reportForm">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">از تاریخ</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="startDateIcon" style="cursor:pointer;"><i class="ti ti-calendar"></i></span>
+                        <input name="StartDate" class="form-control fc-datepicker" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">تا تاریخ</label>
+                    <div class="input-group">
+                        <span class="input-group-text" id="endDateIcon" style="cursor:pointer;"><i class="ti ti-calendar"></i></span>
+                        <input name="EndDate" class="form-control fc-datepicker" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">از ساعت</label>
+                    <input name="StartTime" type="time" class="form-control" />
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">تا ساعت</label>
+                    <input name="EndTime" type="time" class="form-control" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">نوع تردد <span class="text-muted fs-11">(سواری/کامیون/نفر - اختیاری)</span></label>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-outline-info dropdown-toggle w-100 text-end" id="trafficTypeBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="همه">
+                            <span class="dropdown-toggle-text">همه</span>
+                        </button>
+                        <ul class="dropdown-menu w-100 p-2" id="trafficTypeMenu" aria-labelledby="trafficTypeBtn">
+                            <li><div class="form-check"><input class="form-check-input traffic-type-checkbox" type="checkbox" value="1" id="allTrafficType1"><label class="form-check-label" for="allTrafficType1">سواری رو</label></div></li>
+                            <li><div class="form-check"><input class="form-check-input traffic-type-checkbox" type="checkbox" value="2" id="allTrafficType2"><label class="form-check-label" for="allTrafficType2">کامیون رو</label></div></li>
+                            <li><div class="form-check"><input class="form-check-input traffic-type-checkbox" type="checkbox" value="3" id="allTrafficType3"><label class="form-check-label" for="allTrafficType3">نفر رو</label></div></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">مسیر تردد <span class="text-muted fs-11">(اختیاری)</span></label>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-outline-info dropdown-toggle w-100 text-end" id="entranceTypeBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="انتخاب کنید">
+                            <span class="dropdown-toggle-text">انتخاب کنید</span>
+                        </button>
+                        <ul class="dropdown-menu w-100 p-2" id="entranceTypeMenu" aria-labelledby="entranceTypeBtn" style="max-height:300px;overflow-y:auto;">
+                            <li class="px-2 pb-2">
+                                <input type="search" class="form-control form-control-sm" id="entranceTypeSearch" placeholder="جستجو..." autocomplete="off">
+                            </li>
+                            <li>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="entranceTypeAll">
+                                    <label class="form-check-label" for="entranceTypeAll">همه</label>
+                                </div>
+                                <hr class="dropdown-divider" />
+                            </li>
+                            <li class="dropdown-header-item" data-group="east"><h6 class="dropdown-header">درب شرقی</h6></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="1" id="allEntranceType1"><label class="form-check-label" for="allEntranceType1">درب شرقی مسیر 1</label></div></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="2" id="allEntranceType2"><label class="form-check-label" for="allEntranceType2">درب شرقی مسیر 2</label></div></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="11" id="allEntranceType11"><label class="form-check-label" for="allEntranceType11">درب شرقی مسیر 3</label></div></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="120" id="allEntranceType120"><label class="form-check-label" for="allEntranceType120">درب شرقی مسیر 4</label></div></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="13" id="allEntranceType13"><label class="form-check-label" for="allEntranceType13">درب شرقی مسیر 5</label></div></li>
+                            <li class="option-item" data-group="east"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="140" id="allEntranceType140"><label class="form-check-label" for="allEntranceType140">درب شرقی مسیر 6</label></div></li>
+                            <hr class="dropdown-divider" />
+                            <li class="dropdown-header-item" data-group="west"><h6 class="dropdown-header">درب غربی</h6></li>
+                            <li class="option-item" data-group="west"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="4" id="allEntranceType4"><label class="form-check-label" for="allEntranceType4">درب غربی مسیر 1</label></div></li>
+                            <li class="option-item" data-group="west"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="5" id="allEntranceType5"><label class="form-check-label" for="allEntranceType5">درب غربی مسیر 2</label></div></li>
+                            <li class="option-item" data-group="west"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="3" id="allEntranceType3"><label class="form-check-label" for="allEntranceType3">درب غربی مسیر 3</label></div></li>
+                            <li class="option-item" data-group="west"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="7" id="allEntranceType7"><label class="form-check-label" for="allEntranceType7">درب غربی مسیر 4</label></div></li>
+                            <hr class="dropdown-divider" />
+                            <li class="dropdown-header-item" data-group="bijak"><h6 class="dropdown-header">بیجک</h6></li>
+                            <li class="option-item" data-group="bijak"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="19" id="allEntranceType19"><label class="form-check-label" for="allEntranceType19">بیجک مسیر 8 درب شرقی</label></div></li>
+                            <li class="option-item" data-group="bijak"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="22" id="allEntranceType22"><label class="form-check-label" for="allEntranceType22">بیجک مسیر 9 درب شرقی</label></div></li>
+                            <li class="option-item" data-group="bijak"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="23" id="allEntranceType23"><label class="form-check-label" for="allEntranceType23">بیجک مسیر 10 درب شرقی</label></div></li>
+                            <li class="option-item" data-group="bijak"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="12" id="allEntranceType12"><label class="form-check-label" for="allEntranceType12">بیجک مسیر 6 درب غربی</label></div></li>
+                            <li class="option-item" data-group="bijak"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="14" id="allEntranceType14"><label class="form-check-label" for="allEntranceType14">بیجک Xray درب غربی</label></div></li>
+                            <hr class="dropdown-divider" />
+                            <li class="dropdown-header-item" data-group="other"><h6 class="dropdown-header">سایر</h6></li>
+                            <li class="option-item" data-group="other"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="نفر رو ورودی" id="allEntranceTypePedIn"><label class="form-check-label" for="allEntranceTypePedIn">نفر رو ورودی</label></div></li>
+                            <li class="option-item" data-group="other"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="نفر رو خروجی" id="allEntranceTypePedOut"><label class="form-check-label" for="allEntranceTypePedOut">نفر رو خروجی</label></div></li>
+                            <li class="option-item" data-group="other"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="سواری رو ورود" id="allEntranceTypeCarIn"><label class="form-check-label" for="allEntranceTypeCarIn">سواری رو ورودی</label></div></li>
+                            <li class="option-item" data-group="other"><div class="form-check"><input class="form-check-input entrance-type-checkbox" type="checkbox" value="سواری رو خروج" id="allEntranceTypeCarOut"><label class="form-check-label" for="allEntranceTypeCarOut">سواری رو خروجی</label></div></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">پلاک وسیله نقلیه <span class="text-muted fs-11">(اختیاری)</span></label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input name="P1" class="form-control text-center" maxlength="2" autocomplete="off" style="max-width:70px;" />
+                        <input name="P2" class="form-control text-center" maxlength="1" placeholder="مثال: ج" autocomplete="off" style="max-width:70px;" />
+                        <input name="P3" class="form-control text-center" maxlength="3" autocomplete="off" style="max-width:90px;" />
+                        <span class="fw-bold">ایران</span>
+                        <input name="P4" class="form-control text-center" maxlength="2" autocomplete="off" style="max-width:70px;" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">کد ملی <span class="text-muted fs-11">(اختیاری)</span></label>
+                    <input name="NationalId" class="form-control" maxlength="10" autocomplete="off" />
+                </div>
+                <div class="col-md-9 mb-3 d-flex align-items-end justify-content-end">
+                    <button type="button" id="btnSearch" class="btn btn-primary"><i class="ti ti-search"></i> دریافت گزارش</button>
+                </div>
+            </div>
+        </form>
+        <div class="form-text mb-3">
+            اگر پلاک یا کد ملی وارد شود، فقط همان تردد نمایش داده می‌شود؛ در غیر این صورت اگر مسیر تردد انتخاب شده باشد گزارش بر اساس مسیر، و در حالت پیش‌فرض (بدون هیچ فیلتری) گزارش روزانه به‌تفکیک سواری/کامیون/نفر نمایش داده می‌شود.
+        </div>
+        <hr />
+        <div id="errorBox" class="alert alert-danger d-none"></div>
+        <div id="customExportButtons" class="btn-group mb-3 d-none">
+            <button class="btn btn-info-light" id="btnPrint"><i class="ti ti-printer"></i> پرینت</button>
+            <button class="btn btn-info-light" id="btnExcel"><i class="ti ti-file-spreadsheet"></i> اکسل</button>
+        </div>
+
+        <div id="grid-loading">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">در حال بارگذاری...</span></div>
+            <div class="loading-text">در حال دریافت اطلاعات ...</div>
+        </div>
+        <div id="grid-report"></div>
+        <div id="printArea"></div>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        let gridInstance = null;
+        let gridData = [];
+        let currentMode = 'types';
+        let reportHeaders = ['ردیف', 'تاریخ', 'سواری', 'کامیون', 'نفر', 'جمع کل'];
+
+        function padDate(d) {
+            if (!d) return d;
+            let p = d.split('/');
+            return p[0] + '/' + p[1].padStart(2, '0') + '/' + p[2].padStart(2, '0');
+        }
+
+        function getPersianDate() {
+            const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            return formatter.format(new Date()).replace(/\//g, '/');
+        }
+
+        function getPersianDateTime() {
+            const now = new Date();
+            const time = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            return getPersianDate() + ' - ' + time;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function getSelectedEntranceTypes() {
+            return $(".entrance-type-checkbox:checked").map(function () { return $(this).val(); }).get();
+        }
+
+        function getSelectedEntranceTypeLabels() {
+            const checked = $(".entrance-type-checkbox:checked");
+            if (checked.length === 0) return '-';
+            return checked.map(function () { return $("label[for='" + this.id + "']").text(); }).get().join('، ');
+        }
+
+        function updateEntranceTypeButtonText() {
+            const checked = $(".entrance-type-checkbox:checked");
+            const $btn = $("#entranceTypeBtn");
+            const $label = $btn.find(".dropdown-toggle-text");
+            let text;
+            if (checked.length === 0) text = "انتخاب کنید";
+            else if (checked.length === $(".entrance-type-checkbox").length) text = "همه";
+            else text = checked.map(function () { return $("label[for='" + this.id + "']").text(); }).get().join('، ');
+            $label.text(text);
+            $btn.attr("title", text);
+        }
+
+        function getSelectedTrafficTypes() {
+            return $(".traffic-type-checkbox:checked").map(function () { return parseInt($(this).val(), 10); }).get();
+        }
+
+        function getSelectedTrafficTypeLabels() {
+            const checked = $(".traffic-type-checkbox:checked");
+            if (checked.length === 0) return 'همه (پیش‌فرض)';
+            return checked.map(function () { return $("label[for='" + this.id + "']").text(); }).get().join('، ');
+        }
+
+        function updateTrafficTypeButtonText() {
+            const checked = $(".traffic-type-checkbox:checked");
+            const $btn = $("#trafficTypeBtn");
+            const $label = $btn.find(".dropdown-toggle-text");
+            let text = checked.length === 0
+                ? "همه"
+                : checked.map(function () { return $("label[for='" + this.id + "']").text(); }).get().join('، ');
+            $label.text(text);
+            $btn.attr("title", text);
+        }
+
+        function getPlateFilterText() {
+            const p1 = ($("input[name='P1']").val() || '').trim();
+            const p2 = ($("input[name='P2']").val() || '').trim();
+            const p3 = ($("input[name='P3']").val() || '').trim();
+            const p4 = ($("input[name='P4']").val() || '').trim();
+            if (!p1 && !p2 && !p3 && !p4) return '-';
+            return [p1, p2, p3, 'ایران', p4].filter(Boolean).join(' ');
+        }
+
+        function getModeLabel() {
+            if (currentMode === 'plates') return 'بر اساس پلاک';
+            if (currentMode === 'nationalid') return 'بر اساس کد ملی';
+            if (currentMode === 'lanes') return 'بر اساس مسیر تردد';
+            return 'تفکیک روزانه سواری/کامیون/نفر';
+        }
+
+        function getReportMeta() {
+            const nationalId = ($("input[name='NationalId']").val() || '').trim();
+            let filterLine;
+            if (currentMode === 'plates') filterLine = { label: 'پلاک', value: getPlateFilterText() };
+            else if (currentMode === 'nationalid') filterLine = { label: 'کد ملی', value: nationalId || '-' };
+            else if (currentMode === 'lanes') filterLine = { label: 'مسیر تردد', value: getSelectedEntranceTypeLabels() };
+            else filterLine = { label: 'نوع تردد', value: getSelectedTrafficTypeLabels() };
+
+            return {
+                title: 'گزارش همه ترددها',
+                items: [
+                    { label: 'بازه تاریخ', value: $("input[name='StartDate']").val() + ' تا ' + $("input[name='EndDate']").val() },
+                    { label: 'بازه ساعت', value: $("input[name='StartTime']").val() + ' تا ' + $("input[name='EndTime']").val() },
+                    { label: 'نوع گزارش', value: getModeLabel() },
+                    filterLine,
+                    { label: 'تعداد ردیف', value: gridData.length.toLocaleString('fa-IR') },
+                    { label: 'تاریخ و ساعت تهیه گزارش', value: getPersianDateTime() }
+                ]
+            };
+        }
+
+        function getReportRows() {
+            return gridData;
+        }
+
+        function renderPrintArea(meta, headers, rows) {
+            let html = '<div class="print-header">';
+            html += '<h4>' + escapeHtml(meta.title) + '</h4>';
+            html += '<div class="print-date">تاریخ چاپ: ' + escapeHtml(getPersianDateTime()) + '</div>';
+            html += '</div>';
+
+            html += '<div class="print-meta">';
+            meta.items.forEach(item => {
+                html += '<div><span class="meta-label">' + escapeHtml(item.label) + ':</span><span>' + escapeHtml(item.value) + '</span></div>';
+            });
+            html += '</div>';
+
+            html += '<table><thead><tr>';
+            headers.forEach(h => { html += '<th>' + escapeHtml(h) + '</th>'; });
+            html += '</tr></thead><tbody>';
+            rows.forEach(row => {
+                html += '<tr>';
+                row.forEach(cell => { html += '<td>' + escapeHtml(cell) + '</td>'; });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+
+            html += '<div class="print-footer">این گزارش به‌صورت خودکار از سامانه جامع گزارشات تردد تهیه شده است.</div>';
+
+            document.getElementById('printArea').innerHTML = html;
+        }
+
+        function exportToExcel(filename, meta, headers, rows) {
+            if (typeof XLSX === 'undefined') return;
+
+            const aoa = [[meta.title]];
+            meta.items.forEach(item => aoa.push([item.label + ': ' + item.value]));
+            aoa.push([]);
+            aoa.push(headers);
+            rows.forEach(r => aoa.push(r));
+
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            ws['!cols'] = headers.map(() => ({ wch: 24 }));
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } },
+                ...meta.items.map((_, i) => ({ s: { r: i + 1, c: 0 }, e: { r: i + 1, c: headers.length - 1 } }))
+            ];
+
+            const wb = XLSX.utils.book_new();
+            wb.Workbook = { Views: [{ RTL: true }] };
+            XLSX.utils.book_append_sheet(wb, ws, meta.title.slice(0, 31));
+
+            XLSX.writeFile(wb, filename);
+        }
+
+        function showGridLoading(show) {
+            document.getElementById('grid-loading').classList.toggle('show', show);
+        }
+
+        function badgeFormatter(cls) {
+            return (cell) => gridjs.html('<span class="badge rounded-pill ' + cls + ' fs-12">' + cell + '</span>');
+        }
+
+        function updateGridTypes(rows) {
+            gridData = rows.map((item, i) => [
+                i + 1,
+                item.reportDate || '',
+                item.carCount || 0,
+                item.truckCount || 0,
+                item.pedestrianCount || 0,
+                item.total || 0
+            ]);
+            reportHeaders = ['ردیف', 'تاریخ', 'سواری', 'کامیون', 'نفر', 'جمع کل'];
+        }
+
+        function updateGridLanes(rows) {
+            gridData = rows.map((item, i) => [
+                i + 1,
+                item.reportDate || '',
+                item.entranceType || '',
+                item.recordCount || 0
+            ]);
+            reportHeaders = ['ردیف', 'تاریخ', 'مسیر تردد', 'تعداد'];
+        }
+
+        function updateGridPlates(rows) {
+            gridData = rows.map((item, i) => [
+                i + 1,
+                item.plateNumber || '',
+                item.logDateTime || '',
+                item.entranceType || ''
+            ]);
+            reportHeaders = ['ردیف', 'پلاک', 'تاریخ و ساعت تردد', 'نوع تردد'];
+        }
+
+        function updateGridNationalId(rows) {
+            gridData = rows.map((item, i) => [
+                i + 1,
+                item.fullName || '',
+                item.nationalId || '',
+                item.logDateTimePersian || '',
+                item.entranceType || ''
+            ]);
+            reportHeaders = ['ردیف', 'نام و نام خانوادگی', 'کد ملی', 'تاریخ و ساعت تردد', 'نوع تردد'];
+        }
+
+        function buildGrid() {
+            const container = document.getElementById('grid-report');
+            if (!container || typeof gridjs === 'undefined') return;
+            container.innerHTML = '';
+
+            let columns;
+            if (currentMode === 'types') {
+                columns = [
+                    { id: 'rowNumber', name: 'ردیف', width: '70px', sort: false },
+                    { id: 'date', name: 'تاریخ', width: '140px' },
+                    { id: 'car', name: 'سواری', width: '110px', formatter: badgeFormatter('bg-primary-transparent') },
+                    { id: 'truck', name: 'کامیون', width: '110px', formatter: badgeFormatter('bg-warning-transparent') },
+                    { id: 'pedestrian', name: 'نفر', width: '110px', formatter: badgeFormatter('bg-info-transparent') },
+                    {
+                        id: 'total', name: 'جمع کل', width: '130px',
+                        formatter: (cell, row) => gridjs.html(
+                            '<span class="badge rounded-pill bg-dark-transparent fs-12" title="سواری: ' + row.cells[2].data +
+                            ' + کامیون: ' + row.cells[3].data + ' + نفر: ' + row.cells[4].data + '">' + cell + '</span>'
+                        )
+                    }
+                ];
+            } else if (currentMode === 'lanes') {
+                columns = [
+                    { id: 'rowNumber', name: 'ردیف', width: '70px', sort: false },
+                    { id: 'date', name: 'تاریخ', width: '150px' },
+                    { id: 'entranceType', name: 'مسیر تردد', width: 'auto' },
+                    { id: 'count', name: 'تعداد', width: '100px', formatter: badgeFormatter('bg-dark-transparent') }
+                ];
+            } else if (currentMode === 'plates') {
+                columns = [
+                    { id: 'rowNumber', name: 'ردیف', width: '70px', sort: false },
+                    { id: 'plateNumber', name: 'پلاک', width: '160px' },
+                    { id: 'logDateTime', name: 'تاریخ و ساعت تردد', width: '180px' },
+                    { id: 'entranceType', name: 'نوع تردد', width: 'auto' }
+                ];
+            } else {
+                columns = [
+                    { id: 'rowNumber', name: 'ردیف', width: '70px', sort: false },
+                    { id: 'fullName', name: 'نام و نام خانوادگی' },
+                    { id: 'nationalId', name: 'کد ملی', width: '140px' },
+                    { id: 'logDateTime', name: 'تاریخ و ساعت تردد', width: '180px' },
+                    { id: 'entranceType', name: 'نوع تردد', width: '150px' }
+                ];
+            }
+
+            gridInstance = new gridjs.Grid({
+                columns: columns,
+                data: gridData,
+                language: {
+                    search: { placeholder: 'جستجو...' },
+                    pagination: { previous: 'قبلی', next: 'بعدی', showing: 'نمایش', of: 'از', results: 'نتیجه', to: 'تا' },
+                    loading: 'در حال بارگذاری...',
+                    noRecordsFound: 'داده‌ای وجود ندارد',
+                    error: 'خطا در بارگذاری داده‌ها'
+                },
+                pagination: { enabled: true, limit: 25, summary: true },
+                search: true,
+                sort: true,
+                resizable: true,
+                className: { table: 'table table-bordered table-hover', th: 'table-light' }
+            });
+
+            gridInstance.render(container);
+            $("#customExportButtons").toggleClass("d-none", gridData.length === 0);
+        }
+
+        $(document).ready(function () {
+            const today = getPersianDate();
+            $("input[name='StartDate']").val(today);
+            $("input[name='EndDate']").val(today);
+
+            if (typeof $.fn.persianDatepicker !== "undefined") {
+                $(".fc-datepicker").persianDatepicker({
+                    format: "YYYY/MM/DD",
+                    autoClose: true,
+                    initialValue: false
+                });
+            }
+
+            $("#startDateIcon").click(function () {
+                $("input[name='StartDate']").focus();
+                $("input[name='StartDate']").data("persianDatepicker").show();
+            });
+
+            $("#endDateIcon").click(function () {
+                $("input[name='EndDate']").focus();
+                $("input[name='EndDate']").data("persianDatepicker").show();
+            });
+
+            const now = new Date();
+            $("input[name='StartTime']").val("07:00");
+            $("input[name='EndTime']").val(String(now.getHours()).padStart(2, '0') + ":" + String(now.getMinutes()).padStart(2, '0'));
+
+            $("#entranceTypeMenu").on("click", e => e.stopPropagation());
+            $("#entranceTypeAll").on("change", function () {
+                $(".entrance-type-checkbox").prop("checked", $(this).is(":checked"));
+                updateEntranceTypeButtonText();
+            });
+            $(document).on("change", ".entrance-type-checkbox", function () {
+                const total = $(".entrance-type-checkbox").length;
+                $("#entranceTypeAll").prop("checked", $(".entrance-type-checkbox:checked").length === total);
+                updateEntranceTypeButtonText();
+            });
+
+            $("#trafficTypeMenu").on("click", e => e.stopPropagation());
+            $(document).on("change", ".traffic-type-checkbox", function () {
+                updateTrafficTypeButtonText();
+            });
+
+            document.getElementById('entranceTypeSearch').addEventListener('input', function () {
+                const q = this.value.trim().toLowerCase();
+                const menu = document.getElementById('entranceTypeMenu');
+                const groups = {};
+                menu.querySelectorAll('.option-item').forEach(li => {
+                    const text = li.querySelector('label').textContent.toLowerCase();
+                    const match = !q || text.includes(q);
+                    li.style.display = match ? '' : 'none';
+                    const g = li.dataset.group;
+                    if (match) groups[g] = true;
+                });
+                menu.querySelectorAll('.dropdown-header-item').forEach(h => {
+                    h.style.display = groups[h.dataset.group] ? '' : 'none';
+                });
+            });
+
+            gridData = [];
+            buildGrid();
+        });
+
+        $("#btnSearch").on("click", function () {
+            $("#errorBox").addClass("d-none").removeClass("alert-warning").addClass("alert-danger").html("");
+            showGridLoading(true);
+
+            $.ajax({
+                url: '/AccessControlReports/Report/AllTrafficReportAjax',
+                type: 'POST',
+                data: {
+                    StartDate: padDate($("input[name='StartDate']").val()),
+                    EndDate: padDate($("input[name='EndDate']").val()),
+                    StartTime: $("input[name='StartTime']").val(),
+                    EndTime: $("input[name='EndTime']").val(),
+                    EntranceTypes: getSelectedEntranceTypes(),
+                    TrafficTypes: getSelectedTrafficTypes(),
+                    P1: $("input[name='P1']").val(),
+                    P2: $("input[name='P2']").val(),
+                    P3: $("input[name='P3']").val(),
+                    P4: $("input[name='P4']").val(),
+                    NationalId: $("input[name='NationalId']").val()
+                },
+                traditional: true,
+                success: function (res) {
+                    const data = res.data || {};
+                    currentMode = data.mode || 'types';
+
+                    let rows;
+                    if (currentMode === 'plates') { rows = data.plateRows || []; updateGridPlates(rows); }
+                    else if (currentMode === 'nationalid') { rows = data.nationalIdRows || []; updateGridNationalId(rows); }
+                    else if (currentMode === 'lanes') { rows = data.laneRows || []; updateGridLanes(rows); }
+                    else { rows = data.dailyRows || []; updateGridTypes(rows); }
+
+                    buildGrid();
+
+                    if (!rows.length) {
+                        $("#errorBox").removeClass("d-none").removeClass("alert-danger").addClass("alert-warning").text("داده‌ای یافت نشد");
+                    }
+                },
+                error: function (xhr) {
+                    let message = "خطا در ارتباط با سرور";
+                    if (xhr.responseJSON && xhr.responseJSON.message) message = xhr.responseJSON.message;
+                    $("#errorBox").removeClass("d-none").text(message);
+                    gridData = [];
+                    buildGrid();
+                },
+                complete: function () {
+                    showGridLoading(false);
+                }
+            });
+        });
+
+        $("#btnPrint").on("click", function () {
+            if (!gridData.length) return;
+            renderPrintArea(getReportMeta(), reportHeaders, getReportRows());
+            window.print();
+        });
+
+        $("#btnExcel").on("click", function () {
+            if (!gridData.length) return;
+            exportToExcel('گزارش_همه_ترددها.xlsx', getReportMeta(), reportHeaders, getReportRows());
+        });
+    </script>
+}

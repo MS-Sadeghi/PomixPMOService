@@ -1,3 +1,4 @@
+using IdentityManagementSystem.API.Modules.AccessControlReports.AllTraffic;
 using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
 using IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard;
 using IdentityManagementSystem.API.Modules.AccessControlReports.GetData;
@@ -28,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<TrafficByTypeHandler>();
         services.AddScoped<TrafficByPlatesHandler>();
         services.AddScoped<TrafficByNationalIdHandler>();
+        services.AddScoped<AllTrafficHandler>();
         services.AddScoped<DashboardHandler>();
 
         return services;

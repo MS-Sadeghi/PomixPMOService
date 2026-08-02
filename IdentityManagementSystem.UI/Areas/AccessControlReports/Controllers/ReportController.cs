@@ -9,10 +9,12 @@ namespace IdentityManagementSystem.UI.Controllers
 	{
 
 		private readonly IAccessControlReportService _service;
+		private readonly ILogger<ReportController> _logger;
 
-		public ReportController(IAccessControlReportService service)
+		public ReportController(IAccessControlReportService service, ILogger<ReportController> logger)
 		{
 			_service = service;
+			_logger = logger;
 		}
 
 		#region GetData
@@ -168,6 +170,41 @@ namespace IdentityManagementSystem.UI.Controllers
 		public async Task<IActionResult> TrafficByNationalIDReportAjax(TrafficByNationalIdFilterViewModel filter)
 		{
 			return await ExecuteReportAsync(() => _service.TrafficByNationalIdAsync(filter));
+		}
+
+		#endregion
+
+		#region AllTraffic
+
+		[HttpGet]
+		public IActionResult AllTrafficReport()
+		{
+			return View(new AllTrafficPageViewModel());
+		}
+
+		[HttpPost]
+		public async Task<IActionResult> AllTrafficReportAjax(AllTrafficFilterViewModel filter)
+		{
+			try
+			{
+				var result = await _service.AllTrafficAsync(filter);
+
+				return Json(new
+				{
+					success = true,
+					data = result
+				});
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "AllTraffic report request failed.");
+
+				return BadRequest(new
+				{
+					success = false,
+					message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
+				});
+			}
 		}
 
 		#endregion

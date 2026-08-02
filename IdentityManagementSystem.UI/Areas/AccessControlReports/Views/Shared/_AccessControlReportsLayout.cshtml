@@ -382,6 +382,12 @@
                             <span class="side-menu__label">گزارش بر اساس کد ملی</span>
                         </a>
                     </li>
+                    <li class="slide">
+                        <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-road-map-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="AllTrafficReport">
+                            <i class="ri-road-map-line side-menu__icon" aria-hidden="true"></i>
+                            <span class="side-menu__label">همه ترددها</span>
+                        </a>
+                    </li>
                     <!-- Start::slide - User Management with Submenu -->
                     <li class="slide__category">
                         <span class="category-name">مدیریت‌</span>
@@ -597,10 +603,30 @@
                 var frameUrl = url + sep + 'embed=1';
                 var $pane = $('<div class="report-frame-pane" data-id="' + id + '"></div>');
                 var $iframe = $('<iframe src="' + frameUrl + '"></iframe>');
+                $iframe.on('load', syncIframeThemes);
                 $pane.append($iframe);
                 $framesHost().append($pane);
 
                 activateTab(id);
+            }
+
+            function syncIframeThemes() {
+                var html = document.querySelector('html');
+                var theme = html.getAttribute('data-theme-mode');
+                var headerStyle = html.getAttribute('data-header-styles');
+                var menuStyle = html.getAttribute('data-menu-styles');
+
+                document.querySelectorAll('#reportFramesHost iframe').forEach(function (frame) {
+                    try {
+                        var doc = frame.contentDocument;
+                        if (!doc || !doc.documentElement) return;
+                        doc.documentElement.setAttribute('data-theme-mode', theme);
+                        doc.documentElement.setAttribute('data-header-styles', headerStyle);
+                        doc.documentElement.setAttribute('data-menu-styles', menuStyle);
+                    } catch (e) {
+                        // iframe هنوز لود نشده یا در دسترس نیست؛ نادیده گرفته می‌شود
+                    }
+                });
             }
 
             function closeTab(id) {
@@ -643,6 +669,11 @@
                     e.stopPropagation();
                     closeTab($(this).data('id'));
                 });
+
+                // custom.js از قبل روی همین دکمه کلیک را می‌گیرد و تم را روی <html>
+                // صفحه‌ی اصلی عوض می‌کند؛ این هندلر بعد از آن اجرا می‌شود تا همان
+                // مقدار تازه را روی تمام تب‌های iframe بازِ گزارش‌ها هم اعمال کند.
+                $('.layout-setting').on('click', syncIframeThemes);
             });
         })();
     </script>

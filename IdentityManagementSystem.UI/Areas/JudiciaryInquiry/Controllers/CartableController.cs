@@ -140,7 +140,8 @@ namespace IdentityManagementSystem.UI.Controllers
                 }
                 catch (Exception ex)
                 {
-                    model.Step1Message = $"خطا در ارتباط با سرویس احراز هویت: {ex.Message}";
+                    _logger.LogError(ex, "Error calling authentication service during cartable validation.");
+                    model.Step1Message = "خطا در ارتباط با سرویس احراز هویت.";
                     step1Valid = false;
                 }
             }
@@ -238,14 +239,16 @@ namespace IdentityManagementSystem.UI.Controllers
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    ViewBag.ErrorMessage = $"خطا در ثبت درخواست: {error}";
+                    _logger.LogWarning("SubmitRequest API failed. StatusCode: {StatusCode}, Response: {Response}", response.StatusCode, error);
+                    ViewBag.ErrorMessage = "خطا در ثبت درخواست.";
                     ViewBag.FormModel = model;
                     return View("Index", await GetCartableData(1, "", ""));
                 }
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessage = $"خطا در ارتباط با سرور: {ex.Message}";
+                _logger.LogError(ex, "Error submitting cartable request.");
+                ViewBag.ErrorMessage = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.";
                 ViewBag.FormModel = model;
                 return View("Index", await GetCartableData(1, "", ""));
             }
@@ -321,7 +324,6 @@ namespace IdentityManagementSystem.UI.Controllers
 
                         if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
                         {
-                            // 🔥 دریافت دقیق پیام خطا از API
                             string errorMessage = errorResponse?.Message ?? responseContent ?? "عملیات ناموفق بود";
 
                             if (errorMessage.Contains("سند وجود ندارد"))
@@ -334,7 +336,7 @@ namespace IdentityManagementSystem.UI.Controllers
                             }
                             else
                             {
-                                return Json(new { success = false, message = $"❌ {errorMessage}" });
+                                return Json(new { success = false, message = "عملیات ناموفق بود." });
                             }
                         }
                         else
@@ -342,7 +344,7 @@ namespace IdentityManagementSystem.UI.Controllers
                             return Json(new
                             {
                                 success = false,
-                                message = errorResponse?.Message ?? $"خطا از سمت سرور: {response.StatusCode}"
+                                message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
                             });
                         }
                     }
@@ -352,7 +354,7 @@ namespace IdentityManagementSystem.UI.Controllers
                         return Json(new
                         {
                             success = false,
-                            message = $"❌ پاسخ نامعتبر از سمت سرور: {responseContent}"
+                            message = "پاسخ نامعتبر از سمت سرور دریافت شد."
                         });
                     }
                 }
@@ -364,7 +366,7 @@ namespace IdentityManagementSystem.UI.Controllers
                 return Json(new
                 {
                     success = false,
-                    message = $"خطا در برقراری ارتباط با سرور: {ex.Message}"
+                    message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
                 });
             }
         }
@@ -391,12 +393,14 @@ namespace IdentityManagementSystem.UI.Controllers
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = $"خطا در علامت‌گذاری سند: {error}" });
+                    _logger.LogWarning("MarkDocumentAsRead API failed. StatusCode: {StatusCode}, Response: {Response}", response.StatusCode, error);
+                    return Json(new { success = false, message = "خطا در علامت‌گذاری سند." });
                 }
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"خطا در ارتباط با سرور: {ex.Message}" });
+                _logger.LogError(ex, "Error marking document as read for RequestId: {RequestId}", requestId);
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 
@@ -423,12 +427,14 @@ namespace IdentityManagementSystem.UI.Controllers
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = $"خطا در دریافت متن سند: {error}" });
+                    _logger.LogWarning("GetDocumentText API failed. StatusCode: {StatusCode}, Response: {Response}", response.StatusCode, error);
+                    return Json(new { success = false, message = "خطا در دریافت متن سند." });
                 }
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"خطا در دریافت متن سند: {ex.Message}" });
+                _logger.LogError(ex, "Error getting document text for RequestId: {RequestId}", requestId);
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 
@@ -549,13 +555,14 @@ namespace IdentityManagementSystem.UI.Controllers
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = $"خطا در ارتباط با سرویس شاهکار: {error}" });
+                    _logger.LogWarning("Shahkar API failed. StatusCode: {StatusCode}, Response: {Response}", response.StatusCode, error);
+                    return Json(new { success = false, message = "خطا در ارتباط با سرویس شاهکار." });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "خطا در احراز هویت با سرویس شاهکار برای کد ملی {NationalCode}", model.NationalCode);
-                return Json(new { success = false, message = $"خطا در سرور: {ex.Message}" });
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
             }
         }
 

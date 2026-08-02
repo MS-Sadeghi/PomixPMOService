@@ -1,5 +1,6 @@
 ﻿using IdentityManagementSystem.API.Controllers;
 using IdentityManagementSystem.API.Data;
+using IdentityManagementSystem.API.Infrastructure;
 using IdentityManagementSystem.API.Modules.AccessControlReports;
 using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
 using IdentityManagementSystem.API.Services;
@@ -94,20 +95,25 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // --- CORS ---
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? Array.Empty<string>();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowUI", builder =>
+    options.AddPolicy("AllowUI", policy =>
     {
-        builder.WithOrigins("http://localhost:7031", "https://localhost:7031")
-               .AllowAnyHeader()
-               .AllowAnyMethod()
-               .AllowCredentials();
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
 var app = builder.Build();
 
 // --- Middleware ---
+app.UseGlobalExceptionHandling();
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -116,11 +122,6 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseRouting();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
 
 app.UseCors("AllowUI");
 

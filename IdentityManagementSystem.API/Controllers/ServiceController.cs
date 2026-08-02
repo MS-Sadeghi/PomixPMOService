@@ -157,7 +157,7 @@ namespace IdentityManagementSystem.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing combined request for {RequestId}", request.RequestId);
-                return new JsonResult(new { success = false, message = $"خطا در پردازش درخواست: {ex.Message}" });
+                return new JsonResult(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." }) { StatusCode = 500 };
             }
         }
         private async Task<ShahkarResponse> CheckMobileNationalCode_Internal(
@@ -493,7 +493,7 @@ namespace IdentityManagementSystem.API.Controllers
             catch (JsonException ex)
             {
                 _logger.LogError(ex, "خطا در استخراج متن سند از پاسخ VerifyDoc");
-                return $"خطا در پردازش سند: {ex.Message}";
+                return "خطا در پردازش سند.";
             }
         }
 
@@ -607,25 +607,27 @@ namespace IdentityManagementSystem.API.Controllers
                 }
                 catch (JsonException ex)
                 {
+                    _logger.LogError(ex, "Failed to parse VerifyDoc response for RequestId: {RequestId}", requestId);
                     return new DocTextResponse
                     {
                         Success = false,
                         DocumentText = null,
                         IsRead = verifyDocLog.IsRead,
                         ExistDoc = verifyDocLog.ExistDoc,
-                        Message = $"خطا در پردازش JSON: {ex.Message}"
+                        Message = "خطا در پردازش اطلاعات سند."
                     };
                 }
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Failed to get document text for RequestId: {RequestId}", requestId);
                 return new DocTextResponse
                 {
                     Success = false,
                     DocumentText = null,
                     IsRead = false,
                     ExistDoc = false,
-                    Message = $"خطا در دریافت اطلاعات سند: {ex.Message}"
+                    Message = "خطا در دریافت اطلاعات سند."
                 };
             }
         }
@@ -669,7 +671,7 @@ namespace IdentityManagementSystem.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error marking document as read for RequestId: {RequestId}. InnerException: {InnerException}", requestId, ex.InnerException?.Message);
-                return new JsonResult(new { success = false, message = $"خطا در علامت‌گذاری سند: {ex.Message}{(ex.InnerException != null ? " - " + ex.InnerException.Message : "")}" }) { StatusCode = 500 };
+                return new JsonResult(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." }) { StatusCode = 500 };
             }
         }
 

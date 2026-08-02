@@ -124,7 +124,8 @@
         }
 
         @@page {
-            margin: 14mm 12mm;
+            size: landscape;
+            margin: 12mm 10mm;
         }
 
         #printArea {
@@ -188,6 +189,7 @@
             #printArea table {
                 width: 100%;
                 border-collapse: collapse;
+                table-layout: fixed;
                 font-size: 12px;
             }
 
@@ -195,6 +197,8 @@
                 border: 1px solid #ccc;
                 padding: 6px 8px;
                 text-align: center;
+                word-break: break-word;
+                overflow-wrap: break-word;
             }
 
             #printArea th {

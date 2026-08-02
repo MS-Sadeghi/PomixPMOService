@@ -49,8 +49,12 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = "نام کاربری یا رمز عبور نامعتبر است." });
+                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        return Json(new { success = false, message = "نام کاربری یا رمز عبور نامعتبر است." });
+                    }
+
+                    return Json(new { success = false, message = "ارتباط با سرور برقرار نشد. لطفاً بعداً دوباره تلاش کنید." });
                 }
 
                 var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();

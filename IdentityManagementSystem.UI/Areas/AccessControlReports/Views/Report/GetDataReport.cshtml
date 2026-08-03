@@ -140,6 +140,113 @@
     #loadingBox {
         display: none !important;
     }
+
+    #printArea {
+        display: none;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden !important;
+        }
+
+        #printArea, #printArea * {
+            visibility: visible !important;
+        }
+
+        @@page {
+            size: landscape;
+            margin: 12mm 10mm;
+        }
+
+        #printArea {
+            display: block !important;
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            width: 100%;
+            direction: rtl;
+            font-family: Tahoma, Arial, sans-serif;
+            color: #1f2937;
+        }
+
+            #printArea .print-header {
+                display: flex !important;
+                align-items: baseline;
+                justify-content: space-between;
+                border-bottom: 2px solid #333;
+                padding-bottom: 10px;
+                margin-bottom: 14px;
+            }
+
+                #printArea .print-header h4 {
+                    margin: 0;
+                    font-size: 18px;
+                    font-weight: 700;
+                }
+
+                #printArea .print-header .print-date {
+                    font-size: 12px;
+                    color: #555;
+                }
+
+            #printArea .print-meta {
+                font-size: 12.5px;
+                color: #333;
+                margin-bottom: 16px;
+                background: #f8f9fa;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                padding: 10px 14px;
+            }
+
+                #printArea .print-meta div {
+                    display: flex !important;
+                    gap: 6px;
+                    margin-bottom: 5px;
+                }
+
+                    #printArea .print-meta div:last-child {
+                        margin-bottom: 0;
+                    }
+
+                #printArea .print-meta .meta-label {
+                    font-weight: 700;
+                    color: #111;
+                    white-space: nowrap;
+                }
+
+            #printArea table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12px;
+            }
+
+            #printArea th, #printArea td {
+                border: 1px solid #ccc;
+                padding: 6px 8px;
+                text-align: center;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+
+            #printArea th {
+                background: #f1f3f5;
+                font-weight: 700;
+            }
+
+            #printArea tbody tr:nth-child(even) {
+                background: #fafafa;
+            }
+
+            #printArea .print-footer {
+                margin-top: 14px;
+                font-size: 11px;
+                color: #777;
+                text-align: center;
+            }
+    }
 </style>
 @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
 {
@@ -253,6 +360,7 @@
             <div class="loading-text">در حال دریافت اطلاعات ...</div>
         </div>
         <div id="grid-report"></div>
+        <div id="printArea"></div>
     </div>
 </div>
 
@@ -261,6 +369,7 @@
     <script>
         let gridInstance = null;
         let gridData = [];
+        const reportHeaders = ['ردیف', 'تاریخ', 'مسیر تردد', 'تعداد'];
 
         function padDate(d) {
             if (!d) return d;
@@ -289,6 +398,94 @@
         function getPersianDate() {
             const formatter = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' });
             return formatter.format(new Date()).replace(/\//g, '/');
+        }
+
+        function getPersianDateTime() {
+            const now = new Date();
+            const time = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            return getPersianDate() + ' - ' + time;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function getSelectedEntranceTypeLabels() {
+            const checked = $(".entrance-type-checkbox:checked");
+            if (checked.length === 0) return '-';
+            if (checked.length === $(".entrance-type-checkbox").length) return 'همه';
+            return checked.map(function () { return $("label[for='" + this.id + "']").text(); }).get().join('، ');
+        }
+
+        function getReportMeta() {
+            return {
+                title: 'گزارش تردد مسیر',
+                items: [
+                    { label: 'بازه تاریخ', value: $("input[name='StartDate']").val() + ' تا ' + $("input[name='EndDate']").val() },
+                    { label: 'بازه ساعت', value: $("input[name='StartTime']").val() + ' تا ' + $("input[name='EndTime']").val() },
+                    { label: 'مسیر تردد', value: getSelectedEntranceTypeLabels() },
+                    { label: 'تعداد رکورد', value: gridData.length.toLocaleString('fa-IR') },
+                    { label: 'تاریخ و ساعت تهیه گزارش', value: getPersianDateTime() }
+                ]
+            };
+        }
+
+        function getReportRows() {
+            return gridData.map(r => [r[1], r[2], r[3], r[4]]);
+        }
+
+        function renderPrintArea(meta, headers, rows) {
+            let html = '<div class="print-header">';
+            html += '<h4>' + escapeHtml(meta.title) + '</h4>';
+            html += '<div class="print-date">تاریخ چاپ: ' + escapeHtml(getPersianDateTime()) + '</div>';
+            html += '</div>';
+
+            html += '<div class="print-meta">';
+            meta.items.forEach(item => {
+                html += '<div><span class="meta-label">' + escapeHtml(item.label) + ':</span><span>' + escapeHtml(item.value) + '</span></div>';
+            });
+            html += '</div>';
+
+            html += '<table><thead><tr>';
+            headers.forEach(h => { html += '<th>' + escapeHtml(h) + '</th>'; });
+            html += '</tr></thead><tbody>';
+            rows.forEach(row => {
+                html += '<tr>';
+                row.forEach(cell => { html += '<td>' + escapeHtml(cell) + '</td>'; });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+
+            html += '<div class="print-footer">این گزارش به‌صورت خودکار از سامانه جامع گزارشات تردد تهیه شده است.</div>';
+
+            document.getElementById('printArea').innerHTML = html;
+        }
+
+        function exportToExcel(filename, meta, headers, rows) {
+            if (typeof XLSX === 'undefined') return;
+
+            const aoa = [[meta.title]];
+            meta.items.forEach(item => aoa.push([item.label + ': ' + item.value]));
+            aoa.push([]);
+            aoa.push(headers);
+            rows.forEach(r => aoa.push(r));
+
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            ws['!cols'] = headers.map(() => ({ wch: 24 }));
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } },
+                ...meta.items.map((_, i) => ({ s: { r: i + 1, c: 0 }, e: { r: i + 1, c: headers.length - 1 } }))
+            ];
+
+            const wb = XLSX.utils.book_new();
+            wb.Workbook = { Views: [{ RTL: true }] };
+            XLSX.utils.book_append_sheet(wb, ws, meta.title.slice(0, 31));
+
+            XLSX.writeFile(wb, filename);
         }
 
         function toggleRow(buttonElement) {
@@ -479,19 +676,15 @@
             });
         });
 
-        $("#btnPrint").on("click", () => window.print());
+        $("#btnPrint").on("click", function () {
+            if (!gridData.length) return;
+            renderPrintArea(getReportMeta(), reportHeaders, getReportRows());
+            window.print();
+        });
 
         $("#btnExcel").on("click", function () {
             if (!gridData.length) return;
-            let csv = "ردیف,تاریخ,مسیر تردد,تعداد\n";
-            gridData.forEach(r => {
-                csv += `${r[1]},${r[2]},${r[3]},${r[4]}\n`;
-            });
-            const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "گزارش_تردد.csv";
-            link.click();
+            exportToExcel('گزارش_تردد_مسیر.xlsx', getReportMeta(), reportHeaders, getReportRows());
         });
 
         document.getElementById('entranceTypeSearch').addEventListener('input', function () {

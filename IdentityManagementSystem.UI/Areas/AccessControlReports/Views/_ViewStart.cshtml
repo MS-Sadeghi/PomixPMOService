@@ -1,3 +1,5 @@
 @{
-    Layout = "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml";
+    Layout = Context.Request.Query.ContainsKey("embed")
+        ? "~/Areas/AccessControlReports/Views/Shared/_ReportFrameLayout.cshtml"
+        : "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml";
 }

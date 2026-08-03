@@ -193,11 +193,11 @@
         <div class="card-body">
             <div class="d-flex gap-3 align-items-center">
                 <div class="avatar avatar-md secondary">
-                    <i class="ri-truck-line fs-20"></i>
+                    <i class="ri-car-line fs-20"></i>
                 </div>
                 <div class="flex-fill">
-                    <div class="fw-medium fs-13 mb-1">تردد خودروها</div>
-                    <div class="fs-22 fw-semibold mb-0 stat-value" id="vehicleTrafficToday">-</div>
+                    <div class="fw-medium fs-13 mb-1">تردد سواری</div>
+                    <div class="fs-22 fw-semibold mb-0 stat-value" id="carTrafficToday">-</div>
                 </div>
             </div>
         </div>
@@ -225,11 +225,11 @@
         <div class="card-body">
             <div class="d-flex gap-3 align-items-center">
                 <div class="avatar avatar-md danger">
-                    <i class="ri-file-chart-line fs-20"></i>
+                    <i class="ri-truck-line fs-20"></i>
                 </div>
                 <div class="flex-fill">
-                    <div class="fw-medium fs-13 mb-1">گزارش‌ها</div>
-                    <div class="fs-22 fw-semibold mb-0 stat-value" id="reportsCountToday">-</div>
+                    <div class="fw-medium fs-13 mb-1">تردد کامیون‌ها</div>
+                    <div class="fs-22 fw-semibold mb-0 stat-value" id="truckTrafficToday">-</div>
                 </div>
             </div>
         </div>
@@ -569,16 +569,16 @@
                         Number(data.totalTrafficToday || 0).toLocaleString('fa-IR')
                     );
 
-                    $('#vehicleTrafficToday').text(
-                        Number(data.vehicleTrafficToday || 0).toLocaleString('fa-IR')
-                    );
-
                     $('#peopleTrafficToday').text(
                         Number(data.peopleTrafficToday || 0).toLocaleString('fa-IR')
                     );
 
-                    $('#reportsCountToday').text(
-                        Number(data.reportsCountToday || 0).toLocaleString('fa-IR')
+                    $('#carTrafficToday').text(
+                        Number(data.carTrafficToday || 0).toLocaleString('fa-IR')
+                    );
+
+                    $('#truckTrafficToday').text(
+                        Number(data.truckTrafficToday || 0).toLocaleString('fa-IR')
                     );
 
                     $('#lastUpdated').text(data.lastUpdated || '-');

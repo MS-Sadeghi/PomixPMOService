@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
 using IdentityManagementSystem.API.Modules.AccessControlReports.GetData;
+using IdentityManagementSystem.API.Modules.AccessControlReports.TrafficByType;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
@@ -10,6 +11,7 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 		private readonly IPomixClient _pomixClient;
 		private readonly IConfiguration _configuration;
 		private readonly IMemoryCache _cache;
+		private readonly TrafficByTypeHandler _trafficByTypeHandler;
 
 		// سرویس Pomix سقف درخواست ساعتی دارد؛ کش کردن پاسخ داشبورد باعث می‌شود
 		// رفرش‌های پشت‌سرهم/بازدید چند کاربر از یک فیلتر، درخواست تازه‌ای به Pomix نزنند.
@@ -32,11 +34,13 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 		public DashboardHandler(
 			IPomixClient pomixClient,
 			IConfiguration configuration,
-			IMemoryCache cache)
+			IMemoryCache cache,
+			TrafficByTypeHandler trafficByTypeHandler)
 		{
 			_pomixClient = pomixClient;
 			_configuration = configuration;
 			_cache = cache;
+			_trafficByTypeHandler = trafficByTypeHandler;
 		}
 
 		public async Task<DashboardResponse> HandleAsync(DashboardRequest request)
@@ -84,12 +88,20 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 				.Where(x => PersonEntranceTypes.Contains(x.EntranceType))
 				.Sum(x => x.RecordCount);
 
+			// تفکیک سواری/کامیون فقط از سرویس نوع تردد (bsr-TrafficByType) قابل
+			// دریافت است؛ گزارش لاین/گیت (bsr-GetData) بالا این تفکیک را ندارد.
+			var carCount = await GetTrafficTypeCountAsync(rangeStart, rangeEnd, 1);
+			var truckCount = await GetTrafficTypeCountAsync(rangeStart, rangeEnd, 2);
+
 			return new DashboardResponse
 			{
 				Period = period,
 				TotalTrafficToday = periodData.Sum(x => x.RecordCount),
 				VehicleTrafficToday = vehicleCount,
 				PeopleTrafficToday = peopleCount,
+
+				CarTrafficToday = carCount,
+				TruckTrafficToday = truckCount,
 
 				// تا وقتی لاگ گزارش‌های کاربران نداری، این عدد واقعی قابل محاسبه نیست.
 				ReportsCountToday = 0,
@@ -172,6 +184,20 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 				"last30" => (today.AddDays(-29), today),
 				_ => (today, today)
 			};
+		}
+
+		private async Task<int> GetTrafficTypeCountAsync(DateTime startDate, DateTime endDate, int trafficType)
+		{
+			var rows = await _trafficByTypeHandler.HandleAsync(new TrafficByTypeRequest
+			{
+				StartDate = ToPersianDate(startDate),
+				EndDate = ToPersianDate(endDate),
+				StartTime = "00:00",
+				EndTime = "23:59",
+				TrafficTypes = new List<int> { trafficType }
+			});
+
+			return rows.Sum(x => x.RecordCount);
 		}
 
 		private async Task<List<GetDataResponse>> GetTrafficAsync(

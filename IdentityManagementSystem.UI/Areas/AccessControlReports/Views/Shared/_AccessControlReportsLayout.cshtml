@@ -119,6 +119,83 @@
                 color: #6c757d;
                 font-size: 13px;
             }
+
+        .report-tabs-strip {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .5rem .75rem;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--default-border, #eeedf3);
+            background: var(--custom-white, #fff);
+        }
+
+        .report-tab-item {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            border: 1px solid transparent;
+            border-radius: .35rem;
+            padding: .45rem .7rem;
+            font-size: .8rem;
+            font-weight: 500;
+            color: var(--default-text-color, #4b5563);
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color .15s ease;
+        }
+
+            .report-tab-item:hover {
+                background: var(--primary01);
+                color: var(--primary-color);
+                text-decoration: none;
+            }
+
+            .report-tab-item.active {
+                background: var(--primary01);
+                color: var(--primary-color);
+                font-weight: 600;
+            }
+
+            .report-tab-item i.report-tab-icon {
+                font-size: .9rem;
+            }
+
+            .report-tab-item .report-tab-close {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                font-size: 11px;
+                color: inherit;
+                opacity: .6;
+            }
+
+                .report-tab-item .report-tab-close:hover {
+                    opacity: 1;
+                    background: rgba(0, 0, 0, .08);
+                }
+
+        .report-tab-pane,
+        .report-frame-pane {
+            display: none;
+        }
+
+            .report-tab-pane.active,
+            .report-frame-pane.active {
+                display: block;
+            }
+
+            .report-frame-pane iframe {
+                display: block;
+                width: 100%;
+                height: calc(100vh - 11.5rem);
+                border: 0;
+            }
     </style>
     @RenderSection("Styles", required: false)
 </head>
@@ -259,7 +336,7 @@
                         <span class="category-name">داشبورد</span>
                     </li>
                     <li class="slide">
-                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="Dashboard">
+                        <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-dashboard-3-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="Dashboard">
                             <svg class="side-menu__icon" height="1em" viewBox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg">
                                 <g color="currentColor" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
                                     <path d="m9 22l-.251-3.509a3.259 3.259 0 1 1 6.501 0L15 22"></path>
@@ -276,33 +353,39 @@
                     <!-- End::slide__category -->
                     <!-- Start::slide - Report items -->
                     <li class="slide">
-                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="GetDataReport">
+                        <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-layout-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="GetDataReport">
                             <i class="ri-layout-line side-menu__icon" aria-hidden="true"></i>
                             <span class="side-menu__label">گزارش تردد مسیر</span>
                         </a>
                     </li>
                     <li class="slide">
-                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="GetSumReport">
+                        <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-stack-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="GetSumReport">
                             <i class="ri-stack-line side-menu__icon" aria-hidden="true"></i>
                             <span class="side-menu__label">گزارش مجموع نوع تردد</span>
                         </a>
                     </li>
                     <li class="slide">
-                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByTypeReport">
+                        <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-truck-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByTypeReport">
                             <i class="ri-truck-line side-menu__icon" aria-hidden="true"></i>
                             <span class="side-menu__label">گزارش تفکیک نوع تردد</span>
                         </a>
                     </li>
                     <li class="slide">
-                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByPlatesReport">
+                        <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-bank-card-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByPlatesReport">
                             <i class="ri-bank-card-line side-menu__icon" aria-hidden="true"></i>
                             <span class="side-menu__label">گزارش بر اساس پلاک</span>
                         </a>
                     </li>
                     <li class="slide">
-                        <a class="side-menu__item" asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByNationalIDReport">
+                        <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-user-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByNationalIDReport">
                             <i class="ri-user-line side-menu__icon" aria-hidden="true"></i>
                             <span class="side-menu__label">گزارش بر اساس کد ملی</span>
+                        </a>
+                    </li>
+                    <li class="slide">
+                        <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-road-map-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="AllTrafficReport">
+                            <i class="ri-road-map-line side-menu__icon" aria-hidden="true"></i>
+                            <span class="side-menu__label">همه ترددها</span>
                         </a>
                     </li>
                     <!-- Start::slide - User Management with Submenu -->
@@ -349,11 +432,15 @@
     <!-- ========== END SIDEBAR ========== -->
     <!-- ========== MAIN CONTENT ========== -->
     <div class="main-content app-content">
-        <div class="container-fluid">
-            <div class="row">
-                @RenderBody()
+        <div class="report-tabs-strip" id="reportTabsStrip"></div>
+        <div class="report-tab-pane active" id="reportPaneHome">
+            <div class="container-fluid">
+                <div class="row">
+                    @RenderBody()
+                </div>
             </div>
         </div>
+        <div id="reportFramesHost"></div>
     </div>
     <!-- ========== END MAIN CONTENT ========== -->
     <!-- ========== FOOTER ========== -->
@@ -425,23 +512,28 @@
     <script src="~/assets/libs/%40simonwep/pickr/pickr.es5.min.js"></script>
     <script src="~/assets/libs/flatpickr/flatpickr.min.js"></script>
     <script src="~/assets/libs/prismjs/prism.js"></script>
-	<script src="~/assets/js/prism-custom.js"></script>
-	<script src="~/assets/js/custom.js"></script>
+    <script src="~/assets/js/prism-custom.js"></script>
+    <script src="~/assets/js/custom.js"></script>
     <script src="~/assets/js/date&time_pickers.js"></script>
     <script src="~/assets/libs/gridjs/gridjs.umd.js"></script>
-	<link href="~/assets/libs/persian-datepicker/css/persian-datepicker.min.css" rel="stylesheet" />
+    <!-- SheetJS (Excel export) -->
+    <script src="~/lib/xlsx/xlsx.full.min.js"></script>
+    <link href="~/assets/libs/persian-datepicker/css/persian-datepicker.min.css" rel="stylesheet" />
     <script src="~/assets/libs/persian-datepicker/index.global.min.js"></script>
     <script src="~/assets/libs/persian-datepicker/persian-date.min.js"></script>
     <script src="~/assets/libs/persian-datepicker/persian-datepicker.min.js"></script>
     <script src="~/assets/libs/fullcalendar/index.global.min.js"></script>
-	<!-- Toastify JS -->
-	<link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" />
+    <!-- Toastify JS -->
+    <link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" />
     <script src="~/assets/libs/toastify-js/src/toastify.js">
     </script>
     <!-- Toast JS -->
     <script src="~/assets/js/toasts.js">
     </script>
     <script>
+         // بروزرسانی سال شمسی
+        document.getElementById("year").textContent = new Date().toLocaleDateString("fa-IR", { year: "numeric" });
+
         function openFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen();
@@ -451,6 +543,139 @@
                 }
             }
         }
+
+        (function () {
+            var homeTitleEl = document.querySelector('.page-header-breadcrumb .breadcrumb-item.active');
+            var homeTab = {
+                id: 'home',
+                title: (homeTitleEl && homeTitleEl.textContent.trim()) || document.title,
+                icon: 'ri-home-4-line',
+                closable: false
+            };
+
+            var tabs = [homeTab];
+            var activeId = homeTab.id;
+            var seq = 0;
+
+            function $strip() {
+                return $('#reportTabsStrip');
+            }
+
+            function $framesHost() {
+                return $('#reportFramesHost');
+            }
+
+            function tabItemHtml(tab) {
+                var activeClass = tab.id === activeId ? ' active' : '';
+                var closeBtn = tab.closable
+                    ? '<span class="report-tab-close" data-id="' + tab.id + '"><i class="ri-close-line"></i></span>'
+                    : '';
+                return '<a class="report-tab-item' + activeClass + '" data-id="' + tab.id + '" href="javascript:void(0);">' +
+                    '<i class="' + tab.icon + ' report-tab-icon"></i><span>' + tab.title + '</span>' + closeBtn +
+                    '</a>';
+            }
+
+            function renderTabs() {
+                var $s = $strip();
+                if (!$s.length) return;
+                $s.html(tabs.map(tabItemHtml).join(''));
+            }
+
+            function activateTab(id) {
+                activeId = id;
+                $('#reportPaneHome').toggleClass('active', id === 'home');
+                $framesHost().children('.report-frame-pane').each(function () {
+                    $(this).toggleClass('active', $(this).data('id') === id);
+                });
+                renderTabs();
+            }
+
+            function openReportTab(url, title, icon) {
+                seq++;
+                var id = 'tab-' + Date.now() + '-' + seq;
+
+                var sameTitleCount = tabs.filter(function (t) { return t.title === title; }).length;
+                var displayTitle = sameTitleCount > 0 ? title + ' (' + (sameTitleCount + 1) + ')' : title;
+
+                tabs.push({ id: id, title: displayTitle, icon: icon || 'ri-file-list-3-line', closable: true });
+
+                var sep = url.indexOf('?') === -1 ? '?' : '&';
+                var frameUrl = url + sep + 'embed=1';
+                var $pane = $('<div class="report-frame-pane" data-id="' + id + '"></div>');
+                var $iframe = $('<iframe src="' + frameUrl + '"></iframe>');
+                $iframe.on('load', syncIframeThemes);
+                $pane.append($iframe);
+                $framesHost().append($pane);
+
+                activateTab(id);
+            }
+
+            function syncIframeThemes() {
+                var html = document.querySelector('html');
+                var theme = html.getAttribute('data-theme-mode');
+                var headerStyle = html.getAttribute('data-header-styles');
+                var menuStyle = html.getAttribute('data-menu-styles');
+
+                document.querySelectorAll('#reportFramesHost iframe').forEach(function (frame) {
+                    try {
+                        var doc = frame.contentDocument;
+                        if (!doc || !doc.documentElement) return;
+                        doc.documentElement.setAttribute('data-theme-mode', theme);
+                        doc.documentElement.setAttribute('data-header-styles', headerStyle);
+                        doc.documentElement.setAttribute('data-menu-styles', menuStyle);
+                    } catch (e) {
+                        // iframe هنوز لود نشده یا در دسترس نیست؛ نادیده گرفته می‌شود
+                    }
+                });
+            }
+
+            function closeTab(id) {
+                var idx = -1;
+                for (var i = 0; i < tabs.length; i++) {
+                    if (tabs[i].id === id) { idx = i; break; }
+                }
+                if (idx === -1) return;
+
+                var wasActive = activeId === id;
+                tabs.splice(idx, 1);
+                $framesHost().children('[data-id="' + id + '"]').remove();
+
+                if (wasActive) {
+                    var fallback = tabs[tabs.length - 1] || homeTab;
+                    activateTab(fallback.id);
+                } else {
+                    renderTabs();
+                }
+            }
+
+            $(document).ready(function () {
+                renderTabs();
+
+                $('.js-report-tab-link').on('click', function (e) {
+                    e.preventDefault();
+                    var url = $(this).attr('href');
+                    var title = $(this).data('tab-title') || $(this).find('.side-menu__label').text().trim();
+                    var icon = $(this).data('tab-icon');
+                    openReportTab(url, title, icon);
+                });
+
+                $(document).on('click', '.report-tab-item', function (e) {
+                    if ($(e.target).closest('.report-tab-close').length) return;
+                    activateTab($(this).data('id'));
+                });
+
+                $(document).on('click', '.report-tab-close', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeTab($(this).data('id'));
+                });
+
+                // custom.js از قبل روی همین دکمه کلیک را می‌گیرد و تم را روی <html>
+                // صفحه‌ی اصلی عوض می‌کند؛ این هندلر بعد از آن اجرا می‌شود تا همان
+                // مقدار تازه را روی تمام تب‌های iframe بازِ گزارش‌ها هم اعمال کند.
+                $('.layout-setting').on('click', syncIframeThemes);
+            });
+        })();
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

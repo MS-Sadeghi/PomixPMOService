@@ -12,6 +12,17 @@
     <!-- Main Theme Js -->
     <script src="~/assets/js/authentication-main.js">
     </script>
+    <script>
+        // این صفحه (ورود/فراموشی رمز) طراحی مخصوص روشن دارد و از حالت تاریک
+        // برنامه پیروی نمی‌کند؛ حالت تیره‌ای که authentication-main.js از
+        // localStorage اعمال می‌کند، همین‌جا خنثی می‌شود.
+        (function () {
+            var html = document.querySelector('html');
+            html.setAttribute('data-theme-mode', 'light');
+            html.setAttribute('data-header-styles', 'light');
+            html.setAttribute('data-menu-styles', 'light');
+        })();
+    </script>
     <!-- Bootstrap Css -->
     <link href="~/assets/libs/bootstrap/css/bootstrap.rtl.min.css" id="style" rel="stylesheet" />
     <!-- Style Css -->

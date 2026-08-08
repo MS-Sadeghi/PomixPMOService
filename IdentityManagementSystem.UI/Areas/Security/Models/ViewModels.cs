@@ -64,4 +64,30 @@
         public int RoleId { get; set; }
         public bool IsActive { get; set; }
     }
+
+    public class ForgotPasswordStartViewModel
+    {
+        public string NationalId { get; set; } = string.Empty;
+        public string MobileNumber { get; set; } = string.Empty;
+    }
+
+    public class ForgotPasswordVerifyViewModel : ForgotPasswordStartViewModel
+    {
+        public string Code { get; set; } = string.Empty;
+    }
+
+    public class ForgotPasswordResetViewModel
+    {
+        public string ResetToken { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
+        public string ConfirmNewPassword { get; set; } = string.Empty;
+    }
+
+    public class ForgotPasswordApiResponse
+    {
+        public string? Message { get; set; }
+        public string? ResetToken { get; set; }
+        public string? DevelopmentCode { get; set; }
+        public int? ExpiresInSeconds { get; set; }
+    }
 }

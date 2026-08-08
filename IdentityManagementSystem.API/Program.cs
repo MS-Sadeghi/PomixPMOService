@@ -5,6 +5,7 @@ using IdentityManagementSystem.API.Modules.AccessControlReports;
 using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
 using IdentityManagementSystem.API.Services;
 using IdentityManagementSystem.API.Services.Logging;
+using IdentityManagementSystem.API.Services.SMS;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -64,6 +65,10 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<UserActionLogger>();
+builder.Services.Configure<DiafaanSmsSettings>(builder.Configuration.GetSection("DiafanSmsSettings"));
+builder.Services.Configure<RajaeiSmsSettings>(builder.Configuration.GetSection("RajaeiSmsSettings"));
+builder.Services.AddHttpClient<SendServiceClient>();
+builder.Services.AddScoped<SendSmsService>();
 
 // --- Swagger ---
 builder.Services.AddSwaggerGen(c =>

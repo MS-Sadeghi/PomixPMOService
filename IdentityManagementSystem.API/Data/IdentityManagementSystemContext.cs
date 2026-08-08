@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using   IdentityManagementSystem.API.Models;
+﻿using IdentityManagementSystem.API.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace IdentityManagementSystem.API.Data
 {
@@ -21,6 +21,7 @@ namespace IdentityManagementSystem.API.Data
         public DbSet<ShahkarLog> ShahkarLog { get; set; } // اضافه شده
         public DbSet<VerifyDocLog> VerifyDocLog { get; set; } // اضافه شده
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<SmsLog> SmsLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -29,12 +30,30 @@ namespace IdentityManagementSystem.API.Data
             modelBuilder.Entity<RequestStatus>().ToTable("RequestStatus", "Define");
             modelBuilder.Entity<Cartable>().ToTable("Cartable", "WF");
             modelBuilder.Entity<CartableItem>().ToTable("CartableItems", "WF");
-            modelBuilder.Entity<UserLog>().ToTable("UserLogs", "Log");
+            modelBuilder.Entity<UserLog>(entity =>
+            {
+                entity.ToTable("UserLog", "Log");
+                entity.HasKey(ul => ul.LogId);
+                entity.Property(ul => ul.LogId).HasColumnName("log_id");
+                entity.Property(ul => ul.UserId).HasColumnName("userid");
+                entity.Property(ul => ul.Action).HasColumnName("action");
+                entity.Property(ul => ul.ActionTime).HasColumnName("action_time");
+                entity.Property(ul => ul.IpAddress).HasColumnName("ip_address").HasMaxLength(45);
+                entity.Property(ul => ul.UserAgent).HasColumnName("user_agent").HasMaxLength(255);
+                entity.Ignore(ul => ul.ActionResult);
+                entity.Ignore(ul => ul.LogLevel);
+            });
             modelBuilder.Entity<RequestHistory>().ToTable("RequestHistory", "Sec");
             modelBuilder.Entity<UserAccess>().ToTable("UserAccess", "Sec");
             modelBuilder.Entity<ShahkarLog>().ToTable("ShahkarLog", "Log"); // اضافه شده
             modelBuilder.Entity<RefreshToken>().ToTable("RefreshTokens", "Sec");
             modelBuilder.Entity<Role>().ToTable("Roles", "Sec");
+            modelBuilder.Entity<SmsLog>(entity =>
+            {
+                entity.ToTable("SmsLogs", "Log");
+                entity.HasKey(sl => sl.Id);
+                entity.Ignore(sl => sl.UserId);
+            });
             // اضافه شده
 
             modelBuilder.Entity<User>()
@@ -90,15 +109,12 @@ namespace IdentityManagementSystem.API.Data
             modelBuilder.Entity<RefreshToken>()
                 .HasIndex(rt => rt.Token)
                 .IsUnique();
-            
+
             modelBuilder.Entity<RequestStatus>()
                 .HasIndex(rt => rt.StatusId)
                 .IsUnique();
 
             base.OnModelCreating(modelBuilder);
-
-
         }
-
     }
 }

@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "گزارش مجموع نوع تردد";
 }
-<link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/assets/libs/gridjs/theme/mermaid.min.css" />
 <style>
     .gridjs-table {
@@ -357,7 +356,6 @@
             });
             html += '</tbody></table>';
 
-            html += '<div class="print-footer">این گزارش به‌صورت خودکار از سامانه جامع گزارشات تردد تهیه شده است.</div>';
 
             document.getElementById('printArea').innerHTML = html;
         }

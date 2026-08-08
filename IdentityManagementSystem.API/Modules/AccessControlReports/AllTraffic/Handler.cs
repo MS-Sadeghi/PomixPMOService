@@ -108,8 +108,9 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.AllTraffic
                         dailyTotals[dateKey] = daily;
                     }
 
-                    if (code == 1) daily.CarCount += row.RecordCount;
-                    else if (code == 2) daily.TruckCount += row.RecordCount;
+                    // سرویس پومیکس: 1=کامیون، 2=سواری، 3=نفر
+                    if (code == 1) daily.TruckCount += row.RecordCount;
+                    else if (code == 2) daily.CarCount += row.RecordCount;
                     else if (code == 3) daily.PedestrianCount += row.RecordCount;
 
                     daily.Total += row.RecordCount;

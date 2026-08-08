@@ -90,8 +90,9 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 
 			// تفکیک سواری/کامیون فقط از سرویس نوع تردد (bsr-TrafficByType) قابل
 			// دریافت است؛ گزارش لاین/گیت (bsr-GetData) بالا این تفکیک را ندارد.
-			var carCount = await GetTrafficTypeCountAsync(rangeStart, rangeEnd, 1);
-			var truckCount = await GetTrafficTypeCountAsync(rangeStart, rangeEnd, 2);
+			// کدهای سرویس پومیکس: 1=کامیون، 2=سواری، 3=نفر
+			var truckCount = await GetTrafficTypeCountAsync(rangeStart, rangeEnd, 1);
+			var carCount = await GetTrafficTypeCountAsync(rangeStart, rangeEnd, 2);
 
 			return new DashboardResponse
 			{

@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "گزارش تردد مسیر";
 }
-<link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/assets/libs/gridjs/theme/mermaid.min.css" />
 <style>
     #entranceTypeMenu {
@@ -460,7 +459,6 @@
             });
             html += '</tbody></table>';
 
-            html += '<div class="print-footer">این گزارش به‌صورت خودکار از سامانه جامع گزارشات تردد تهیه شده است.</div>';
 
             document.getElementById('printArea').innerHTML = html;
         }

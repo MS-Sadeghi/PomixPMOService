@@ -364,3 +364,7 @@ Desktop.ini
 
 # Ignore Visual Studio Code specific files
 .vscode/
+/IdentityManagementSystem.API/.codex_build/api
+/IdentityManagementSystem.Shared/.codex_build/api
+/IdentityManagementSystem.Shared/.codex_build/ui
+/IdentityManagementSystem.UI/.codex_build/ui

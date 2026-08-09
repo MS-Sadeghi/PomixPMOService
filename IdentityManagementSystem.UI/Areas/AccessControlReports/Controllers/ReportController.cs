@@ -76,7 +76,24 @@ namespace IdentityManagementSystem.UI.Controllers
 		[HttpPost]
 		public async Task<IActionResult> GetSumReportAjax(BaseReportFilterViewModel filter)
 		{
-			return await ExecuteReportAsync(() => _service.GetSumAsync(filter));
+			try
+			{
+				var result = await _service.GetSumAsync(filter);
+
+				return Json(new
+				{
+					success = true,
+					data = result
+				});
+			}
+			catch (Exception)
+			{
+				return BadRequest(new
+				{
+					success = false,
+					message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
+				});
+			}
 		}
 
 		#endregion

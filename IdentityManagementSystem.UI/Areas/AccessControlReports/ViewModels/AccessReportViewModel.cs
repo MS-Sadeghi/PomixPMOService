@@ -44,20 +44,46 @@ namespace IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel
 
     #region GetSum
 
-    public class GetSumReportViewModel
+    public class GetSumCategoryStatViewModel
+    {
+        public int Total { get; set; }
+
+        public int? Iranian { get; set; }
+
+        public int? Transit { get; set; }
+    }
+
+    public class GetSumDailyStatViewModel
     {
         public string ReportDate { get; set; }
 
-        public string EntranceType { get; set; }
+        public GetSumCategoryStatViewModel TruckEntrance { get; set; }
 
-        public int RecordCount { get; set; }
+        public GetSumCategoryStatViewModel TruckEmptyExit { get; set; }
+
+        public GetSumCategoryStatViewModel TruckLoadedExit { get; set; }
+
+        public GetSumCategoryStatViewModel CarEntrance { get; set; }
+
+        public GetSumCategoryStatViewModel CarExit { get; set; }
+
+        public GetSumCategoryStatViewModel PedestrianEntrance { get; set; }
+
+        public GetSumCategoryStatViewModel PedestrianExit { get; set; }
+    }
+
+    public class GetSumReportViewModel
+    {
+        public List<GetSumDailyStatViewModel> Daily { get; set; } = new();
+
+        public GetSumDailyStatViewModel TotalPeriod { get; set; }
     }
 
     public class GetSumReportPageViewModel
     {
         public BaseReportFilterViewModel Filter { get; set; } = new();
 
-        public List<GetSumReportViewModel> Reports { get; set; } = new();
+        public GetSumReportViewModel Reports { get; set; } = new();
     }
 
     #endregion

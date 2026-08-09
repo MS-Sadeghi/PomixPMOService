@@ -37,7 +37,7 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
 				   ?? new List<GetDataReportViewModel>();
 		}
 
-		public async Task<List<GetSumReportViewModel>> GetSumAsync(BaseReportFilterViewModel filter)
+		public async Task<GetSumReportViewModel> GetSumAsync(BaseReportFilterViewModel filter)
 		{
 			var client = _factory.CreateClient("PomixApi");
 
@@ -56,8 +56,8 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
 			if (!response.IsSuccessStatusCode)
 				await ThrowForFailedResponseAsync(response, "گزارش تجمیعی");
 
-			return await response.Content.ReadFromJsonAsync<List<GetSumReportViewModel>>()
-				   ?? new List<GetSumReportViewModel>();
+			return await response.Content.ReadFromJsonAsync<GetSumReportViewModel>()
+				   ?? new GetSumReportViewModel();
 		}
 
 		public async Task<List<TrafficByTypeReportViewModel>> TrafficByTypeAsync(TrafficByTypeFilterViewModel filter)

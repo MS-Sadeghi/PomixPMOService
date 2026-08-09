@@ -13,7 +13,7 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.GetSum
             _configuration = configuration;
         }
 
-        public async Task<List<GetSumResponse>> HandleAsync(GetSumRequest request)
+        public async Task<GetSumResponse> HandleAsync(GetSumRequest request)
         {
             var parameters = new object[]
             {
@@ -48,7 +48,7 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.GetSum
                 }
             };
 
-            return await _pomixClient.ExecuteAsync<List<GetSumResponse>>(
+            return await _pomixClient.ExecuteAsync<GetSumResponse>(
                 "bsr-GetSum",
                 parameters);
         }

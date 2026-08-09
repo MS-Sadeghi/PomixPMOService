@@ -277,6 +277,51 @@
             <button class="btn btn-info-light" id="btnExcel"><i class="ti ti-file-spreadsheet"></i> اکسل</button>
         </div>
 
+        <div id="summaryCards" class="row g-2 mb-3 d-none">
+            <div class="col-6 col-md-3">
+                <div class="border rounded-3 p-2 text-center h-100">
+                    <div class="fs-11 text-muted mb-1">ورود کامیون</div>
+                    <div class="fs-16 fw-semibold" id="sum_truckEntrance">0</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="border rounded-3 p-2 text-center h-100">
+                    <div class="fs-11 text-muted mb-1">خروج خالی کامیون</div>
+                    <div class="fs-16 fw-semibold" id="sum_truckEmptyExit">0</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="border rounded-3 p-2 text-center h-100">
+                    <div class="fs-11 text-muted mb-1">خروج پر کامیون</div>
+                    <div class="fs-16 fw-semibold" id="sum_truckLoadedExit">0</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="border rounded-3 p-2 text-center h-100">
+                    <div class="fs-11 text-muted mb-1">ورود سواری</div>
+                    <div class="fs-16 fw-semibold" id="sum_carEntrance">0</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="border rounded-3 p-2 text-center h-100">
+                    <div class="fs-11 text-muted mb-1">خروج سواری</div>
+                    <div class="fs-16 fw-semibold" id="sum_carExit">0</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="border rounded-3 p-2 text-center h-100">
+                    <div class="fs-11 text-muted mb-1">ورود نفرو</div>
+                    <div class="fs-16 fw-semibold" id="sum_pedestrianEntrance">0</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="border rounded-3 p-2 text-center h-100">
+                    <div class="fs-11 text-muted mb-1">خروج نفرو</div>
+                    <div class="fs-16 fw-semibold" id="sum_pedestrianExit">0</div>
+                </div>
+            </div>
+        </div>
+
         <div id="grid-loading">
             <div class="spinner-border text-primary" role="status"><span class="visually-hidden">در حال بارگذاری...</span></div>
             <div class="loading-text">در حال دریافت اطلاعات ...</div>
@@ -291,7 +336,27 @@
     <script>
         let gridInstance = null;
         let gridData = [];
-        const reportHeaders = ['ردیف', 'تاریخ گزارش', 'نوع تردد', 'تعداد تردد'];
+        let rawDaily = [];
+        let dailyByDate = new Map();
+        let totalPeriodData = null;
+        const reportHeaders = ['ردیف', 'تاریخ گزارش', 'ورود کامیون', 'خروج خالی کامیون', 'خروج پر کامیون', 'ورود سواری', 'خروج سواری', 'ورود نفرو', 'خروج نفرو'];
+        const categoryDefs = [
+            { key: 'truckEntrance', label: 'ورود کامیون' },
+            { key: 'truckEmptyExit', label: 'خروج خالی کامیون' },
+            { key: 'truckLoadedExit', label: 'خروج پر کامیون' },
+            { key: 'carEntrance', label: 'ورود سواری' },
+            { key: 'carExit', label: 'خروج سواری' },
+            { key: 'pedestrianEntrance', label: 'ورود نفرو' },
+            { key: 'pedestrianExit', label: 'خروج نفرو' }
+        ];
+
+        function catTotal(stat) {
+            return (stat && typeof stat.total === 'number') ? stat.total : 0;
+        }
+
+        function fmt(n) {
+            return (n || 0).toLocaleString('fa-IR');
+        }
 
         function padDate(d) {
             if (!d) return d;
@@ -324,14 +389,40 @@
                 items: [
                     { label: 'بازه تاریخ', value: $("input[name='StartDate']").val() + ' تا ' + $("input[name='EndDate']").val() },
                     { label: 'بازه ساعت', value: $("input[name='StartTime']").val() + ' تا ' + $("input[name='EndTime']").val() },
-                    { label: 'تعداد رکورد', value: gridData.length.toLocaleString('fa-IR') },
+                    { label: 'تعداد روز', value: fmt(rawDaily.length) },
                     { label: 'تاریخ و ساعت تهیه گزارش', value: getPersianDateTime() }
                 ]
             };
         }
 
         function getReportRows() {
-            return gridData.map(r => [r[1], r[2], r[3], r[4]]);
+            const rows = rawDaily.map((item, i) => [
+                i + 1,
+                item.reportDate || '',
+                fmt(catTotal(item.truckEntrance)),
+                fmt(catTotal(item.truckEmptyExit)),
+                fmt(catTotal(item.truckLoadedExit)),
+                fmt(catTotal(item.carEntrance)),
+                fmt(catTotal(item.carExit)),
+                fmt(catTotal(item.pedestrianEntrance)),
+                fmt(catTotal(item.pedestrianExit))
+            ]);
+
+            if (totalPeriodData) {
+                rows.push([
+                    'جمع کل',
+                    '',
+                    fmt(catTotal(totalPeriodData.truckEntrance)),
+                    fmt(catTotal(totalPeriodData.truckEmptyExit)),
+                    fmt(catTotal(totalPeriodData.truckLoadedExit)),
+                    fmt(catTotal(totalPeriodData.carEntrance)),
+                    fmt(catTotal(totalPeriodData.carExit)),
+                    fmt(catTotal(totalPeriodData.pedestrianEntrance)),
+                    fmt(catTotal(totalPeriodData.pedestrianExit))
+                ]);
+            }
+
+            return rows;
         }
 
         function renderPrintArea(meta, headers, rows) {
@@ -387,7 +478,30 @@
             document.getElementById('grid-loading').classList.toggle('show', show);
         }
 
-        function toggleRow(buttonElement) {
+        function buildDetailHtml(reportDate) {
+            const item = dailyByDate.get(reportDate);
+            if (!item) return '<p class="mb-0">داده‌ای یافت نشد.</p>';
+
+            const truckRows = [
+                { label: 'ورود کامیون', stat: item.truckEntrance },
+                { label: 'خروج خالی کامیون', stat: item.truckEmptyExit },
+                { label: 'خروج پر کامیون', stat: item.truckLoadedExit }
+            ];
+
+            let html = '<p class="mb-2"><strong>جزئیات کامیون (ایرانی/ترانزیت) — ' + escapeHtml(reportDate) + '</strong></p>';
+            html += '<div class="row g-2">';
+            truckRows.forEach(r => {
+                const s = r.stat || {};
+                html += '<div class="col-md-4"><div class="border rounded-2 p-2 bg-white">'
+                    + '<div class="fw-medium mb-1">' + escapeHtml(r.label) + '</div>'
+                    + '<div class="fs-12 text-muted">کل: ' + fmt(s.total) + ' | ایرانی: ' + fmt(s.iranian) + ' | ترانزیت: ' + fmt(s.transit) + '</div>'
+                    + '</div></div>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function toggleRow(buttonElement, reportDate) {
             const mainRow = buttonElement.closest('tr');
             if (!mainRow) return;
 
@@ -395,11 +509,8 @@
 
             if (!detailRow || !detailRow.classList.contains('detail-row')) {
                 const td = document.createElement('td');
-                td.colSpan = 5;
-                td.innerHTML = `<div class="detail-content">
-                    <p><strong>جزئیات</strong></p>
-                    <p>اطلاعات تکمیلی اینجا نمایش داده می‌شود.</p>
-                </div>`;
+                td.colSpan = 10;
+                td.innerHTML = `<div class="detail-content">${buildDetailHtml(reportDate)}</div>`;
 
                 detailRow = document.createElement('tr');
                 detailRow.className = 'detail-row';
@@ -415,6 +526,10 @@
             buttonElement.classList.toggle('expanded', !isExpanded);
         }
 
+        function badgeFmt(cell) {
+            return gridjs.html(`<span class="badge rounded-pill bg-dark-transparent fs-12">${fmt(cell)}</span>`);
+        }
+
         function initGrid() {
             if (typeof gridjs === 'undefined') return;
             const container = document.getElementById('grid-report');
@@ -426,19 +541,22 @@
                     {
                         id: 'expand',
                         name: '',
-                        width: '60px',
+                        width: '50px',
                         sort: false,
                         formatter: (cell, row) => {
-                            return gridjs.html(`<button class="expand-btn" onclick="toggleRow(this)">+</button>`);
+                            const reportDate = String(row.cells[2].data).replace(/'/g, "\\'");
+                            return gridjs.html(`<button class="expand-btn" onclick="toggleRow(this, '${reportDate}')">+</button>`);
                         }
                     },
-                    { id: 'rowNumber', name: 'ردیف', width: '80px', sort: false },
-                    { id: 'date', name: 'تاریخ گزارش', width: '150px' },
-                    { id: 'entranceType', name: 'نوع تردد', width: 'auto' },
-                    {
-                        id: 'count', name: 'تعداد تردد', width: '120px',
-                        formatter: (cell) => gridjs.html(`<span class="badge rounded-pill bg-dark-transparent fs-12">${cell}</span>`)
-                    }
+                    { id: 'rowNumber', name: 'ردیف', width: '60px', sort: false },
+                    { id: 'date', name: 'تاریخ گزارش', width: '110px' },
+                    { id: 'truckEntrance', name: 'ورود کامیون', formatter: badgeFmt },
+                    { id: 'truckEmptyExit', name: 'خروج خالی کامیون', formatter: badgeFmt },
+                    { id: 'truckLoadedExit', name: 'خروج پر کامیون', formatter: badgeFmt },
+                    { id: 'carEntrance', name: 'ورود سواری', formatter: badgeFmt },
+                    { id: 'carExit', name: 'خروج سواری', formatter: badgeFmt },
+                    { id: 'pedestrianEntrance', name: 'ورود نفرو', formatter: badgeFmt },
+                    { id: 'pedestrianExit', name: 'خروج نفرو', formatter: badgeFmt }
                 ],
                 data: gridData,
                 language: {
@@ -457,16 +575,27 @@
             gridInstance.render(container);
         }
 
-        function updateGrid(rows) {
+        function updateGrid(dailyList) {
             document.querySelectorAll('.detail-row').forEach(row => row.remove());
 
-            gridData = rows.map((item, i) => [
-                i + 1,
-                i + 1,
-                item.reportDate || '',
-                item.entranceType || '',
-                item.recordCount || 0
-            ]);
+            rawDaily = dailyList || [];
+            dailyByDate = new Map();
+
+            gridData = rawDaily.map((item, i) => {
+                dailyByDate.set(item.reportDate, item);
+                return [
+                    i + 1,
+                    i + 1,
+                    item.reportDate || '',
+                    catTotal(item.truckEntrance),
+                    catTotal(item.truckEmptyExit),
+                    catTotal(item.truckLoadedExit),
+                    catTotal(item.carEntrance),
+                    catTotal(item.carExit),
+                    catTotal(item.pedestrianEntrance),
+                    catTotal(item.pedestrianExit)
+                ];
+            });
 
             if (gridInstance) {
                 gridInstance.updateConfig({ data: gridData }).forceRender();
@@ -474,6 +603,20 @@
                 initGrid();
             }
             $("#customExportButtons").toggleClass("d-none", gridData.length === 0);
+        }
+
+        function updateSummaryCards(totalPeriod) {
+            totalPeriodData = totalPeriod || null;
+
+            if (!totalPeriodData) {
+                $("#summaryCards").addClass("d-none");
+                return;
+            }
+
+            categoryDefs.forEach(def => {
+                $("#sum_" + def.key).text(fmt(catTotal(totalPeriodData[def.key])));
+            });
+            $("#summaryCards").removeClass("d-none");
         }
 
         $(document).ready(function () {
@@ -519,19 +662,24 @@
                     EndTime: $("input[name='EndTime']").val()
                 },
                 success: function (res) {
-                    let rows = res.data || res || [];
-                    if (!rows.length) {
+                    const result = (res && res.data) || {};
+                    const daily = result.daily || [];
+
+                    updateSummaryCards(result.totalPeriod);
+
+                    if (!daily.length) {
                         updateGrid([]);
                         $("#errorBox").removeClass("d-none").removeClass("alert-danger").addClass("alert-warning").text("داده‌ای یافت نشد");
                         return;
                     }
-                    updateGrid(rows);
+                    updateGrid(daily);
                 },
                 error: function (xhr) {
                     let message = "خطا در ارتباط با سرور";
                     if (xhr.responseJSON && xhr.responseJSON.message) message = xhr.responseJSON.message;
                     $("#errorBox").removeClass("d-none").text(message);
                     updateGrid([]);
+                    updateSummaryCards(null);
                 },
                 complete: function () {
                     showGridLoading(false);

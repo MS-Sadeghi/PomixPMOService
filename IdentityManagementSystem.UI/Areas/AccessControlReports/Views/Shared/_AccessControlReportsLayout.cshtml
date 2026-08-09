@@ -124,33 +124,37 @@
         .report-tabs-strip {
             display: flex;
             align-items: center;
-            gap: .4rem;
-            padding: .5rem .75rem;
+            gap: .3rem;
+            padding: .4rem;
+            margin: .85rem .75rem 1rem;
             overflow-x: auto;
-            border-bottom: 1px solid var(--default-border, #eeedf3);
-            background: var(--custom-white, #f2f4f9);
+            background: var(--custom-white, #fff);
+            border: 1px solid var(--default-border, #eeedf3);
+            border-radius: .75rem;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 6px 16px rgba(15, 23, 42, .05);
         }
 
         .report-tab-item {
             display: inline-flex;
             align-items: center;
-            gap: .4rem;
+            gap: .45rem;
             white-space: nowrap;
             flex: 0 0 auto;
             border: 1px solid transparent;
-            border-radius: .35rem;
-            padding: .45rem .7rem;
-            font-size: .8rem;
+            border-radius: .55rem;
+            padding: .5rem .9rem;
+            font-size: .8125rem;
             font-weight: 500;
-            color: var(--default-text-color, #4b5563);
+            color: var(--text-muted, #8c9097);
+            background: transparent;
             text-decoration: none;
             cursor: pointer;
-            transition: background-color .15s ease;
+            transition: background-color .15s ease, color .15s ease;
         }
 
             .report-tab-item:hover {
-                background: var(--primary01);
-                color: var(--primary-color);
+                background: rgba(var(--light-rgb), .9);
+                color: var(--default-text-color, #4b5563);
                 text-decoration: none;
             }
 
@@ -161,24 +165,25 @@
             }
 
             .report-tab-item i.report-tab-icon {
-                font-size: .9rem;
+                font-size: .95rem;
             }
 
             .report-tab-item .report-tab-close {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                width: 16px;
-                height: 16px;
+                width: 18px;
+                height: 18px;
                 border-radius: 50%;
                 font-size: 11px;
                 color: inherit;
-                opacity: .6;
+                opacity: .55;
+                transition: opacity .15s ease, background-color .15s ease;
             }
 
                 .report-tab-item .report-tab-close:hover {
                     opacity: 1;
-                    background: rgba(0, 0, 0, .08);
+                    background: rgba(var(--primary-rgb), .16);
                 }
 
         .report-tab-pane,
@@ -197,6 +202,12 @@
                 height: calc(100vh - 11.5rem);
                 border: 0;
             }
+
+        .header-logo img {
+            max-width: 160px;
+            margin-bottom: 24px;
+            filter: brightness(0) invert(1);
+        }
     </style>
     @RenderSection("Styles", required: false)
 </head>
@@ -354,6 +365,12 @@
                     <!-- End::slide__category -->
                     <!-- Start::slide - Report items -->
                     <li class="slide">
+                        <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-road-map-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="AllTrafficReport">
+                            <i class="ri-road-map-line side-menu__icon" aria-hidden="true"></i>
+                            <span class="side-menu__label">همه ترددها</span>
+                        </a>
+                    </li>
+                    <li class="slide">
                         <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-layout-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="GetDataReport">
                             <i class="ri-layout-line side-menu__icon" aria-hidden="true"></i>
                             <span class="side-menu__label">گزارش تردد مسیر</span>
@@ -381,12 +398,6 @@
                         <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-user-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="TrafficByNationalIDReport">
                             <i class="ri-user-line side-menu__icon" aria-hidden="true"></i>
                             <span class="side-menu__label">گزارش بر اساس کد ملی</span>
-                        </a>
-                    </li>
-                    <li class="slide">
-                        <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-road-map-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="AllTrafficReport">
-                            <i class="ri-road-map-line side-menu__icon" aria-hidden="true"></i>
-                            <span class="side-menu__label">همه ترددها</span>
                         </a>
                     </li>
                     <!-- Start::slide - User Management with Submenu -->
@@ -448,11 +459,11 @@
     <footer class="footer mt-auto py-3 bg-white text-center">
         <div class="container">
             <span class="text-muted">
+                <span id="year">۱۴۰۵</span>
                 <a class="text-dark fw-medium" href="javascript:void(0);">اداره کل بنادر و دریانوردی هرمزگان</a>
                 — طراحی و توسعه توسط
                 <a href="javascript:void(0);"><span class="fw-medium text-primary">تیم فناوری اطلاعات</span></a>
                 تمام حقوق محفوظ است
-                © <span id="year">۱۴۰۵</span>
             </span>
         </div>
     </footer>
@@ -481,7 +492,7 @@
                             <i class="ti ti-phone"></i>
                             <div>
                                 <div class="label">اداره فاوا واحد نرم‌افزار(ساعت اداری)</div>
-                                <div class="number">داخلی 4647</div>
+                                <div class="number">داخلی 4547</div>
                             </div>
                         </div>
                         <div class="support-number-item">
@@ -532,9 +543,6 @@
     <script src="~/assets/js/toasts.js">
     </script>
     <script>
-         // بروزرسانی سال شمسی
-        document.getElementById("year").textContent = new Date().toLocaleDateString("fa-IR", { year: "numeric" });
-
         function openFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen();
@@ -625,7 +633,6 @@
                         doc.documentElement.setAttribute('data-header-styles', headerStyle);
                         doc.documentElement.setAttribute('data-menu-styles', menuStyle);
                     } catch (e) {
-                        // iframe هنوز لود نشده یا در دسترس نیست؛ نادیده گرفته می‌شود
                     }
                 });
             }
@@ -671,10 +678,17 @@
                     closeTab($(this).data('id'));
                 });
 
-                // custom.js از قبل روی همین دکمه کلیک را می‌گیرد و تم را روی <html>
-                // صفحه‌ی اصلی عوض می‌کند؛ این هندلر بعد از آن اجرا می‌شود تا همان
-                // مقدار تازه را روی تمام تب‌های iframe بازِ گزارش‌ها هم اعمال کند.
                 $('.layout-setting').on('click', syncIframeThemes);
+
+                var currentPath = window.location.pathname;
+                $('.slide-menu .side-menu__item').each(function () {
+                    if ($(this).attr('href') !== currentPath) return;
+
+                    $(this).addClass('active');
+                    var $subMenu = $(this).closest('ul.slide-menu');
+                    $subMenu.css('display', 'block');
+                    $subMenu.closest('li.has-sub').addClass('active open');
+                });
             });
         })();
     </script>

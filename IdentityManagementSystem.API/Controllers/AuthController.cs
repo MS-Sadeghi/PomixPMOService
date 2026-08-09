@@ -716,33 +716,33 @@ namespace IdentityManagementSystem.API.Controllers
 
     public class ForgotPasswordStartViewModel
     {
-        [Required]
-        [StringLength(10, MinimumLength = 10)]
+        [Required(ErrorMessage = "کد ملی الزامی است.")]
+        [RegularExpression("^\\d{10}$", ErrorMessage = "کد ملی باید ۱۰ رقم باشد.")]
         public string NationalId { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(11, MinimumLength = 11)]
+        [Required(ErrorMessage = "شماره همراه الزامی است.")]
+        [RegularExpression("^09\\d{9}$", ErrorMessage = "شماره همراه باید با 09 شروع شود و ۱۱ رقم باشد.")]
         public string MobileNumber { get; set; } = string.Empty;
     }
 
     public class ForgotPasswordVerifyViewModel : ForgotPasswordStartViewModel
     {
-        [Required]
-        [StringLength(5, MinimumLength = 5)]
+        [Required(ErrorMessage = "کد تأیید الزامی است.")]
+        [RegularExpression("^\\d{5}$", ErrorMessage = "کد تأیید باید ۵ رقم باشد.")]
         public string Code { get; set; } = string.Empty;
     }
 
     public class ForgotPasswordResetViewModel
     {
-        [Required]
+        [Required(ErrorMessage = "نشست بازنشانی نامعتبر است.")]
         public string ResetToken { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(255, MinimumLength = 8)]
+        [Required(ErrorMessage = "رمز عبور جدید الزامی است.")]
+        [RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\da-zA-Z]).{8,}$", ErrorMessage = "رمز عبور باید حداقل ۸ کاراکتر و شامل حرف بزرگ، حرف کوچک، عدد و نویسه خاص باشد.")]
         public string NewPassword { get; set; } = string.Empty;
 
-        [Required]
-        [Compare(nameof(NewPassword))]
+        [Required(ErrorMessage = "تأیید رمز عبور الزامی است.")]
+        [Compare(nameof(NewPassword), ErrorMessage = "رمز عبور و تأیید آن یکسان نیستند.")]
         public string ConfirmNewPassword { get; set; } = string.Empty;
     }
 

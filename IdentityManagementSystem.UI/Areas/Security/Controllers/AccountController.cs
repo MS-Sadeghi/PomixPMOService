@@ -496,6 +496,9 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> StartForgotPassword(ForgotPasswordStartViewModel model)
         {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = GetFirstModelError() ?? "اطلاعات وارد شده معتبر نیست." });
+
             if (!IsValidNationalId(model.NationalId) || !IsValidMobileNumber(model.MobileNumber))
                 return Json(new { success = false, message = "کد ملی یا شماره همراه معتبر نیست." });
 
@@ -530,6 +533,9 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> VerifyForgotPasswordCode(ForgotPasswordVerifyViewModel model)
         {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = GetFirstModelError() ?? "کد تأیید معتبر نیست." });
+
             if (!IsValidNationalId(model.NationalId) || !IsValidMobileNumber(model.MobileNumber) || !Regex.IsMatch(model.Code ?? "", "^\\d{5}$"))
                 return Json(new { success = false, message = "کد تأیید معتبر نیست." });
 
@@ -559,6 +565,9 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetForgotPassword(ForgotPasswordResetViewModel model)
         {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = GetFirstModelError() ?? "اطلاعات بازنشانی رمز عبور معتبر نیست." });
+
             if (string.IsNullOrWhiteSpace(model.ResetToken) ||
                 string.IsNullOrWhiteSpace(model.NewPassword) ||
                 model.NewPassword != model.ConfirmNewPassword ||
@@ -601,6 +610,14 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                     Message = await response.Content.ReadAsStringAsync()
                 };
             }
+        }
+
+        private string? GetFirstModelError()
+        {
+            return ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault(message => !string.IsNullOrWhiteSpace(message));
         }
 
         #endregion

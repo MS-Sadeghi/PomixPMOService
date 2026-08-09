@@ -59,14 +59,35 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.GetData
                 }
             };
 
-            return await _pomixClient.ExecuteAsync
-                <List<GetDataResponse>>
-                (
-                    "bsr-GetData",
-                    parameters
-                );
+            var raw = await _pomixClient.ExecuteAsync<GetDataRawResponse>(
+                "bsr-GetData",
+                parameters
+            );
+
+            return Flatten(raw);
         }
 
+        internal static List<GetDataResponse> Flatten(GetDataRawResponse raw)
+        {
+            var result = new List<GetDataResponse>();
+
+            foreach (var plate in raw?.PlateData ?? new())
+            {
+                foreach (var pair in plate.DailyCounts ?? new())
+                {
+                    result.Add(new GetDataResponse
+                    {
+                        ReportDate = pair.Key,
+                        EntranceType = plate.EntranceType,
+                        Transit = pair.Value?.Transit ?? 0,
+                        IranianTruck = pair.Value?.IranianTruck ?? 0,
+                        IranianPassenger = pair.Value?.IranianPassenger ?? 0
+                    });
+                }
+            }
+
+            return result;
+        }
 
         private static string ToEnglishDigits(string input)
         {

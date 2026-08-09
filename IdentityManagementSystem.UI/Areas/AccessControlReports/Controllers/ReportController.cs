@@ -191,41 +191,6 @@ namespace IdentityManagementSystem.UI.Controllers
 
 		#endregion
 
-		#region AllTraffic
-
-		[HttpGet]
-		public IActionResult AllTrafficReport()
-		{
-			return View(new AllTrafficPageViewModel());
-		}
-
-		[HttpPost]
-		public async Task<IActionResult> AllTrafficReportAjax(AllTrafficFilterViewModel filter)
-		{
-			try
-			{
-				var result = await _service.AllTrafficAsync(filter);
-
-				return Json(new
-				{
-					success = true,
-					data = result
-				});
-			}
-			catch (Exception ex)
-			{
-				_logger.LogError(ex, "AllTraffic report request failed.");
-
-				return BadRequest(new
-				{
-					success = false,
-					message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
-				});
-			}
-		}
-
-		#endregion
-
 		#region Dashboard
 		[HttpGet]
 		public IActionResult Dashboard()

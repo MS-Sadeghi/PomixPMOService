@@ -135,36 +135,6 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
 				   ?? new List<TrafficByNationalIdReportViewModel>();
 		}
 
-		public async Task<AllTrafficResponseViewModel> AllTrafficAsync(AllTrafficFilterViewModel filter)
-		{
-			var client = _factory.CreateClient("PomixApi");
-
-			var request = new
-			{
-				StartDate = filter.StartDate,
-				EndDate = filter.EndDate,
-				StartTime = filter.StartTime,
-				EndTime = filter.EndTime,
-				EntranceTypes = filter.EntranceTypes,
-				TrafficTypes = filter.TrafficTypes,
-				P1 = filter.P1,
-				P2 = filter.P2,
-				P3 = filter.P3,
-				P4 = filter.P4,
-				NationalId = filter.NationalId
-			};
-
-			var response = await client.PostAsJsonAsync(
-				"access-control-reports/all-traffic",
-				request);
-
-			if (!response.IsSuccessStatusCode)
-				await ThrowForFailedResponseAsync(response, "همه ترددها");
-
-			return await response.Content.ReadFromJsonAsync<AllTrafficResponseViewModel>()
-				   ?? new AllTrafficResponseViewModel();
-		}
-
 		public async Task<DashboardResponseViewModel> GetDashboardAsync(string period, bool forceRefresh = false)
 		{
 			var client = _factory.CreateClient("PomixApi");

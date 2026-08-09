@@ -112,7 +112,6 @@
         .page-header-breadcrumb .dropdown,
         #refreshDashboardBtn,
         #printDashboardBtn,
-        .recent-transactions,
         #btnExportWeekly {
             display: none !important;
         }
@@ -379,8 +378,8 @@
     </div>
 </div>
 <!-- End::quick access -->
-<!-- Start::traffic types + recent reports -->
-<div class="col-xl-5">
+<!-- Start::traffic types -->
+<div class="col-xl-12">
     <div class="card custom-card">
         <div class="card-header justify-content-between">
             <div class="card-title">
@@ -398,66 +397,7 @@
         </div>
     </div>
 </div>
-
-<div class="col-xl-7">
-    <div class="card custom-card recent-transactions">
-        <div class="card-header justify-content-between">
-            <div class="card-title">آخرین گزارش‌های مشاهده شده</div>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table text-nowrap">
-                    <thead>
-                        <tr>
-                            <th>عنوان گزارش</th>
-                            <th>تاریخ</th>
-                            <th>کاربر</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="avatar avatar-md avatar-rounded bg-primary-transparent">
-                                        <i class="ri-bank-card-line fs-16"></i>
-                                    </span>
-                                    <span class="fw-semibold">گزارش پلاک</span>
-                                </div>
-                            </td>
-                            <td>1405/05/12</td>
-                            <td>مدیر سیستم</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="avatar avatar-md avatar-rounded bg-secondary-transparent">
-                                        <i class="ri-user-line fs-16"></i>
-                                    </span>
-                                    <span class="fw-semibold">گزارش کد ملی</span>
-                                </div>
-                            </td>
-                            <td>1405/05/12</td>
-                            <td>کارشناس</td>
-                        </tr>
-                        <tr>
-                            <td class="border-bottom-0">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="avatar avatar-md avatar-rounded bg-warning-transparent">
-                                        <i class="ri-list-check-2 fs-16"></i>
-                                    </span>
-                                    <span class="fw-semibold">گزارش خلاصه تردد</span>
-                                </div>
-                            </td>
-                            <td class="border-bottom-0">1405/05/11</td>
-                            <td class="border-bottom-0">مدیر</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- End::traffic types + recent reports -->
+<!-- End::traffic types -->
 @section Scripts {
     <!-- Apex Charts JS -->
     <script src="~/assets/libs/apexcharts/apexcharts.min.js">

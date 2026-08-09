@@ -53,9 +53,33 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.TrafficByTyp
                 }
             };
 
-            return await _pomixClient.ExecuteAsync<List<TrafficByTypeResponse>>(
+            var raw = await _pomixClient.ExecuteAsync<TrafficByTypeRawResponse>(
                 "bsr-TrafficByType",
                 parameters);
+
+            return Flatten(raw);
+        }
+
+        internal static List<TrafficByTypeResponse> Flatten(TrafficByTypeRawResponse raw)
+        {
+            var result = new List<TrafficByTypeResponse>();
+
+            foreach (var plate in raw?.PlateData ?? new())
+            {
+                foreach (var pair in plate.DailyCounts ?? new())
+                {
+                    result.Add(new TrafficByTypeResponse
+                    {
+                        ReportDate = pair.Key,
+                        EntranceType = plate.EntranceType,
+                        Transit = pair.Value?.Transit ?? 0,
+                        IranianTruck = pair.Value?.IranianTruck ?? 0,
+                        IranianPassenger = pair.Value?.IranianPassenger ?? 0
+                    });
+                }
+            }
+
+            return result;
         }
 
         private static string ToEnglishDigits(string input)

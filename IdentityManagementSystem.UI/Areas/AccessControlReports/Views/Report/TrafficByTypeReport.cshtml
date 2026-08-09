@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "گزارش تفکیک نوع تردد";
 }
+<link rel="stylesheet" href="~/css/IndexStyle.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/assets/libs/gridjs/theme/mermaid.min.css" />
 <style>
     #trafficTypeMenu {
@@ -38,22 +39,6 @@
             vertical-align: middle !important;
         }
 
-            .gridjs-table th:first-child, .gridjs-table td:first-child {
-                width: 80px;
-            }
-
-            .gridjs-table th:nth-child(2), .gridjs-table td:nth-child(2) {
-                width: 150px;
-            }
-
-            .gridjs-table th:nth-child(3), .gridjs-table td:nth-child(3) {
-                width: auto;
-            }
-
-            .gridjs-table th:last-child, .gridjs-table td:last-child {
-                width: 120px;
-            }
-
     .gridjs-pagination {
         justify-content: flex-start !important;
     }
@@ -61,50 +46,6 @@
         .gridjs-pagination .gridjs-summary {
             margin-right: 0;
             margin-left: auto;
-        }
-
-    .expand-btn {
-        background: none;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-        width: 24px;
-        height: 24px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-        color: #495057;
-        padding: 0;
-        margin: 0 auto;
-    }
-
-        .expand-btn:hover {
-            background: #e9ecef;
-            border-color: #adb5bd;
-        }
-
-        .expand-btn.expanded {
-            background: #0d6efd;
-            border-color: #0d6efd;
-            color: white;
-        }
-
-    .detail-row td {
-        padding: 0 !important;
-        background-color: #f8f9fa;
-    }
-
-    .detail-content {
-        padding: 15px 20px;
-        text-align: right;
-        border-top: 1px solid #dee2e6;
-        background-color: #f8f9fa;
-    }
-
-        .detail-content p {
-            margin: 0 0 5px 0;
         }
 
     #customExportButtons {
@@ -162,81 +103,81 @@
             color: #1f2937;
         }
 
-            #printArea .print-header {
-                display: flex !important;
-                align-items: baseline;
-                justify-content: space-between;
-                border-bottom: 2px solid #333;
-                padding-bottom: 10px;
-                margin-bottom: 14px;
-            }
+        #printArea .print-header {
+            display: flex !important;
+            align-items: baseline;
+            justify-content: space-between;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
 
-                #printArea .print-header h4 {
-                    margin: 0;
-                    font-size: 18px;
-                    font-weight: 700;
-                }
+        #printArea .print-header h4 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
 
-                #printArea .print-header .print-date {
-                    font-size: 12px;
-                    color: #555;
-                }
+        #printArea .print-header .print-date {
+            font-size: 12px;
+            color: #555;
+        }
 
-            #printArea .print-meta {
-                font-size: 12.5px;
-                color: #333;
-                margin-bottom: 16px;
-                background: #f8f9fa;
-                border: 1px solid #ddd;
-                border-radius: 6px;
-                padding: 10px 14px;
-            }
+        #printArea .print-meta {
+            font-size: 12.5px;
+            color: #333;
+            margin-bottom: 16px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px 14px;
+        }
 
-                #printArea .print-meta div {
-                    display: flex !important;
-                    gap: 6px;
-                    margin-bottom: 5px;
-                }
+        #printArea .print-meta div {
+            display: flex !important;
+            gap: 6px;
+            margin-bottom: 5px;
+        }
 
-                    #printArea .print-meta div:last-child {
-                        margin-bottom: 0;
-                    }
+        #printArea .print-meta div:last-child {
+            margin-bottom: 0;
+        }
 
-                #printArea .print-meta .meta-label {
-                    font-weight: 700;
-                    color: #111;
-                    white-space: nowrap;
-                }
+        #printArea .print-meta .meta-label {
+            font-weight: 700;
+            color: #111;
+            white-space: nowrap;
+        }
 
-            #printArea table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 12px;
-            }
+        #printArea table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
 
-            #printArea th, #printArea td {
-                border: 1px solid #ccc;
-                padding: 6px 8px;
-                text-align: center;
-                word-break: break-word;
-                overflow-wrap: break-word;
-            }
+        #printArea th, #printArea td {
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+            text-align: center;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
 
-            #printArea th {
-                background: #f1f3f5;
-                font-weight: 700;
-            }
+        #printArea th {
+            background: #f1f3f5;
+            font-weight: 700;
+        }
 
-            #printArea tbody tr:nth-child(even) {
-                background: #fafafa;
-            }
+        #printArea tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
 
-            #printArea .print-footer {
-                margin-top: 14px;
-                font-size: 11px;
-                color: #777;
-                text-align: center;
-            }
+        #printArea .print-footer {
+            margin-top: 14px;
+            font-size: 11px;
+            color: #777;
+            text-align: center;
+        }
     }
 </style>
 @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage as string))
@@ -324,7 +265,9 @@
             <div class="spinner-border text-primary" role="status"><span class="visually-hidden">در حال بارگذاری...</span></div>
             <div class="loading-text">در حال دریافت اطلاعات ...</div>
         </div>
-        <div id="grid-report"></div>
+        <div class="table-responsive">
+            <div id="grid-report"></div>
+        </div>
         <div id="printArea"></div>
     </div>
 </div>
@@ -334,7 +277,11 @@
     <script>
         let gridInstance = null;
         let gridData = [];
-        const reportHeaders = ['ردیف', 'تاریخ گزارش', 'مسیر تردد', 'تعداد تردد'];
+        const reportHeaders = ['ردیف', 'تاریخ گزارش', 'مسیر تردد', 'ترانزیت', 'کامیون ایرانی', 'سرنشین ایرانی', 'جمع'];
+
+        function fmt(n) {
+            return (n || 0).toLocaleString('fa-IR');
+        }
 
         function padDate(d) {
             if (!d) return d;
@@ -400,7 +347,7 @@
         }
 
         function getReportRows() {
-            return gridData.map(r => [r[1], r[2], r[3], r[4]]);
+            return gridData.map(r => [r[0], r[1], r[2], fmt(r[3]), fmt(r[4]), fmt(r[5]), fmt(r[6])]);
         }
 
         function renderPrintArea(meta, headers, rows) {
@@ -456,32 +403,12 @@
             document.getElementById('grid-loading').classList.toggle('show', show);
         }
 
-        function toggleRow(buttonElement) {
-            const mainRow = buttonElement.closest('tr');
-            if (!mainRow) return;
+        function badgeFmt(cell) {
+            return gridjs.html(`<span class="badge rounded-pill bg-dark-transparent fs-12">${fmt(cell)}</span>`);
+        }
 
-            let detailRow = mainRow.nextElementSibling;
-
-            if (!detailRow || !detailRow.classList.contains('detail-row')) {
-                const td = document.createElement('td');
-                td.colSpan = 5;
-                td.innerHTML = `<div class="detail-content">
-                    <p><strong>جزئیات</strong></p>
-                    <p>اطلاعات تکمیلی اینجا نمایش داده می‌شود.</p>
-                </div>`;
-
-                detailRow = document.createElement('tr');
-                detailRow.className = 'detail-row';
-                detailRow.style.display = 'none';
-                detailRow.appendChild(td);
-
-                mainRow.parentElement.insertBefore(detailRow, mainRow.nextSibling);
-            }
-
-            const isExpanded = detailRow.style.display !== 'none';
-            detailRow.style.display = isExpanded ? 'none' : 'table-row';
-            buttonElement.textContent = isExpanded ? '+' : '−';
-            buttonElement.classList.toggle('expanded', !isExpanded);
+        function numFmt(cell) {
+            return fmt(cell);
         }
 
         function initGrid() {
@@ -492,22 +419,13 @@
 
             gridInstance = new gridjs.Grid({
                 columns: [
-                    {
-                        id: 'expand',
-                        name: '',
-                        width: '60px',
-                        sort: false,
-                        formatter: (cell, row) => {
-                            return gridjs.html(`<button class="expand-btn" onclick="toggleRow(this)">+</button>`);
-                        }
-                    },
-                    { id: 'rowNumber', name: 'ردیف', width: '80px', sort: false },
-                    { id: 'date', name: 'تاریخ گزارش', width: '150px' },
+                    { id: 'rowNumber', name: 'ردیف', width: '60px', sort: false },
+                    { id: 'date', name: 'تاریخ گزارش', width: '110px' },
                     { id: 'entranceType', name: 'مسیر تردد', width: 'auto' },
-                    {
-                        id: 'count', name: 'تعداد تردد', width: '120px',
-                        formatter: (cell) => gridjs.html(`<span class="badge rounded-pill bg-dark-transparent fs-12">${cell}</span>`)
-                    }
+                    { id: 'transit', name: 'ترانزیت', width: '100px', formatter: numFmt },
+                    { id: 'iranianTruck', name: 'کامیون ایرانی', width: '110px', formatter: numFmt },
+                    { id: 'iranianPassenger', name: 'سرنشین ایرانی', width: '110px', formatter: numFmt },
+                    { id: 'total', name: 'جمع', width: '100px', formatter: badgeFmt }
                 ],
                 data: gridData,
                 language: {
@@ -520,20 +438,19 @@
                 pagination: { enabled: true, limit: 25, summary: true },
                 search: true,
                 sort: true,
-                resizable: true,
                 className: { table: 'table table-bordered table-hover', th: 'table-light' }
             });
             gridInstance.render(container);
         }
 
         function updateGrid(rows) {
-            document.querySelectorAll('.detail-row').forEach(row => row.remove());
-
             gridData = rows.map((item, i) => [
-                i + 1,
                 i + 1,
                 item.reportDate || '',
                 item.entranceType || '',
+                item.transit || 0,
+                item.iranianTruck || 0,
+                item.iranianPassenger || 0,
                 item.recordCount || 0
             ]);
 

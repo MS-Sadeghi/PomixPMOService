@@ -1,46 +1,24 @@
-﻿using System.Globalization;
-using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
-using IdentityManagementSystem.API.Modules.AccessControlReports.GetData;
-using IdentityManagementSystem.API.Modules.AccessControlReports.TrafficByType;
+using System.Globalization;
+using IdentityManagementSystem.API.Modules.AccessControlReports.GetSum;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 {
 	public class DashboardHandler
 	{
-		private readonly IPomixClient _pomixClient;
-		private readonly IConfiguration _configuration;
 		private readonly IMemoryCache _cache;
-		private readonly TrafficByTypeHandler _trafficByTypeHandler;
+		private readonly GetSumHandler _getSumHandler;
 
 		// سرویس Pomix سقف درخواست ساعتی دارد؛ کش کردن پاسخ داشبورد باعث می‌شود
 		// رفرش‌های پشت‌سرهم/بازدید چند کاربر از یک فیلتر، درخواست تازه‌ای به Pomix نزنند.
 		private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
-		private static readonly List<string> AllEntranceTypes = new()
-		{
-			"1", "2", "11", "120", "13", "140",
-			"4", "5", "3", "7",
-			"19", "22", "23", "12", "14",
-			"نفر رو ورودی", "نفر رو خروجی",
-			"سواری رو ورود", "سواری رو خروج"
-		};
-
-		private static readonly HashSet<string> PersonEntranceTypes = new()
-		{
-			"نفر رو ورودی", "نفر رو خروجی"
-		};
-
 		public DashboardHandler(
-			IPomixClient pomixClient,
-			IConfiguration configuration,
 			IMemoryCache cache,
-			TrafficByTypeHandler trafficByTypeHandler)
+			GetSumHandler getSumHandler)
 		{
-			_pomixClient = pomixClient;
-			_configuration = configuration;
 			_cache = cache;
-			_trafficByTypeHandler = trafficByTypeHandler;
+			_getSumHandler = getSumHandler;
 		}
 
 		public async Task<DashboardResponse> HandleAsync(DashboardRequest request)
@@ -67,37 +45,59 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 
 			var (rangeStart, rangeEnd) = GetRange(period, today);
 
-			var periodData = await GetTrafficAsync(rangeStart, rangeEnd, AllEntranceTypes);
-
-			// روند تردد - بازه و طول نمودار بر اساس فیلتر انتخابی تغییر می‌کند.
-			// برای بازه‌ی ۳۰ روزه به‌جای یک درخواست به ازای هر روز (۳۰ درخواست)،
-			// بازه به تکه‌های هفتگی تقسیم می‌شود (حداکثر ۵ درخواست) تا فشار کمتری
-			// به سقف درخواست ساعتی Pomix وارد شود.
+			// روند تردد - بازه‌ی نمودار مستقل از بازه‌ی کارت‌های بالای صفحه است
+			// (مثلاً برای period=today همچنان روند ۷ روز اخیر نمایش داده می‌شود).
 			var trendAnchor = period == "yesterday" ? today.AddDays(-1) : today;
 			var trendDays = period == "last30" ? 30 : 7;
+			var trendStart = trendAnchor.AddDays(-(trendDays - 1));
+
+			// یک درخواست bsr-GetSum که بازه‌ی کارت‌ها و بازه‌ی نمودار روند را
+			// همزمان پوشش می‌دهد، به‌جای چند درخواست جداگانه (یکی به ازای هر
+			// روز/هفته) که پیش‌تر برای GetData/TrafficByType انجام می‌شد.
+			var queryStart = rangeStart < trendStart ? rangeStart : trendStart;
+			var queryEnd = rangeEnd > trendAnchor ? rangeEnd : trendAnchor;
+
+			var sum = await _getSumHandler.HandleAsync(new GetSumRequest
+			{
+				StartDate = ToPersianDate(queryStart),
+				EndDate = ToPersianDate(queryEnd),
+				StartTime = "00:00",
+				EndTime = "23:59"
+			});
+
+			var byDate = new Dictionary<string, GetSumDailyStat>();
+			foreach (var day in sum.Daily ?? new List<GetSumDailyStat>())
+			{
+				if (day?.ReportDate != null && !byDate.ContainsKey(day.ReportDate))
+					byDate[day.ReportDate] = day;
+			}
+
+			var periodDates = new HashSet<string>();
+			for (var d = rangeStart; d <= rangeEnd; d = d.AddDays(1))
+				periodDates.Add(ToPersianDate(d));
+
+			var periodDaily = byDate.Values.Where(d => periodDates.Contains(d.ReportDate)).ToList();
+
+			var truckCount = periodDaily.Sum(d =>
+				CategoryTotal(d.TruckEntrance) + CategoryTotal(d.TruckEmptyExit) + CategoryTotal(d.TruckLoadedExit));
+
+			var carCount = periodDaily.Sum(d =>
+				CategoryTotal(d.CarEntrance) + CategoryTotal(d.CarExit));
+
+			var peopleCount = periodDaily.Sum(d =>
+				CategoryTotal(d.PedestrianEntrance) + CategoryTotal(d.PedestrianExit));
+
+			var vehicleCount = truckCount + carCount;
+			var totalTraffic = vehicleCount + peopleCount;
 
 			var weeklyTraffic = trendDays <= 7
-				? await BuildDailyTrendAsync(trendAnchor, trendDays)
-				: await BuildWeeklyTrendAsync(trendAnchor, trendDays);
-
-			var vehicleCount = periodData
-				.Where(x => !PersonEntranceTypes.Contains(x.EntranceType))
-				.Sum(x => x.RecordCount);
-
-			var peopleCount = periodData
-				.Where(x => PersonEntranceTypes.Contains(x.EntranceType))
-				.Sum(x => x.RecordCount);
-
-			// تفکیک سواری/کامیون فقط از سرویس نوع تردد (bsr-TrafficByType) قابل
-			// دریافت است؛ گزارش لاین/گیت (bsr-GetData) بالا این تفکیک را ندارد.
-			// کدهای سرویس پومیکس: 1=کامیون، 2=سواری، 3=نفر
-			var truckCount = await GetTrafficTypeCountAsync(rangeStart, rangeEnd, 1);
-			var carCount = await GetTrafficTypeCountAsync(rangeStart, rangeEnd, 2);
+				? BuildDailyTrend(byDate, trendAnchor, trendDays)
+				: BuildWeeklyTrend(byDate, trendAnchor, trendDays);
 
 			return new DashboardResponse
 			{
 				Period = period,
-				TotalTrafficToday = periodData.Sum(x => x.RecordCount),
+				TotalTrafficToday = totalTraffic,
 				VehicleTrafficToday = vehicleCount,
 				PeopleTrafficToday = peopleCount,
 
@@ -119,26 +119,28 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 			};
 		}
 
-		private async Task<List<ChartItemResponse>> BuildDailyTrendAsync(DateTime trendAnchor, int trendDays)
+		private static List<ChartItemResponse> BuildDailyTrend(
+			Dictionary<string, GetSumDailyStat> byDate, DateTime trendAnchor, int trendDays)
 		{
 			var items = new List<ChartItemResponse>();
 
 			for (var i = trendDays - 1; i >= 0; i--)
 			{
 				var date = trendAnchor.AddDays(-i);
-				var dayData = await GetTrafficAsync(date, date, AllEntranceTypes);
+				byDate.TryGetValue(ToPersianDate(date), out var day);
 
 				items.Add(new ChartItemResponse
 				{
 					Label = date.ToString("dddd", new CultureInfo("fa-IR")),
-					Value = dayData.Sum(x => x.RecordCount)
+					Value = DayTotal(day)
 				});
 			}
 
 			return items;
 		}
 
-		private async Task<List<ChartItemResponse>> BuildWeeklyTrendAsync(DateTime trendAnchor, int trendDays)
+		private static List<ChartItemResponse> BuildWeeklyTrend(
+			Dictionary<string, GetSumDailyStat> byDate, DateTime trendAnchor, int trendDays)
 		{
 			var items = new List<ChartItemResponse>();
 			var bucketStart = trendAnchor.AddDays(-(trendDays - 1));
@@ -149,14 +151,19 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 				if (bucketEnd > trendAnchor)
 					bucketEnd = trendAnchor;
 
-				var bucketData = await GetTrafficAsync(bucketStart, bucketEnd, AllEntranceTypes);
+				var bucketTotal = 0;
+				for (var d = bucketStart; d <= bucketEnd; d = d.AddDays(1))
+				{
+					byDate.TryGetValue(ToPersianDate(d), out var day);
+					bucketTotal += DayTotal(day);
+				}
 
 				items.Add(new ChartItemResponse
 				{
 					Label = bucketStart == bucketEnd
 						? ToPersianShortLabel(bucketStart)
 						: ToPersianShortLabel(bucketStart) + " تا " + ToPersianShortLabel(bucketEnd),
-					Value = bucketData.Sum(x => x.RecordCount)
+					Value = bucketTotal
 				});
 
 				bucketStart = bucketEnd.AddDays(1);
@@ -164,6 +171,18 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 
 			return items;
 		}
+
+		private static int DayTotal(GetSumDailyStat day)
+		{
+			if (day == null)
+				return 0;
+
+			return CategoryTotal(day.TruckEntrance) + CategoryTotal(day.TruckEmptyExit) + CategoryTotal(day.TruckLoadedExit)
+				 + CategoryTotal(day.CarEntrance) + CategoryTotal(day.CarExit)
+				 + CategoryTotal(day.PedestrianEntrance) + CategoryTotal(day.PedestrianExit);
+		}
+
+		private static int CategoryTotal(GetSumCategoryStat stat) => stat?.Total ?? 0;
 
 		private static string NormalizePeriod(string? period)
 		{
@@ -185,49 +204,6 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 				"last30" => (today.AddDays(-29), today),
 				_ => (today, today)
 			};
-		}
-
-		private async Task<int> GetTrafficTypeCountAsync(DateTime startDate, DateTime endDate, int trafficType)
-		{
-			var rows = await _trafficByTypeHandler.HandleAsync(new TrafficByTypeRequest
-			{
-				StartDate = ToPersianDate(startDate),
-				EndDate = ToPersianDate(endDate),
-				StartTime = "00:00",
-				EndTime = "23:59",
-				TrafficTypes = new List<int> { trafficType }
-			});
-
-			return rows.Sum(x => x.RecordCount);
-		}
-
-		private async Task<List<GetDataResponse>> GetTrafficAsync(
-			DateTime startDate,
-			DateTime endDate,
-			List<string> entranceTypes)
-		{
-			var parameters = new object[]
-			{
-				new { parameterName = "StartDate", parameterValue = ToPersianDate(startDate) },
-				new { parameterName = "EndDate", parameterValue = ToPersianDate(endDate) },
-				new { parameterName = "EntranceTypes", parameterValue = entranceTypes },
-				new { parameterName = "startTime", parameterValue = "00:00" },
-				new { parameterName = "endTime", parameterValue = "23:59" },
-				new
-				{
-					parameterName = "credentials",
-					parameterValue = new
-					{
-						username = _configuration["AccessControl:Username"],
-						password = _configuration["AccessControl:Password"]
-					}
-				}
-			};
-
-			return await _pomixClient.ExecuteAsync<List<GetDataResponse>>(
-				"bsr-GetData",
-				parameters
-			);
 		}
 
 		private static string ToPersianDate(DateTime date)

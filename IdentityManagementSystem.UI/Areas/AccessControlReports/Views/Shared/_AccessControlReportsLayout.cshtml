@@ -202,12 +202,6 @@
             height: calc(100vh - 11.5rem);
             border: 0;
         }
-
-        .header-logo img {
-            max-width: 160px;
-            margin-bottom: 24px;
-            filter: brightness(0) invert(1);
-        }
     </style>
     @RenderSection("Styles", required: false)
 </head>
@@ -373,7 +367,7 @@
                     <li class="slide">
                         <a class="side-menu__item js-report-tab-link" data-tab-icon="ri-stack-line" asp-area="AccessControlReports" asp-controller="Report" asp-action="GetSumReport">
                             <i class="ri-stack-line side-menu__icon" aria-hidden="true"></i>
-                            <span class="side-menu__label">گزارش مجموع نوع تردد</span>
+                            <span class="side-menu__label">گزارش تجمیعی تردد</span>
                         </a>
                     </li>
                     <li class="slide">
@@ -531,9 +525,11 @@
     <script src="~/assets/libs/fullcalendar/index.global.min.js"></script>
 	<!-- Toastify JS -->
 	<link href="~/assets/libs/toastify-js/src/toastify.css" rel="stylesheet" />
-    <script src="~/assets/libs/toastify-js/src/toastify.js"></script>
+    <script src="~/assets/libs/toastify-js/src/toastify.js">
+    </script>
     <!-- Toast JS -->
-    <script src="~/assets/js/toasts.js"></script>
+    <script src="~/assets/js/toasts.js">
+    </script>
     <script>
         function openFullscreen() {
             if (!document.fullscreenElement) {
@@ -625,6 +621,7 @@
                         doc.documentElement.setAttribute('data-header-styles', headerStyle);
                         doc.documentElement.setAttribute('data-menu-styles', menuStyle);
                     } catch (e) {
+                        // iframe هنوز لود نشده یا در دسترس نیست؛ نادیده گرفته می‌شود
                     }
                 });
             }
@@ -670,8 +667,17 @@
                     closeTab($(this).data('id'));
                 });
 
+                // custom.js از قبل روی همین دکمه کلیک را می‌گیرد و تم را روی <html>
+                // صفحه‌ی اصلی عوض می‌کند؛ این هندلر بعد از آن اجرا می‌شود تا همان
+                // مقدار تازه را روی تمام تب‌های iframe بازِ گزارش‌ها هم اعمال کند.
                 $('.layout-setting').on('click', syncIframeThemes);
 
+                // defaultmenu.min.js فقط لینک‌هایی با href تک‌بخشی (مثل index.html)
+                // را برای باز نگه‌داشتن زیرمنوی فعال تشخیص می‌دهد، نه مسیرهای کامل
+                // MVC مثل /Security/Account/Users؛ چون این لینک‌ها با navigation
+                // واقعی صفحه بارگذاری می‌شوند (نه تب iframe)، بعد از هر بار رفرش
+                // زیرمنویشان بسته می‌ماند. اینجا با مقایسه‌ی مسیر فعلی، همان زیرمنو
+                // را باز نگه می‌داریم.
                 var currentPath = window.location.pathname;
                 $('.slide-menu .side-menu__item').each(function () {
                     if ($(this).attr('href') !== currentPath) return;

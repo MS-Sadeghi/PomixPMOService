@@ -78,6 +78,10 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 
 			var periodDaily = byDate.Values.Where(d => periodDates.Contains(d.ReportDate)).ToList();
 
+			// «مجموع ورود» دقیقاً همان دسته‌ی خام سرویس bsr-GetSum است (ورود کامیون،
+			// چون سواری/نفرو دسته‌های جدای خودشان را دارند) - بدون جمع با خروجی‌ها.
+			var entranceCount = periodDaily.Sum(d => CategoryTotal(d.TruckEntrance));
+
 			var truckCount = periodDaily.Sum(d =>
 				CategoryTotal(d.TruckEntrance) + CategoryTotal(d.TruckEmptyExit) + CategoryTotal(d.TruckLoadedExit));
 
@@ -88,7 +92,6 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 				CategoryTotal(d.PedestrianEntrance) + CategoryTotal(d.PedestrianExit));
 
 			var vehicleCount = truckCount + carCount;
-			var totalTraffic = vehicleCount + peopleCount;
 
 			var weeklyTraffic = trendDays <= 7
 				? BuildDailyTrend(byDate, trendAnchor, trendDays)
@@ -97,7 +100,7 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 			return new DashboardResponse
 			{
 				Period = period,
-				TotalTrafficToday = totalTraffic,
+				TotalTrafficToday = entranceCount,
 				VehicleTrafficToday = vehicleCount,
 				PeopleTrafficToday = peopleCount,
 
@@ -111,8 +114,9 @@ namespace IdentityManagementSystem.API.Modules.AccessControlReports.Dashboard
 
 				TrafficTypes = new List<ChartItemResponse>
 				{
-					new() { Label = "خودرو", Value = vehicleCount },
-					new() { Label = "افراد", Value = peopleCount }
+					new() { Label = "کامیون", Value = truckCount },
+					new() { Label = "خودرو", Value = carCount },
+					new() { Label = "نفر", Value = peopleCount }
 				},
 
 				LastUpdated = DateTime.Now.ToString("HH:mm")

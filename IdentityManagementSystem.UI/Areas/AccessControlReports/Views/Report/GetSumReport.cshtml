@@ -1,7 +1,7 @@
 @using IdentityManagementSystem.UI.Areas.AccessControlReports.ViewModel
 @model GetSumReportPageViewModel
 @{
-    ViewData["Title"] = "گزارش مجموع نوع تردد";
+    ViewData["Title"] = "گزارش تجمیعی تردد";
 }
 <link rel="stylesheet" href="~/assets/libs/gridjs/theme/mermaid.min.css" />
 <style>
@@ -230,7 +230,7 @@
         <nav>
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="javascript:void(0);">گزارش‌ها</a></li>
-                <li aria-current="page" class="breadcrumb-item active">گزارش مجموع نوع تردد</li>
+                <li aria-current="page" class="breadcrumb-item active">گزارش تجمیعی تردد</li>
             </ol>
         </nav>
     </div>
@@ -238,7 +238,7 @@
 
 <div class="card custom-card">
     <div class="card-header">
-        <div class="card-title">گزارش مجموع نوع تردد</div>
+        <div class="card-title">گزارش تجمیعی تردد</div>
     </div>
     <div class="card-body">
         <form id="reportForm">
@@ -281,22 +281,22 @@
             <div class="col-6 col-md-3">
                 <div class="border rounded-3 p-2 text-center h-100">
                     <div class="fs-11 text-muted mb-1">مجموع ورود</div>
-                    <div class="fs-16 fw-semibold" id="sum_truckEntrance">0</div>
-                    <div class="fs-10 text-muted" id="sum_truckEntrance_transit">ترانزیت: 0</div>
+                    <div class="fs-16 fw-semibold mb-1" id="sum_truckEntrance">0</div>
+                    <span class="badge bg-warning-transparent fs-12" id="sum_truckEntrance_transit">ترانزیت: 0</span>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="border rounded-3 p-2 text-center h-100">
                     <div class="fs-11 text-muted mb-1">خروج خالی کامیون</div>
-                    <div class="fs-16 fw-semibold" id="sum_truckEmptyExit">0</div>
-                    <div class="fs-10 text-muted" id="sum_truckEmptyExit_transit">ترانزیت: 0</div>
+                    <div class="fs-16 fw-semibold mb-1" id="sum_truckEmptyExit">0</div>
+                    <span class="badge bg-warning-transparent fs-12" id="sum_truckEmptyExit_transit">ترانزیت: 0</span>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="border rounded-3 p-2 text-center h-100">
                     <div class="fs-11 text-muted mb-1">خروج پر کامیون</div>
-                    <div class="fs-16 fw-semibold" id="sum_truckLoadedExit">0</div>
-                    <div class="fs-10 text-muted" id="sum_truckLoadedExit_transit">ترانزیت: 0</div>
+                    <div class="fs-16 fw-semibold mb-1" id="sum_truckLoadedExit">0</div>
+                    <span class="badge bg-warning-transparent fs-12" id="sum_truckLoadedExit_transit">ترانزیت: 0</span>
                 </div>
             </div>
             <div class="col-6 col-md-3">
@@ -394,7 +394,7 @@
 
         function getReportMeta() {
             return {
-                title: 'گزارش مجموع نوع تردد',
+                title: 'گزارش تجمیعی تردد',
                 items: [
                     { label: 'بازه تاریخ', value: $("input[name='StartDate']").val() + ' تا ' + $("input[name='EndDate']").val() },
                     { label: 'بازه ساعت', value: $("input[name='StartTime']").val() + ' تا ' + $("input[name='EndTime']").val() },
@@ -559,13 +559,13 @@
                     },
                     { id: 'rowNumber', name: 'ردیف', width: '60px', sort: false },
                     { id: 'date', name: 'تاریخ گزارش', width: '110px' },
-                    { id: 'truckEntrance', name: 'مجموع ورود', formatter: badgeFmt },
-                    { id: 'truckEmptyExit', name: 'خروج خالی کامیون', formatter: badgeFmt },
-                    { id: 'truckLoadedExit', name: 'خروج پر کامیون', formatter: badgeFmt },
-                    { id: 'carEntrance', name: 'ورود سواری', formatter: badgeFmt },
-                    { id: 'carExit', name: 'خروج سواری', formatter: badgeFmt },
-                    { id: 'pedestrianEntrance', name: 'ورود نفرو', formatter: badgeFmt },
-                    { id: 'pedestrianExit', name: 'خروج نفرو', formatter: badgeFmt }
+                    { id: 'truckEntrance', name: 'مجموع ورود', width: '130px', formatter: badgeFmt },
+                    { id: 'truckEmptyExit', name: 'خروج خالی کامیون', width: '140px', formatter: badgeFmt },
+                    { id: 'truckLoadedExit', name: 'خروج پر کامیون', width: '130px', formatter: badgeFmt },
+                    { id: 'carEntrance', name: 'ورود سواری', width: '120px', formatter: badgeFmt },
+                    { id: 'carExit', name: 'خروج سواری', width: '120px', formatter: badgeFmt },
+                    { id: 'pedestrianEntrance', name: 'ورود نفرو', width: '120px', formatter: badgeFmt },
+                    { id: 'pedestrianExit', name: 'خروج نفرو', width: '120px', formatter: badgeFmt }
                 ],
                 data: gridData,
                 language: {
@@ -706,7 +706,7 @@
 
         $("#btnExcel").on("click", function () {
             if (!gridData.length) return;
-            exportToExcel('گزارش_مجموع_نوع_تردد.xlsx', getReportMeta(), reportHeaders, getReportRows());
+            exportToExcel('گزارش_تجمیعی_تردد.xlsx', getReportMeta(), reportHeaders, getReportRows());
         });
     </script>
 }

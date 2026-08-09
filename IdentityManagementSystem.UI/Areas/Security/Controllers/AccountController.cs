@@ -516,7 +516,8 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                     return Json(new
                     {
                         success = true,
-                        message = apiResult?.Message ?? "در صورت تطابق اطلاعات، کد تأیید ارسال می‌شود."
+                        message = apiResult?.Message ?? "در صورت تطابق اطلاعات، کد تأیید ارسال می‌شود.",
+                        expiresInSeconds = apiResult?.ExpiresInSeconds
                     });
                 }
 

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.ComponentModel.DataAnnotations;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -429,10 +430,19 @@ namespace IdentityManagementSystem.API.Controllers
                 return StatusCode(StatusCodes.Status429TooManyRequests, new { message = "برای ارسال مجدد کد کمی صبر کنید." });
             }
 
-            var user = await _context.Users.FirstOrDefaultAsync(u =>
-                u.NationalId == model.NationalId &&
-                u.MobileNumber == model.MobileNumber &&
-                u.IsActive);
+            User? user;
+            try
+            {
+                user = await _context.Users.FirstOrDefaultAsync(u =>
+                    u.NationalId == model.NationalId &&
+                    u.MobileNumber == model.MobileNumber &&
+                    u.IsActive);
+            }
+            catch (DbException ex)
+            {
+                _logger.LogError(ex, "Forgot password start failed because database connection/query failed.");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = "در حال حاضر اتصال به پایگاه داده برقرار نیست. لطفاً تنظیمات سرور را بررسی کنید." });
+            }
 
             _memoryCache.Set($"{cacheKey}:cooldown", DateTimeOffset.UtcNow, TimeSpan.FromSeconds(60));
 

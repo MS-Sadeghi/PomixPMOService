@@ -280,20 +280,23 @@
         <div id="summaryCards" class="row g-2 mb-3 d-none">
             <div class="col-6 col-md-3">
                 <div class="border rounded-3 p-2 text-center h-100">
-                    <div class="fs-11 text-muted mb-1">ورود کامیون</div>
+                    <div class="fs-11 text-muted mb-1">مجموع ورود</div>
                     <div class="fs-16 fw-semibold" id="sum_truckEntrance">0</div>
+                    <div class="fs-10 text-muted" id="sum_truckEntrance_transit">ترانزیت: 0</div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="border rounded-3 p-2 text-center h-100">
                     <div class="fs-11 text-muted mb-1">خروج خالی کامیون</div>
                     <div class="fs-16 fw-semibold" id="sum_truckEmptyExit">0</div>
+                    <div class="fs-10 text-muted" id="sum_truckEmptyExit_transit">ترانزیت: 0</div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="border rounded-3 p-2 text-center h-100">
                     <div class="fs-11 text-muted mb-1">خروج پر کامیون</div>
                     <div class="fs-16 fw-semibold" id="sum_truckLoadedExit">0</div>
+                    <div class="fs-10 text-muted" id="sum_truckLoadedExit_transit">ترانزیت: 0</div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
@@ -341,16 +344,20 @@
         let rawDaily = [];
         let dailyByDate = new Map();
         let totalPeriodData = null;
-        const reportHeaders = ['ردیف', 'تاریخ گزارش', 'ورود کامیون', 'خروج خالی کامیون', 'خروج پر کامیون', 'ورود سواری', 'خروج سواری', 'ورود نفرو', 'خروج نفرو'];
+        const reportHeaders = ['ردیف', 'تاریخ گزارش', 'مجموع ورود', 'خروج خالی کامیون', 'خروج پر کامیون', 'ورود سواری', 'خروج سواری', 'ورود نفرو', 'خروج نفرو'];
         const categoryDefs = [
-            { key: 'truckEntrance', label: 'ورود کامیون' },
-            { key: 'truckEmptyExit', label: 'خروج خالی کامیون' },
-            { key: 'truckLoadedExit', label: 'خروج پر کامیون' },
+            { key: 'truckEntrance', label: 'مجموع ورود', hasTransit: true },
+            { key: 'truckEmptyExit', label: 'خروج خالی کامیون', hasTransit: true },
+            { key: 'truckLoadedExit', label: 'خروج پر کامیون', hasTransit: true },
             { key: 'carEntrance', label: 'ورود سواری' },
             { key: 'carExit', label: 'خروج سواری' },
             { key: 'pedestrianEntrance', label: 'ورود نفرو' },
             { key: 'pedestrianExit', label: 'خروج نفرو' }
         ];
+
+        function catTransit(stat) {
+            return (stat && typeof stat.transit === 'number') ? stat.transit : 0;
+        }
 
         function catTotal(stat) {
             return (stat && typeof stat.total === 'number') ? stat.total : 0;
@@ -485,7 +492,7 @@
             if (!item) return '<p class="mb-0">داده‌ای یافت نشد.</p>';
 
             const truckRows = [
-                { label: 'ورود کامیون', stat: item.truckEntrance },
+                { label: 'مجموع ورود', stat: item.truckEntrance },
                 { label: 'خروج خالی کامیون', stat: item.truckEmptyExit },
                 { label: 'خروج پر کامیون', stat: item.truckLoadedExit }
             ];
@@ -552,7 +559,7 @@
                     },
                     { id: 'rowNumber', name: 'ردیف', width: '60px', sort: false },
                     { id: 'date', name: 'تاریخ گزارش', width: '110px' },
-                    { id: 'truckEntrance', name: 'ورود کامیون', formatter: badgeFmt },
+                    { id: 'truckEntrance', name: 'مجموع ورود', formatter: badgeFmt },
                     { id: 'truckEmptyExit', name: 'خروج خالی کامیون', formatter: badgeFmt },
                     { id: 'truckLoadedExit', name: 'خروج پر کامیون', formatter: badgeFmt },
                     { id: 'carEntrance', name: 'ورود سواری', formatter: badgeFmt },
@@ -616,6 +623,9 @@
 
             categoryDefs.forEach(def => {
                 $("#sum_" + def.key).text(fmt(catTotal(totalPeriodData[def.key])));
+                if (def.hasTransit) {
+                    $("#sum_" + def.key + "_transit").text('ترانزیت: ' + fmt(catTransit(totalPeriodData[def.key])));
+                }
             });
             $("#summaryCards").removeClass("d-none");
         }

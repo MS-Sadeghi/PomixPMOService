@@ -235,8 +235,8 @@
     </div>
 </div>
 <!-- End::stat cards -->
-<!-- Start::weekly chart + system status -->
-<div class="col-xxl-8">
+<!-- Start::weekly chart -->
+<div class="col-xl-12">
     <div class="card custom-card">
         <div class="card-header justify-content-between">
             <div class="card-title" id="weeklyTrafficChartTitle">روند تردد هفت روز اخیر</div>
@@ -256,55 +256,7 @@
         </div>
     </div>
 </div>
-
-<div class="col-xxl-4">
-    <div class="card custom-card">
-        <div class="card-header justify-content-between">
-            <div class="card-title">وضعیت سامانه</div>
-        </div>
-        <div class="card-body p-0">
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="avatar avatar-sm avatar-rounded bg-success-transparent">
-                            <i class="ri-cloud-line fs-16"></i>
-                        </span>
-                        <span class="fw-medium">وب سرویس تردد</span>
-                    </div>
-                    <span class="badge bg-success-transparent" id="serviceStatusBadge">فعال</span>
-                </li>
-                <li class="list-group-item d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="avatar avatar-sm avatar-rounded bg-success-transparent">
-                            <i class="ri-database-2-line fs-16"></i>
-                        </span>
-                        <span class="fw-medium">پایگاه داده</span>
-                    </div>
-                    <span class="badge bg-success-transparent">فعال</span>
-                </li>
-                <li class="list-group-item d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="avatar avatar-sm avatar-rounded bg-primary-transparent">
-                            <i class="ri-time-line fs-16"></i>
-                        </span>
-                        <span class="fw-medium">آخرین بروزرسانی</span>
-                    </div>
-                    <span class="badge bg-primary-transparent" id="lastUpdated">-</span>
-                </li>
-                <li class="list-group-item d-flex align-items-center justify-content-between border-bottom-0">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="avatar avatar-sm avatar-rounded bg-info-transparent">
-                            <i class="ri-git-branch-line fs-16"></i>
-                        </span>
-                        <span class="fw-medium">نسخه سامانه</span>
-                    </div>
-                    <span class="badge bg-info-transparent">1.0.0</span>
-                </li>
-            </ul>
-        </div>
-    </div>
-</div>
-<!-- End::weekly chart + system status -->
+<!-- End::weekly chart -->
 <!-- Start::quick access -->
 <div class="col-xl-12">
     <div class="card custom-card">
@@ -378,8 +330,8 @@
     </div>
 </div>
 <!-- End::quick access -->
-<!-- Start::traffic types -->
-<div class="col-xl-12">
+<!-- Start::traffic types + system status -->
+<div class="col-xl-5">
     <div class="card custom-card">
         <div class="card-header justify-content-between">
             <div class="card-title">
@@ -397,7 +349,55 @@
         </div>
     </div>
 </div>
-<!-- End::traffic types -->
+
+<div class="col-xl-7">
+    <div class="card custom-card">
+        <div class="card-header justify-content-between">
+            <div class="card-title">وضعیت سامانه</div>
+        </div>
+        <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-sm avatar-rounded bg-success-transparent">
+                            <i class="ri-cloud-line fs-16"></i>
+                        </span>
+                        <span class="fw-medium">وب سرویس تردد</span>
+                    </div>
+                    <span class="badge bg-success-transparent" id="serviceStatusBadge">فعال</span>
+                </li>
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-sm avatar-rounded bg-success-transparent">
+                            <i class="ri-database-2-line fs-16"></i>
+                        </span>
+                        <span class="fw-medium">پایگاه داده</span>
+                    </div>
+                    <span class="badge bg-success-transparent">فعال</span>
+                </li>
+                <li class="list-group-item d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-sm avatar-rounded bg-primary-transparent">
+                            <i class="ri-time-line fs-16"></i>
+                        </span>
+                        <span class="fw-medium">آخرین بروزرسانی</span>
+                    </div>
+                    <span class="badge bg-primary-transparent" id="lastUpdated">-</span>
+                </li>
+                <li class="list-group-item d-flex align-items-center justify-content-between border-bottom-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="avatar avatar-sm avatar-rounded bg-info-transparent">
+                            <i class="ri-git-branch-line fs-16"></i>
+                        </span>
+                        <span class="fw-medium">نسخه سامانه</span>
+                    </div>
+                    <span class="badge bg-info-transparent">1.0.0</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<!-- End::traffic types + system status -->
 @section Scripts {
     <!-- Apex Charts JS -->
     <script src="~/assets/libs/apexcharts/apexcharts.min.js">

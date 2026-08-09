@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
 
 namespace IdentityManagementSystem.UI.Areas.Security.Controllers
 {
@@ -481,12 +482,162 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
             return View(userInfo);
         }
 
-		#endregion
+        #endregion
 
-		[AllowAnonymous]
-		public IActionResult ForgotPassword()
-		{
-			return View();
-		}
-	}
+        #region ForgotPassword
+        [AllowAnonymous]
+        public IActionResult ForgotPassword(ForgotPasswordStartViewModel model)
+        {
+            return View(model);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StartForgotPassword(ForgotPasswordStartViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = GetFirstModelError() ?? "اطلاعات وارد شده معتبر نیست." });
+
+            if (!IsValidNationalId(model.NationalId) || !IsValidMobileNumber(model.MobileNumber))
+                return Json(new { success = false, message = "کد ملی یا شماره همراه معتبر نیست." });
+
+            try
+            {
+                var response = await _client.PostAsJsonAsync("Auth/forgot-password/start", new
+                {
+                    model.NationalId,
+                    model.MobileNumber
+                });
+
+                var apiResult = await ReadForgotPasswordApiResponse(response);
+                if (response.IsSuccessStatusCode)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = apiResult?.Message ?? "در صورت تطابق اطلاعات، کد تأیید ارسال می‌شود.",
+                        expiresInSeconds = apiResult?.ExpiresInSeconds
+                    });
+                }
+
+                return Json(new { success = false, message = apiResult?.Message ?? "امکان ارسال کد تأیید وجود ندارد." });
+            }
+            catch (Exception)
+            {
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
+            }
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyForgotPasswordCode(ForgotPasswordVerifyViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = GetFirstModelError() ?? "کد تأیید معتبر نیست." });
+
+            if (!IsValidNationalId(model.NationalId) || !IsValidMobileNumber(model.MobileNumber) || !Regex.IsMatch(model.Code ?? "", "^\\d{5}$"))
+                return Json(new { success = false, message = "کد تأیید معتبر نیست." });
+
+            try
+            {
+                var response = await _client.PostAsJsonAsync("Auth/forgot-password/verify", new
+                {
+                    model.NationalId,
+                    model.MobileNumber,
+                    model.Code
+                });
+
+                var apiResult = await ReadForgotPasswordApiResponse(response);
+                if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(apiResult?.ResetToken))
+                    return Json(new { success = true, message = apiResult.Message ?? "کد تأیید شد.", resetToken = apiResult.ResetToken });
+
+                return Json(new { success = false, message = apiResult?.Message ?? "کد تأیید نامعتبر یا منقضی شده است." });
+            }
+            catch (Exception)
+            {
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
+            }
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetForgotPassword(ForgotPasswordResetViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = GetFirstModelError() ?? "اطلاعات بازنشانی رمز عبور معتبر نیست." });
+
+            if (string.IsNullOrWhiteSpace(model.ResetToken) ||
+                string.IsNullOrWhiteSpace(model.NewPassword) ||
+                model.NewPassword != model.ConfirmNewPassword ||
+                !IsStrongPassword(model.NewPassword))
+            {
+                return Json(new { success = false, message = "رمز عبور باید حداقل ۸ کاراکتر و شامل حرف بزرگ، حرف کوچک، عدد و نویسه خاص باشد." });
+            }
+
+            try
+            {
+                var response = await _client.PostAsJsonAsync("Auth/forgot-password/reset", new
+                {
+                    model.ResetToken,
+                    model.NewPassword,
+                    model.ConfirmNewPassword
+                });
+
+                var apiResult = await ReadForgotPasswordApiResponse(response);
+                if (response.IsSuccessStatusCode)
+                    return Json(new { success = true, message = apiResult?.Message ?? "رمز عبور با موفقیت تغییر کرد.", redirectUrl = Url.Action("Login", "Account", new { area = "Security" }) });
+
+                return Json(new { success = false, message = apiResult?.Message ?? "نشست بازنشانی نامعتبر یا منقضی شده است." });
+            }
+            catch (Exception)
+            {
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
+            }
+        }
+
+        private static async Task<ForgotPasswordApiResponse?> ReadForgotPasswordApiResponse(HttpResponseMessage response)
+        {
+            try
+            {
+                return await response.Content.ReadFromJsonAsync<ForgotPasswordApiResponse>();
+            }
+            catch (Exception)
+            {
+                return new ForgotPasswordApiResponse
+                {
+                    Message = await response.Content.ReadAsStringAsync()
+                };
+            }
+        }
+
+        private string? GetFirstModelError()
+        {
+            return ModelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => e.ErrorMessage)
+                .FirstOrDefault(message => !string.IsNullOrWhiteSpace(message));
+        }
+
+        #endregion
+
+        private static bool IsValidNationalId(string? nationalId)
+            => !string.IsNullOrWhiteSpace(nationalId) && Regex.IsMatch(nationalId, "^\\d{10}$");
+
+        private static bool IsValidMobileNumber(string? mobileNumber)
+            => !string.IsNullOrWhiteSpace(mobileNumber) && Regex.IsMatch(mobileNumber, "^09\\d{9}$");
+
+        private static bool IsStrongPassword(string? password)
+        {
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+                return false;
+
+            return password.Any(char.IsLower) &&
+                   password.Any(char.IsUpper) &&
+                   password.Any(char.IsDigit) &&
+                   password.Any(ch => !char.IsLetterOrDigit(ch));
+        }
+    }
 }

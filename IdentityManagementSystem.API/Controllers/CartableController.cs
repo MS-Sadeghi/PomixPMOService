@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using IdentityManagementSystem.API.Data;
+using IdentityManagementSystem.API.Models;
+using IdentityManagementSystem.API.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using IdentityManagementSystem.API.Models.ViewModels;
-using IdentityManagementSystem.API.Data;
-using IdentityManagementSystem.API.Models;
 
 namespace IdentityManagementSystem.API.Controllers
 {
@@ -95,24 +95,24 @@ namespace IdentityManagementSystem.API.Controllers
             return NoContent();
         }
 
-            // متد کمکی برای ایجاد آیتم کارتابل برای Request جدید
-            [HttpPost("create-for-request")]
-            public async Task<CartableItem> CreateCartableItemForRequest(long requestId, long cartableId, long? assignedToUserId = null)
+        // متد کمکی برای ایجاد آیتم کارتابل برای Request جدید
+        [HttpPost("create-for-request")]
+        public async Task<CartableItem> CreateCartableItemForRequest(long requestId, long cartableId, long? assignedToUserId = null)
+        {
+            var cartableItem = new CartableItem
             {
-                var cartableItem = new CartableItem
-                {
-                    RequestId = requestId,
-                    CartableId = cartableId,
-                    AssignedTo = assignedToUserId,
-                    AssignedAt = (DateTime)(assignedToUserId.HasValue ? DateTime.UtcNow : (DateTime?)null),
-                    Status = "New"
-                };
+                RequestId = requestId,
+                CartableId = cartableId,
+                AssignedTo = assignedToUserId,
+                AssignedAt = (DateTime)(assignedToUserId.HasValue ? DateTime.UtcNow : (DateTime?)null),
+                Status = "New"
+            };
 
-                _context.CartableItems.Add(cartableItem);
-                await _context.SaveChangesAsync();
+            _context.CartableItems.Add(cartableItem);
+            await _context.SaveChangesAsync();
 
-                return cartableItem;
-            }
+            return cartableItem;
         }
-    } 
+    }
+}
 

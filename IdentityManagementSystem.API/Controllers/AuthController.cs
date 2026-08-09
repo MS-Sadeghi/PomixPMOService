@@ -2,10 +2,18 @@
 using IdentityManagementSystem.API.Models;
 using IdentityManagementSystem.API.Models.ViewModels;
 using IdentityManagementSystem.API.Services;
+using IdentityManagementSystem.API.Services.SMS;
+using IdentityManagementSystem.API.Services.SMS.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using System.ComponentModel.DataAnnotations;
+using System.Data.Common;
+using System.Diagnostics;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace IdentityManagementSystem.API.Controllers
 {
@@ -15,11 +23,25 @@ namespace IdentityManagementSystem.API.Controllers
     {
         private readonly IdentityManagementSystemContext _context;
         private readonly TokenService _tokenService;
+        private readonly IMemoryCache _memoryCache;
+        private readonly IHostEnvironment _hostEnvironment;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IdentityManagementSystemContext context, TokenService tokenService)
+        public AuthController(
+            IdentityManagementSystemContext context,
+            TokenService tokenService,
+            IMemoryCache memoryCache,
+            IHostEnvironment hostEnvironment,
+            IServiceScopeFactory serviceScopeFactory,
+            ILogger<AuthController> logger)
         {
             _context = context;
             _tokenService = tokenService;
+            _memoryCache = memoryCache;
+            _hostEnvironment = hostEnvironment;
+            _serviceScopeFactory = serviceScopeFactory;
+            _logger = logger;
         }
 
         [HttpPost("login")]
@@ -387,6 +409,144 @@ namespace IdentityManagementSystem.API.Controllers
             return Ok("رمز عبور با موفقیت تغییر کرد.");
         }
 
+        [HttpPost("forgot-password/start")]
+        [AllowAnonymous]
+        public async Task<IActionResult> StartForgotPassword([FromBody] ForgotPasswordStartViewModel model)
+        {
+            if (!ModelState.IsValid || !IsValidNationalId(model.NationalId) || !IsValidMobileNumber(model.MobileNumber))
+                return BadRequest(new { message = "اطلاعات وارد شده معتبر نیست." });
+
+            var cacheKey = BuildForgotPasswordIdentityKey(model.NationalId, model.MobileNumber);
+            if (_memoryCache.TryGetValue<DateTimeOffset>($"{cacheKey}:cooldown", out _))
+            {
+                if (_memoryCache.TryGetValue<ForgotPasswordOtpState>(cacheKey, out var pendingState) &&
+                    pendingState is not null &&
+                    pendingState.ExpiresAt > DateTimeOffset.UtcNow)
+                {
+                    var remainingSeconds = Math.Max(1, (int)(pendingState.ExpiresAt - DateTimeOffset.UtcNow).TotalSeconds);
+                    return Ok(new { message = "کد تأیید قبلاً ارسال شده است.", expiresInSeconds = remainingSeconds });
+                }
+
+                return StatusCode(StatusCodes.Status429TooManyRequests, new { message = "برای ارسال مجدد کد کمی صبر کنید." });
+            }
+
+            User? user;
+            try
+            {
+                user = await _context.Users.FirstOrDefaultAsync(u =>
+                    u.NationalId == model.NationalId &&
+                    u.MobileNumber == model.MobileNumber &&
+                    u.IsActive);
+            }
+            catch (DbException ex)
+            {
+                _logger.LogError(ex, "Forgot password start failed because database connection/query failed.");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = "در حال حاضر اتصال به پایگاه داده برقرار نیست. لطفاً تنظیمات سرور را بررسی کنید." });
+            }
+
+            _memoryCache.Set($"{cacheKey}:cooldown", DateTimeOffset.UtcNow, TimeSpan.FromSeconds(60));
+
+            if (user != null)
+            {
+                var code = RandomNumberGenerator.GetInt32(10000, 100000).ToString();
+                if (_hostEnvironment.IsDevelopment())
+                {
+                    var debugMessage = $"ForgotPassword OTP for {model.NationalId}/{model.MobileNumber}: {code}";
+                    Console.WriteLine(debugMessage);
+                    Debug.WriteLine(debugMessage);
+                }
+
+                var smsText = $"کد تأیید بازنشانی رمز عبور سامانه جامع گزارش‌گیری ترددها: {code}\nاعتبار: ۵ دقیقه";
+                var smsModel = new SendSmsViewModel
+                {
+                    Mobile = user.MobileNumber!,
+                    Text = smsText,
+                    LogText = "ارسال کد تأیید بازنشانی رمز عبور",
+                    Area = "Security",
+                    Controller = "Account",
+                    Action = "ForgotPassword",
+                    UserId = user.UserId
+                };
+
+                var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+                var userAgent = Request.Headers["User-Agent"].ToString();
+
+                _memoryCache.Set(cacheKey, new ForgotPasswordOtpState
+                {
+                    UserId = user.UserId,
+                    CodeHash = BCrypt.Net.BCrypt.HashPassword(code),
+                    ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(5),
+                    FailedAttempts = 0
+                }, TimeSpan.FromMinutes(5));
+
+                QueueForgotPasswordSms(smsModel, user.UserId, user.Username, ipAddress, userAgent);
+                QueueUserLog(user.UserId, "ForgotPassword_Code_Generated", user.Username, "Password reset code generated", ipAddress, userAgent);
+            }
+            else
+            {
+                return BadRequest("کد ملی یا شماره موبایل اشتباه است");
+            }
+
+            return Ok(new { message = "در صورت تطابق اطلاعات، کد تأیید ارسال می‌شود.", expiresInSeconds = 300 });
+        }
+
+        [HttpPost("forgot-password/verify")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyForgotPasswordCode([FromBody] ForgotPasswordVerifyViewModel model)
+        {
+            if (!ModelState.IsValid || !IsValidNationalId(model.NationalId) || !IsValidMobileNumber(model.MobileNumber) || !Regex.IsMatch(model.Code ?? "", "^\\d{5}$"))
+                return BadRequest(new { message = "کد تأیید معتبر نیست." });
+
+            var cacheKey = BuildForgotPasswordIdentityKey(model.NationalId, model.MobileNumber);
+            if (!_memoryCache.TryGetValue<ForgotPasswordOtpState>(cacheKey, out var state) || state.ExpiresAt < DateTimeOffset.UtcNow)
+                return BadRequest(new { message = "کد تأیید نامعتبر یا منقضی شده است." });
+
+            if (state.FailedAttempts >= 5)
+            {
+                _memoryCache.Remove(cacheKey);
+                return StatusCode(StatusCodes.Status429TooManyRequests, new { message = "تعداد تلاش‌ها بیش از حد مجاز است. دوباره درخواست کد دهید." });
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(model.Code, state.CodeHash))
+            {
+                state.FailedAttempts++;
+                _memoryCache.Set(cacheKey, state, state.ExpiresAt);
+                return BadRequest(new { message = "کد تأیید نامعتبر یا منقضی شده است." });
+            }
+
+            var resetToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+            _memoryCache.Set(BuildForgotPasswordResetKey(resetToken), state.UserId, TimeSpan.FromMinutes(10));
+            _memoryCache.Remove(cacheKey);
+
+            var user = await _context.Users.FindAsync(state.UserId);
+            await LogAction(state.UserId, "ForgotPassword_Code_Verified", user?.Username, "Password reset code verified");
+
+            return Ok(new { message = "کد تأیید شد.", resetToken });
+        }
+
+        [HttpPost("forgot-password/reset")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetForgotPassword([FromBody] ForgotPasswordResetViewModel model)
+        {
+            if (!ModelState.IsValid || model.NewPassword != model.ConfirmNewPassword || !IsStrongPassword(model.NewPassword))
+                return BadRequest(new { message = "رمز عبور جدید معتبر نیست یا با تأیید آن یکسان نیست." });
+
+            var resetKey = BuildForgotPasswordResetKey(model.ResetToken);
+            if (!_memoryCache.TryGetValue<long>(resetKey, out var userId))
+                return BadRequest(new { message = "نشست بازنشانی نامعتبر یا منقضی شده است." });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.IsActive);
+            if (user == null)
+                return BadRequest(new { message = "نشست بازنشانی نامعتبر یا منقضی شده است." });
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
+            await _context.SaveChangesAsync();
+            _memoryCache.Remove(resetKey);
+
+            await LogAction(user.UserId, "ForgotPassword_Reset_Success", user.Username, "Password reset successfully");
+            return Ok(new { message = "رمز عبور با موفقیت تغییر کرد." });
+        }
+
         [HttpGet("GetCurrentUser")]
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
@@ -449,11 +609,14 @@ namespace IdentityManagementSystem.API.Controllers
 
         private async Task LogAction(long userId, string action, string? username, string result)
         {
+            if (userId <= 0)
+                return;
+
             try
             {
                 _context.UserLogs.Add(new UserLog
                 {
-                    UserId = (int?)userId,
+                    UserId = userId,
                     Action = $"{action}: Username={username}, Result={result}",
                     ActionTime = DateTime.UtcNow,
                     IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
@@ -464,6 +627,88 @@ namespace IdentityManagementSystem.API.Controllers
             catch (Exception)
             {
             }
+        }
+
+        private void QueueForgotPasswordSms(SendSmsViewModel smsModel, long userId, string username, string? ipAddress, string userAgent)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var sendSmsService = scope.ServiceProvider.GetRequiredService<SendSmsService>();
+                    var smsSent = await sendSmsService.SendSmsAsync(smsModel);
+
+                    if (!smsSent)
+                    {
+                        var context = scope.ServiceProvider.GetRequiredService<IdentityManagementSystemContext>();
+                        context.UserLogs.Add(new UserLog
+                        {
+                            UserId = userId,
+                            Action = $"ForgotPassword_Code_Send_Failed: Username={username}, Result=Password reset code SMS failed",
+                            ActionTime = DateTime.UtcNow,
+                            IpAddress = ipAddress,
+                            UserAgent = userAgent
+                        });
+                        await context.SaveChangesAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Forgot password SMS background send failed for user {UserId}", userId);
+                }
+            });
+        }
+
+        private void QueueUserLog(long userId, string action, string? username, string result, string? ipAddress, string userAgent)
+        {
+            if (userId <= 0)
+                return;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var context = scope.ServiceProvider.GetRequiredService<IdentityManagementSystemContext>();
+                    context.UserLogs.Add(new UserLog
+                    {
+                        UserId = userId,
+                        Action = $"{action}: Username={username}, Result={result}",
+                        ActionTime = DateTime.UtcNow,
+                        IpAddress = ipAddress,
+                        UserAgent = userAgent
+                    });
+                    await context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Forgot password background log failed for user {UserId}", userId);
+                }
+            });
+        }
+
+        private static string BuildForgotPasswordIdentityKey(string nationalId, string mobileNumber)
+            => $"forgot-password:{nationalId}:{mobileNumber}";
+
+        private static string BuildForgotPasswordResetKey(string resetToken)
+            => $"forgot-password:reset:{resetToken}";
+
+        private static bool IsValidNationalId(string? nationalId)
+            => !string.IsNullOrWhiteSpace(nationalId) && Regex.IsMatch(nationalId, "^\\d{10}$");
+
+        private static bool IsValidMobileNumber(string? mobileNumber)
+            => !string.IsNullOrWhiteSpace(mobileNumber) && Regex.IsMatch(mobileNumber, "^09\\d{9}$");
+
+        private static bool IsStrongPassword(string? password)
+        {
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+                return false;
+
+            return password.Any(char.IsLower) &&
+                   password.Any(char.IsUpper) &&
+                   password.Any(char.IsDigit) &&
+                   password.Any(ch => !char.IsLetterOrDigit(ch));
         }
     }
 
@@ -477,5 +722,45 @@ namespace IdentityManagementSystem.API.Controllers
         public string? CurrentPassword { get; set; }
         public string? NewPassword { get; set; }
         public string? ConfirmNewPassword { get; set; }
+    }
+
+    public class ForgotPasswordStartViewModel
+    {
+        [Required(ErrorMessage = "کد ملی الزامی است.")]
+        [RegularExpression("^\\d{10}$", ErrorMessage = "کد ملی باید ۱۰ رقم باشد.")]
+        public string NationalId { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "شماره همراه الزامی است.")]
+        [RegularExpression("^09\\d{9}$", ErrorMessage = "شماره همراه باید با 09 شروع شود و ۱۱ رقم باشد.")]
+        public string MobileNumber { get; set; } = string.Empty;
+    }
+
+    public class ForgotPasswordVerifyViewModel : ForgotPasswordStartViewModel
+    {
+        [Required(ErrorMessage = "کد تأیید الزامی است.")]
+        [RegularExpression("^\\d{5}$", ErrorMessage = "کد تأیید باید ۵ رقم باشد.")]
+        public string Code { get; set; } = string.Empty;
+    }
+
+    public class ForgotPasswordResetViewModel
+    {
+        [Required(ErrorMessage = "نشست بازنشانی نامعتبر است.")]
+        public string ResetToken { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "رمز عبور جدید الزامی است.")]
+        [RegularExpression("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\da-zA-Z]).{8,}$", ErrorMessage = "رمز عبور باید حداقل ۸ کاراکتر و شامل حرف بزرگ، حرف کوچک، عدد و نویسه خاص باشد.")]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "تأیید رمز عبور الزامی است.")]
+        [Compare(nameof(NewPassword), ErrorMessage = "رمز عبور و تأیید آن یکسان نیستند.")]
+        public string ConfirmNewPassword { get; set; } = string.Empty;
+    }
+
+    internal sealed class ForgotPasswordOtpState
+    {
+        public long UserId { get; set; }
+        public string CodeHash { get; set; } = string.Empty;
+        public DateTimeOffset ExpiresAt { get; set; }
+        public int FailedAttempts { get; set; }
     }
 }

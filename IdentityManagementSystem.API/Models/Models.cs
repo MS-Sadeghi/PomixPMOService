@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Data;
 
 namespace IdentityManagementSystem.API.Models
 {
@@ -27,22 +26,22 @@ namespace IdentityManagementSystem.API.Models
         public bool IsActive { get; set; } = true;
     }
 
-        public class RoleViewModel
-        {
-            public int RoleId { get; set; }
-            public string RoleName { get; set; } = string.Empty;
-        }
-    
+    public class RoleViewModel
+    {
+        public int RoleId { get; set; }
+        public string RoleName { get; set; } = string.Empty;
+    }
+
 
     public class Request
     {
         [Key]
         public long RequestId { get; set; }
 
-      
+
         [StringLength(10)]
         public string? NationalId { get; set; }     // کد ملی
-    
+
 
         [StringLength(20)]
         public string? MobileNumber { get; set; }   // شماره همراه
@@ -56,8 +55,8 @@ namespace IdentityManagementSystem.API.Models
         public string? Description { get; set; }
         public bool? IsMatch { get; set; }              // وضعیت احراز هویت
         public bool? IsExist { get; set; }              // وجود سند
-        public bool? IsNationalIdInResponse { get; set; } 
-        public bool? IsNationalIdInLawyers { get; set; } 
+        public bool? IsNationalIdInResponse { get; set; }
+        public bool? IsNationalIdInLawyers { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [StringLength(100)]
@@ -120,7 +119,7 @@ namespace IdentityManagementSystem.API.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long LogId { get; set; }
 
-        public long? UserId { get; set; }
+        public long UserId { get; set; }
 
         [MaxLength(255)]
         public string? Action { get; set; }
@@ -132,8 +131,8 @@ namespace IdentityManagementSystem.API.Models
 
         [MaxLength(512)]
         public string? UserAgent { get; set; }
-        public string ActionResult { get; internal set; }
-        public string LogLevel { get; internal set; }
+        public string? ActionResult { get; internal set; }
+        public string? LogLevel { get; internal set; }
     }
 
 
@@ -149,8 +148,8 @@ namespace IdentityManagementSystem.API.Models
         public Request? Request { get; set; }
 
         // وضعیت درخواست
-   
-         public int StatusId { get; set; }
+
+        public int StatusId { get; set; }
         public RequestStatus Status { get; set; } = null!;
 
         // کارشناس انجام‌دهنده یا دریافت‌کننده
@@ -237,7 +236,7 @@ namespace IdentityManagementSystem.API.Models
         [Required]
         public long ExpertId { get; set; }
 
-      
+
         public long RequestId { get; set; }
 
         [Required]
@@ -266,9 +265,9 @@ namespace IdentityManagementSystem.API.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         [Required]
         public string CreatedBy { get; set; } = null!;
-        public bool? IsExist { get;  set; }
-        public bool? IsRead { get; set; } = false; 
-        public string? ReadBy { get; set; } 
+        public bool? IsExist { get; set; }
+        public bool? IsRead { get; set; } = false;
+        public string? ReadBy { get; set; }
         public DateTime? ReadDate { get; set; }
     }
 
@@ -303,4 +302,29 @@ namespace IdentityManagementSystem.API.Models
         public bool IsActive { get; set; }
     }
 
+    public class SmsLog
+    {
+        public Guid Id { get; set; }
+
+        public string Area { get; set; }
+
+        public string Controller { get; set; }
+
+        public string Action { get; set; }
+
+        public string Text { get; set; }
+
+        public long? UserId { get; set; }
+
+        public string Mobile { get; set; }
+
+        public string ResultCode { get; set; }
+
+        public string ResultDesc { get; set; }
+
+        public bool IsSend { get; set; }
+
+        public DateTime Date { get; set; }
+    }
 }
+

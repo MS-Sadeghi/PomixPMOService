@@ -280,7 +280,7 @@
         <div id="summaryCards" class="row g-2 mb-3 d-none">
             <div class="col-6 col-md-3">
                 <div class="border rounded-3 p-2 text-center h-100">
-                    <div class="fs-11 text-muted mb-1">مجموع ورود</div>
+                    <div class="fs-11 text-muted mb-1">مجموع ورود کامیون‌ها</div>
                     <div class="fs-16 fw-semibold mb-1" id="sum_truckEntrance">0</div>
                     <span class="badge bg-warning-transparent fs-12" id="sum_truckEntrance_transit">ترانزیت: 0</span>
                 </div>
@@ -344,9 +344,9 @@
         let rawDaily = [];
         let dailyByDate = new Map();
         let totalPeriodData = null;
-        const reportHeaders = ['ردیف', 'تاریخ گزارش', 'مجموع ورود', 'خروج خالی کامیون', 'خروج پر کامیون', 'ورود سواری', 'خروج سواری', 'ورود نفرو', 'خروج نفرو'];
+        const reportHeaders = ['ردیف', 'تاریخ گزارش', 'مجموع ورود کامیون‌ها', 'خروج خالی کامیون', 'خروج پر کامیون', 'ورود سواری', 'خروج سواری', 'ورود نفرو', 'خروج نفرو'];
         const categoryDefs = [
-            { key: 'truckEntrance', label: 'مجموع ورود', hasTransit: true },
+            { key: 'truckEntrance', label: 'مجموع ورود کامیون‌ها', hasTransit: true },
             { key: 'truckEmptyExit', label: 'خروج خالی کامیون', hasTransit: true },
             { key: 'truckLoadedExit', label: 'خروج پر کامیون', hasTransit: true },
             { key: 'carEntrance', label: 'ورود سواری' },

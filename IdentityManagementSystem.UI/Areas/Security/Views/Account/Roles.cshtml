@@ -1,0 +1,264 @@
+@using IdentityManagementSystem.UI.Helper
+@using IdentityManagementSystem.UI.Areas.Security.Models
+@model IEnumerable<RoleItemViewModel>
+@{
+    ViewData["Title"] = "مدیریت نقش‌ها";
+    Layout = "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml";
+}
+
+<div class="my-4 page-header-breadcrumb d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+        <nav>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="javascript:void(0);">مدیریت کاربران</a></li>
+                <li aria-current="page" class="breadcrumb-item active">مدیریت نقش‌ها</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+}
+
+<div class="card custom-card">
+    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="card-title mb-0">لیست نقش‌ها</div>
+        <button id="addRoleBtn" type="button" class="btn btn-primary btn-wave">
+            <i class="ti ti-plus me-1"></i>
+            افزودن نقش
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table text-nowrap mb-0" id="rolesTable">
+                <thead>
+                    <tr>
+                        <th>نام نقش</th>
+                        <th>وضعیت</th>
+                        <th>تعداد کاربران</th>
+                        <th>تاریخ ثبت</th>
+                        <th>آخرین ویرایش</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var role in Model)
+                        {
+                            <tr data-role-id="@role.RoleId" data-role-name="@role.RoleName" data-role-active="@(role.IsActive ? "1" : "0")" data-role-protected="@(role.IsProtected ? "1" : "0")">
+                                <td class="fw-semibold">@role.RoleName</td>
+                                <td>
+                                    @if (role.IsActive)
+                                    {
+                                        <span class="badge bg-success-transparent fs-12">فعال</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-transparent fs-12">غیرفعال</span>
+                                    }
+                                </td>
+                                <td>@role.UserCount</td>
+                                <td>
+                                    <span class="d-block fw-semibold">@role.CreatedAt.ToPersianTime()</span>
+                                    <span class="d-block fs-13 text-muted">@role.CreatedAt.ToPersianDate()</span>
+                                </td>
+                                <td>
+                                    <span class="d-block fw-semibold">@role.UpdatedAt.ToPersianTime()</span>
+                                    <span class="d-block fs-13 text-muted">@role.UpdatedAt.ToPersianDate()</span>
+                                </td>
+                                <td>
+                                    <div class="btn-list">
+                                        <button type="button" class="btn btn-primary-light btn-icon btn-sm btn-edit-role" title="ویرایش">
+                                            <i class="ti ti-edit"></i>
+                                        </button>
+                                        @if (!role.IsProtected)
+                                        {
+                                            <button type="button" class="btn btn-danger-light btn-icon btn-sm btn-delete-role" title="حذف">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="6" class="text-center">هیچ نقشی یافت نشد.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="roleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title" id="roleModalTitle">افزودن نقش</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <form id="roleForm" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="RoleId" value="0">
+                <div class="modal-body">
+                    <div id="roleFormError" class="alert alert-danger d-none"></div>
+                    <div class="mb-3">
+                        <label class="form-label" for="RoleName">نام نقش</label>
+                        <input class="form-control" id="RoleName" maxlength="200" required>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label" for="RoleStatus">وضعیت</label>
+                        <select class="form-select" id="RoleStatus">
+                            <option value="1">فعال</option>
+                            <option value="0">غیرفعال</option>
+                        </select>
+                    </div>
+                    <div id="protectedNote" class="form-text text-warning d-none">نام و وضعیت نقش ادمین قابل تغییر نیست.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary" id="roleSubmit">ثبت</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">بستن</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteRoleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">حذف نقش</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <div id="deleteRoleError" class="alert alert-danger d-none"></div>
+                <p class="mb-0">آیا از حذف نقش «<span id="deleteRoleName" class="fw-semibold"></span>» مطمئن هستید؟ این عملیات قابل بازگشت نیست.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="deleteRoleConfirm">حذف</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">انصراف</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modal = new bootstrap.Modal(document.getElementById('roleModal'));
+            var form = document.getElementById('roleForm');
+            var errorBox = document.getElementById('roleFormError');
+            var nameInput = document.getElementById('RoleName');
+            var statusInput = document.getElementById('RoleStatus');
+            var idInput = document.getElementById('RoleId');
+            var note = document.getElementById('protectedNote');
+
+            function openModal(role) {
+                errorBox.classList.add('d-none');
+                idInput.value = role ? role.id : 0;
+                nameInput.value = role ? role.name : '';
+                statusInput.value = role ? (role.active ? '1' : '0') : '1';
+                var locked = !!(role && role.isProtected);
+                nameInput.disabled = locked;
+                statusInput.disabled = locked;
+                note.classList.toggle('d-none', !locked);
+                document.getElementById('roleModalTitle').textContent = role ? 'ویرایش نقش' : 'افزودن نقش';
+                modal.show();
+            }
+
+            document.getElementById('addRoleBtn').addEventListener('click', function () { openModal(null); });
+
+            document.querySelectorAll('.btn-edit-role').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var tr = btn.closest('tr');
+                    openModal({
+                        id: tr.dataset.roleId,
+                        name: tr.dataset.roleName,
+                        active: tr.dataset.roleActive === '1',
+                        isProtected: tr.dataset.roleProtected === '1'
+                    });
+                });
+            });
+
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteRoleModal'));
+            var deleteError = document.getElementById('deleteRoleError');
+            var deleteConfirm = document.getElementById('deleteRoleConfirm');
+            var pendingDeleteId = null;
+
+            document.querySelectorAll('.btn-delete-role').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var tr = btn.closest('tr');
+                    pendingDeleteId = tr.dataset.roleId;
+                    document.getElementById('deleteRoleName').textContent = tr.dataset.roleName;
+                    deleteError.classList.add('d-none');
+                    deleteModal.show();
+                });
+            });
+
+            deleteConfirm.addEventListener('click', function () {
+                var token = form.querySelector('input[name="__RequestVerificationToken"]').value;
+                deleteConfirm.disabled = true;
+                fetch('@Url.Action("DeleteRole", "Account")?id=' + encodeURIComponent(pendingDeleteId), {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': token }
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.success) {
+                        deleteModal.hide();
+                        location.reload();
+                    } else {
+                        deleteError.textContent = res.message || 'خطا در حذف نقش.';
+                        deleteError.classList.remove('d-none');
+                    }
+                })
+                .catch(function () {
+                    deleteError.textContent = 'خطا در ارتباط با سرور.';
+                    deleteError.classList.remove('d-none');
+                })
+                .finally(function () { deleteConfirm.disabled = false; });
+            });
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var isNew = idInput.value === '0';
+                var name = nameInput.value.trim();
+                if (!name) {
+                    errorBox.textContent = 'نام نقش الزامی است.';
+                    errorBox.classList.remove('d-none');
+                    return;
+                }
+                var token = form.querySelector('input[name="__RequestVerificationToken"]').value;
+                var submit = document.getElementById('roleSubmit');
+                submit.disabled = true;
+
+                fetch(isNew ? '@Url.Action("CreateRole", "Account")' : '@Url.Action("UpdateRole", "Account")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                    body: JSON.stringify({ roleId: parseInt(idInput.value, 10), roleName: name, isActive: statusInput.value === '1' })
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.success) {
+                        modal.hide();
+                        location.reload();
+                    } else {
+                        errorBox.textContent = res.message || 'خطا در ذخیره نقش.';
+                        errorBox.classList.remove('d-none');
+                    }
+                })
+                .catch(function () {
+                    errorBox.textContent = 'خطا در ارتباط با سرور.';
+                    errorBox.classList.remove('d-none');
+                })
+                .finally(function () { submit.disabled = false; });
+            });
+        });
+    </script>
+}

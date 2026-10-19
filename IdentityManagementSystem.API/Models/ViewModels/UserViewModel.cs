@@ -13,6 +13,7 @@ namespace IdentityManagementSystem.API.Models.ViewModels
         public string Name { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public required string Role { get; set; }               // ارتباط به جدول Roles
+        public int RoleId { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? LastLogin { get; set; }      
         public bool IsActive { get; set; }

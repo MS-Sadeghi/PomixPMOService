@@ -16,7 +16,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Models
         public DateTime? LastLogin { get; set; }       // می‌تونه null باشه
         public bool IsActive { get; set; }
         public string? MobileNumber { get; set; }      // اختیاری، می‌تونه null باشه
-        public int RoleId { get; internal set; }
+        public int RoleId { get; set; }
     }
 
     // در فایل ViewModels

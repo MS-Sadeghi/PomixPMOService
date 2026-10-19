@@ -204,6 +204,14 @@
         }
     </style>
     @RenderSection("Styles", required: false)
+    <style>
+        /* کادر گزارش‌ها مستقیماً داخل .row قرار می‌گیرند و به لبه‌ها می‌چسبیدند */
+        .container-fluid > .row > .card {
+            width: calc(100% - 1.5rem);
+            max-width: calc(100% - 1.5rem);
+            margin-inline: .75rem;
+        }
+    </style>
 </head>
 <body>
     <div id="loader"></div>
@@ -389,6 +397,8 @@
                         </a>
                     </li>
                     <!-- Start::slide - User Management with Submenu -->
+                    @if (Context.Session.GetString("UserRoleId") == "3" || Context.Session.GetString("UserRole") == "ادمین")
+                    {
                     <li class="slide__category">
                         <span class="category-name">مدیریت‌</span>
                     </li>
@@ -411,12 +421,18 @@
                                 </a>
                             </li>
                             <li class="slide">
+                                <a class="side-menu__item" href="/Security/Account/Roles">
+                                    مدیریت نقش‌ها
+                                </a>
+                            </li>
+                            <li class="slide">
                                 <a class="side-menu__item" href="/Security/Account/EditProfile">
                                     پروفایل
                                 </a>
                             </li>
                         </ul>
                     </li>
+                    }
                     <!-- End::slide -->
                 </ul>
                 <div class="slide-right" id="slide-right">

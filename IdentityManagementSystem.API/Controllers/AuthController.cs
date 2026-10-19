@@ -52,7 +52,7 @@ namespace IdentityManagementSystem.API.Controllers
                 return BadRequest(ModelState);
 
             var user = await _context.Users
-                .Include(u => u.Role) // join جدول Roles
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Username == loginViewModel.Username);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginViewModel.Password, user.PasswordHash))
@@ -77,8 +77,8 @@ namespace IdentityManagementSystem.API.Controllers
                 user.LastName,
                 Role = new
                 {
-                    user.Role.RoleId,
-                    user.Role.RoleName
+                    RoleId = user.Role?.RoleId ?? 0,
+                    RoleName = user.Role?.RoleName
                 },
                 Tokens = tokens // اضافه کردن توکن‌ها
             });
@@ -92,7 +92,7 @@ namespace IdentityManagementSystem.API.Controllers
             if (refreshToken == null)
                 return Unauthorized("Refresh Token نامعتبر یا منقضی شده است.");
 
-            var user = await _context.Users.FindAsync(refreshToken.UserId);
+            var user = await _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.UserId == refreshToken.UserId);
             if (user == null)
                 return Unauthorized("کاربر یافت نشد.");
 
@@ -109,7 +109,7 @@ namespace IdentityManagementSystem.API.Controllers
         }
 
         [HttpPost("register")]
-        [AllowAnonymous]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<UserViewModel>> Register(CreateUserViewModel viewModel)
         {
             if (!ModelState.IsValid)
@@ -131,7 +131,7 @@ namespace IdentityManagementSystem.API.Controllers
                 Name = viewModel.Name,
                 LastName = viewModel.LastName,
                 MobileNumber = viewModel.MobileNumber,
-                RoleId = viewModel.RoleId,
+                UserRoles = new List<UserRole> { new UserRole { RoleId = viewModel.RoleId, CreatedAt = DateTime.Now, CreatedBy = "Register" } },
                 CreatedAt = DateTime.Now,
                 IsActive = true
             };
@@ -141,7 +141,7 @@ namespace IdentityManagementSystem.API.Controllers
 
             // بارگذاری نقش با Include تا از NullReferenceException جلوگیری شود
             user = await _context.Users
-                .Include(u => u.Role)
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
             if (user == null)
@@ -179,7 +179,7 @@ namespace IdentityManagementSystem.API.Controllers
 
 
         [HttpGet("GetUsers")]
-        [AllowAnonymous]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<IEnumerable<UserViewModel>>> GetUsers()
         {
             if (!IsAdmin())
@@ -187,7 +187,7 @@ namespace IdentityManagementSystem.API.Controllers
                 return Forbid();
             }
             var users = await _context.Users
-                .Include(u => u.Role) //  برای جلوگیری از NullReference در Role
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
                 .Select(u => new UserViewModel
                 {
                     UserId = u.UserId,
@@ -195,7 +195,8 @@ namespace IdentityManagementSystem.API.Controllers
                     Username = u.Username,
                     Name = u.Name,
                     LastName = u.LastName,
-                    Role = u.Role != null ? u.Role.RoleName : "بدون نقش",
+                    Role = u.UserRoles.OrderBy(ur => ur.UserRoleId).Select(ur => ur.Role!.RoleName).FirstOrDefault() ?? "بدون نقش",
+                    RoleId = u.UserRoles.OrderBy(ur => ur.UserRoleId).Select(ur => ur.RoleId).FirstOrDefault(),
                     CreatedAt = u.CreatedAt,
                     LastLogin = u.LastLogin,
                     IsActive = u.IsActive,          //  اضافه شد تا وضعیت فعال/غیرفعال هم برگرده
@@ -208,9 +209,10 @@ namespace IdentityManagementSystem.API.Controllers
         }
 
         [HttpPut("UpdateUser/{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdateUser(long id, [FromBody] UpdateUserRequest model)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users.Include(u => u.UserRoles).FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null)
                 return NotFound("کاربر یافت نشد.");
 
@@ -231,7 +233,11 @@ namespace IdentityManagementSystem.API.Controllers
                 user.MobileNumber = model.MobileNumber;
 
             if (model.RoleId.HasValue && model.RoleId.Value > 0)
-                user.RoleId = model.RoleId.Value;
+            {
+                var primary = user.UserRoles.OrderBy(ur => ur.UserRoleId).FirstOrDefault();
+                if (primary != null) primary.RoleId = model.RoleId.Value;
+                else user.UserRoles.Add(new UserRole { RoleId = model.RoleId.Value, CreatedAt = DateTime.Now, CreatedBy = "UpdateUser" });
+            }
 
             // اگر رمز جدید فرستاده شده بود، بروزرسانی کن
             if (!string.IsNullOrEmpty(model.Password))
@@ -245,6 +251,7 @@ namespace IdentityManagementSystem.API.Controllers
 
         // 🔴 Soft Delete (غیرفعال کردن کاربر)
         [HttpDelete("SoftDeleteUser/{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> SoftDeleteUser(long id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -263,6 +270,7 @@ namespace IdentityManagementSystem.API.Controllers
 
         // 🟢 فعال‌سازی مجدد کاربر
         [HttpPost("RestoreUser/{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> RestoreUser(long id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -281,6 +289,7 @@ namespace IdentityManagementSystem.API.Controllers
 
         // ⚫ حذف واقعی از دیتابیس (اختیاری)
         [HttpDelete("HardDeleteUser/{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> HardDeleteUser(long id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -560,7 +569,7 @@ namespace IdentityManagementSystem.API.Controllers
                 }
 
                 var user = await _context.Users
-                    .Include(u => u.Role)
+                    .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
                     .FirstOrDefaultAsync(u => u.UserId == userId);
 
                 if (user == null)
@@ -591,7 +600,7 @@ namespace IdentityManagementSystem.API.Controllers
         {
             try
             {
-                var roles = await _context.Roles
+                var roles = await _context.Roles.Where(r => r.IsActive)
                     .Select(r => new
                     {
                         roleId = r.RoleId,

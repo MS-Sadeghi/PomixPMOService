@@ -40,7 +40,7 @@ namespace IdentityManagementSystem.API.Controllers
             if (string.IsNullOrEmpty(username))
                 return Unauthorized();
 
-            var currentUser = await _context.Users
+            var currentUser = await _context.Users.Include(u => u.UserRoles)
                 .FirstOrDefaultAsync(u => u.Username == username);
 
             if (currentUser == null)

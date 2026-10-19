@@ -24,6 +24,12 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
             _captchaValidatorService = captchaValidatorService ?? throw new ArgumentNullException(nameof(captchaValidatorService));
         }
 
+        private bool IsAdmin()
+        {
+            return HttpContext.Session.GetString("UserRoleId") == "3"
+                || HttpContext.Session.GetString("UserRole") == "ادمین";
+        }
+
         #region Login
         [HttpGet]
         public IActionResult Login()
@@ -132,6 +138,12 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [HttpGet]
         public async Task<IActionResult> Users()
         {
+            if (!IsAdmin())
+            {
+                TempData["ErrorMessage"] = "شما دسترسی لازم برای مدیریت کاربران را ندارید.";
+                return RedirectToAction("Dashboard", "Report", new { area = "AccessControlReports" });
+            }
+
             try
             {
                 var token = HttpContext.Session.GetString("JwtToken");
@@ -166,6 +178,8 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateUser(CreateUserViewModel model)
         {
+            if (!IsAdmin())
+                return Json(new { success = false, message = "شما دسترسی لازم برای این عملیات را ندارید." });
             try
             {
                 if (!ModelState.IsValid)
@@ -216,6 +230,8 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [HttpGet]
         public async Task<IActionResult> EditUser(long id)
         {
+            if (!IsAdmin())
+                return Json(new { success = false, message = "شما دسترسی لازم برای این عملیات را ندارید." });
             try
             {
                 var token = HttpContext.Session.GetString("JwtToken");
@@ -259,6 +275,8 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateUser(UpdateUserViewModel model)
         {
+            if (!IsAdmin())
+                return Json(new { success = false, message = "شما دسترسی لازم برای این عملیات را ندارید." });
             try
             {
                 if (!string.IsNullOrEmpty(model.Password) && model.Password != model.ConfirmPassword)
@@ -308,6 +326,8 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SoftDeleteUser(long id)
         {
+            if (!IsAdmin())
+                return Json(new { success = false, message = "شما دسترسی لازم برای این عملیات را ندارید." });
             try
             {
                 var token = HttpContext.Session.GetString("JwtToken");
@@ -341,6 +361,8 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RestoreUser(long id)
         {
+            if (!IsAdmin())
+                return Json(new { success = false, message = "شما دسترسی لازم برای این عملیات را ندارید." });
             try
             {
                 var token = HttpContext.Session.GetString("JwtToken");
@@ -639,5 +661,120 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                    password.Any(char.IsDigit) &&
                    password.Any(ch => !char.IsLetterOrDigit(ch));
         }
+
+        #region Roles
+        [HttpGet]
+        public async Task<IActionResult> Roles()
+        {
+            if (!IsAdmin())
+            {
+                TempData["ErrorMessage"] = "شما دسترسی لازم برای مدیریت نقش‌ها را ندارید.";
+                return RedirectToAction("Dashboard", "Report", new { area = "AccessControlReports" });
+            }
+
+            try
+            {
+                var token = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["ErrorMessage"] = "لطفاً ابتدا وارد سیستم شوید.";
+                    return RedirectToAction("Login");
+                }
+
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await _client.GetAsync("Roles");
+                if (response.IsSuccessStatusCode)
+                {
+                    var roles = await response.Content.ReadFromJsonAsync<List<RoleItemViewModel>>();
+                    return View(roles ?? new List<RoleItemViewModel>());
+                }
+
+                ViewBag.ErrorMessage = "خطا در دریافت نقش‌ها.";
+                return View(new List<RoleItemViewModel>());
+            }
+            catch (Exception)
+            {
+                ViewBag.ErrorMessage = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.";
+                return View(new List<RoleItemViewModel>());
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public Task<IActionResult> CreateRole([FromBody] RoleFormViewModel model) => SaveRole(model, isNew: true);
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public Task<IActionResult> UpdateRole([FromBody] RoleFormViewModel model) => SaveRole(model, isNew: false);
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteRole(int id)
+        {
+            if (!IsAdmin())
+                return Json(new { success = false, message = "شما دسترسی لازم برای این عملیات را ندارید." });
+
+            try
+            {
+                var token = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(token))
+                    return Json(new { success = false, message = "لطفاً ابتدا وارد سیستم شوید." });
+
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var response = await _client.DeleteAsync($"Roles/{id}");
+
+                if (response.IsSuccessStatusCode)
+                    return Json(new { success = true });
+
+                var error = await response.Content.ReadFromJsonAsync<RoleApiError>();
+                return Json(new { success = false, message = error?.Message ?? "خطا در حذف نقش." });
+            }
+            catch (Exception)
+            {
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
+            }
+        }
+
+        private async Task<IActionResult> SaveRole(RoleFormViewModel model, bool isNew)
+        {
+            if (!IsAdmin())
+                return Json(new { success = false, message = "شما دسترسی لازم برای این عملیات را ندارید." });
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                return Json(new { success = false, message = string.Join(" | ", errors) });
+            }
+
+            try
+            {
+                var token = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(token))
+                    return Json(new { success = false, message = "لطفاً ابتدا وارد سیستم شوید." });
+
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var payload = new { model.RoleName, model.IsActive };
+                var response = isNew
+                    ? await _client.PostAsJsonAsync("Roles", payload)
+                    : await _client.PutAsJsonAsync($"Roles/{model.RoleId}", payload);
+
+                if (response.IsSuccessStatusCode)
+                    return Json(new { success = true });
+
+                var error = await response.Content.ReadFromJsonAsync<RoleApiError>();
+                return Json(new { success = false, message = error?.Message ?? "خطا در ذخیره نقش." });
+            }
+            catch (Exception)
+            {
+                return Json(new { success = false, message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید." });
+            }
+        }
+
+        private class RoleApiError
+        {
+            [System.Text.Json.Serialization.JsonPropertyName("message")]
+            public string? Message { get; set; }
+        }
+        #endregion
     }
 }

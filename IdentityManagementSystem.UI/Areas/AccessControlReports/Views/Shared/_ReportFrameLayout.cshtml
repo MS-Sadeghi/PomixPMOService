@@ -28,6 +28,14 @@
         }
     </style>
     @RenderSection("Styles", required: false)
+    <style>
+        /* کادر گزارش‌ها مستقیماً داخل .row قرار می‌گیرند و به لبه‌ها می‌چسبیدند */
+        .container-fluid > .row > .card {
+            width: calc(100% - 1.5rem);
+            max-width: calc(100% - 1.5rem);
+            margin-inline: .75rem;
+        }
+    </style>
 </head>
 <body>
     <div id="loader"></div>

@@ -55,6 +55,10 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireAssertion(ctx =>
+            ctx.User.HasClaim("RoleId", "3") || ctx.User.IsInRole("ادمین")));
+
     options.AddPolicy("CanAccessShahkar", policy =>
         policy.RequireClaim("Permission", "CanAccessShahkar"));
 

@@ -119,7 +119,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body">
-                <form id="createUserForm" asp-controller="Home" asp-action="CreateUser" method="post" class="needs-validation" novalidate>
+                <form id="createUserForm" asp-controller="Account" asp-action="CreateUser" method="post" class="needs-validation" novalidate>
                     @Html.AntiForgeryToken()
                     <div class="row">
                         <div class="col-xl-6 mb-3">
@@ -154,7 +154,7 @@
                     <div class="row">
                         <div class="col-xl-12 mb-3">
                             <label class="form-label" for="RoleId">نقش کاربر</label>
-                            <select class="form-control" id="RoleId" name="RoleId" required>
+                            <select class="form-select" id="RoleId" name="RoleId" required>
                                 <option value="">در حال بارگذاری...</option>
                             </select>
                             <div class="valid-feedback">معتبر است!</div>
@@ -207,7 +207,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
             </div>
             <div class="modal-body">
-                <form id="editUserForm" asp-controller="Home" asp-action="UpdateUser" method="post">
+                <form id="editUserForm" asp-controller="Account" asp-action="UpdateUser" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="editUserId" name="UserId" />
 
@@ -236,7 +236,7 @@
                     <div class="row">
                         <div class="col-xl-6 mb-3">
                             <label class="form-label" for="editRoleId">نقش کاربر</label>
-                            <select class="form-control" id="editRoleId" name="RoleId">
+                            <select class="form-select" id="editRoleId" name="RoleId">
                                 <option value="">انتخاب کنید</option>
                             </select>
                         </div>
@@ -327,7 +327,7 @@
             btn.addEventListener('click', function() {
                 var userId = this.dataset.id;
 
-                fetch('@Url.Action("EditUser", "Home")?id=' + userId, {
+                fetch('@Url.Action("EditUser", "Account")?id=' + userId, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -364,7 +364,7 @@
 
                     var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
-                    fetch('@Url.Action("SoftDeleteUser", "Home")', {
+                    fetch('@Url.Action("SoftDeleteUser", "Account")', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
@@ -486,7 +486,7 @@
     });
 
     function loadRolesForModal(selectId) {
-        fetch('@Url.Action("GetRoles", "Home")', {
+        fetch('@Url.Action("GetRoles", "Account")', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'

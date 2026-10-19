@@ -142,7 +142,8 @@ namespace IdentityManagementSystem.API.Services
 
     new Claim(ClaimTypes.Surname, user.LastName ?? ""),
 
-    new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User")
+    new Claim(ClaimTypes.Role, user.Role?.RoleName ?? "User"),
+    new Claim("RoleId", user.RoleId.ToString())
 };
             // اضافه کردن پرمیشن‌ها
             claims.AddRange(permissions.Select(p => new Claim("Permission", p)));

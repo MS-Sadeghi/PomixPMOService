@@ -52,7 +52,7 @@ namespace IdentityManagementSystem.API.Controllers
                 return BadRequest(ModelState);
 
             var user = await _context.Users
-                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Username == loginViewModel.Username);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(loginViewModel.Password, user.PasswordHash))
@@ -77,8 +77,8 @@ namespace IdentityManagementSystem.API.Controllers
                 user.LastName,
                 Role = new
                 {
-                    RoleId = user.Role?.RoleId ?? 0,
-                    RoleName = user.Role?.RoleName
+                    user.Role.RoleId,
+                    user.Role.RoleName
                 },
                 Tokens = tokens // اضافه کردن توکن‌ها
             });
@@ -92,7 +92,7 @@ namespace IdentityManagementSystem.API.Controllers
             if (refreshToken == null)
                 return Unauthorized("Refresh Token نامعتبر یا منقضی شده است.");
 
-            var user = await _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.UserId == refreshToken.UserId);
+            var user = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.UserId == refreshToken.UserId);
             if (user == null)
                 return Unauthorized("کاربر یافت نشد.");
 
@@ -131,7 +131,7 @@ namespace IdentityManagementSystem.API.Controllers
                 Name = viewModel.Name,
                 LastName = viewModel.LastName,
                 MobileNumber = viewModel.MobileNumber,
-                UserRoles = new List<UserRole> { new UserRole { RoleId = viewModel.RoleId, CreatedAt = DateTime.Now, CreatedBy = "Register" } },
+                RoleId = viewModel.RoleId,
                 CreatedAt = DateTime.Now,
                 IsActive = true
             };
@@ -141,7 +141,7 @@ namespace IdentityManagementSystem.API.Controllers
 
             // بارگذاری نقش با Include تا از NullReferenceException جلوگیری شود
             user = await _context.Users
-                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.UserId == user.UserId);
 
             if (user == null)
@@ -159,6 +159,7 @@ namespace IdentityManagementSystem.API.Controllers
                 Name = user.Name,
                 LastName = user.LastName,
                 Role = user.Role?.RoleName ?? "بدون نقش", // RoleName مستقیم از DB
+                RoleId = user.RoleId,
                 CreatedAt = user.CreatedAt,
                 LastLogin = user.LastLogin,
                 IsActive = user.IsActive,
@@ -187,7 +188,7 @@ namespace IdentityManagementSystem.API.Controllers
                 return Forbid();
             }
             var users = await _context.Users
-                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .Include(u => u.Role)
                 .Select(u => new UserViewModel
                 {
                     UserId = u.UserId,
@@ -195,8 +196,8 @@ namespace IdentityManagementSystem.API.Controllers
                     Username = u.Username,
                     Name = u.Name,
                     LastName = u.LastName,
-                    Role = u.UserRoles.OrderBy(ur => ur.UserRoleId).Select(ur => ur.Role!.RoleName).FirstOrDefault() ?? "بدون نقش",
-                    RoleId = u.UserRoles.OrderBy(ur => ur.UserRoleId).Select(ur => ur.RoleId).FirstOrDefault(),
+                    Role = u.Role != null ? u.Role.RoleName : "بدون نقش",
+                    RoleId = u.RoleId,
                     CreatedAt = u.CreatedAt,
                     LastLogin = u.LastLogin,
                     IsActive = u.IsActive,          //  اضافه شد تا وضعیت فعال/غیرفعال هم برگرده
@@ -212,7 +213,7 @@ namespace IdentityManagementSystem.API.Controllers
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdateUser(long id, [FromBody] UpdateUserRequest model)
         {
-            var user = await _context.Users.Include(u => u.UserRoles).FirstOrDefaultAsync(u => u.UserId == id);
+            var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound("کاربر یافت نشد.");
 
@@ -233,11 +234,7 @@ namespace IdentityManagementSystem.API.Controllers
                 user.MobileNumber = model.MobileNumber;
 
             if (model.RoleId.HasValue && model.RoleId.Value > 0)
-            {
-                var primary = user.UserRoles.OrderBy(ur => ur.UserRoleId).FirstOrDefault();
-                if (primary != null) primary.RoleId = model.RoleId.Value;
-                else user.UserRoles.Add(new UserRole { RoleId = model.RoleId.Value, CreatedAt = DateTime.Now, CreatedBy = "UpdateUser" });
-            }
+                user.RoleId = model.RoleId.Value;
 
             // اگر رمز جدید فرستاده شده بود، بروزرسانی کن
             if (!string.IsNullOrEmpty(model.Password))
@@ -569,7 +566,7 @@ namespace IdentityManagementSystem.API.Controllers
                 }
 
                 var user = await _context.Users
-                    .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                    .Include(u => u.Role)
                     .FirstOrDefaultAsync(u => u.UserId == userId);
 
                 if (user == null)
@@ -626,7 +623,8 @@ namespace IdentityManagementSystem.API.Controllers
                 _context.UserLogs.Add(new UserLog
                 {
                     UserId = userId,
-                    Action = $"{action}: Username={username}, Result={result}",
+                    Action = action,
+                    Description = $"Username={username}, Result={result}",
                     ActionTime = DateTime.UtcNow,
                     IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
                     UserAgent = Request.Headers["User-Agent"].ToString()
@@ -654,7 +652,10 @@ namespace IdentityManagementSystem.API.Controllers
                         context.UserLogs.Add(new UserLog
                         {
                             UserId = userId,
-                            Action = $"ForgotPassword_Code_Send_Failed: Username={username}, Result=Password reset code SMS failed",
+                            Action = "ForgotPassword_Code_Send_Failed",
+                            Description = $"Username={username}, Result=Password reset code SMS failed",
+                            ActionResult = false,
+                            LogLevel = "ERROR",
                             ActionTime = DateTime.UtcNow,
                             IpAddress = ipAddress,
                             UserAgent = userAgent
@@ -683,7 +684,8 @@ namespace IdentityManagementSystem.API.Controllers
                     context.UserLogs.Add(new UserLog
                     {
                         UserId = userId,
-                        Action = $"{action}: Username={username}, Result={result}",
+                        Action = action,
+                        Description = $"Username={username}, Result={result}",
                         ActionTime = DateTime.UtcNow,
                         IpAddress = ipAddress,
                         UserAgent = userAgent

@@ -34,7 +34,7 @@ namespace IdentityManagementSystem.API.Controllers
                     r.IsActive,
                     r.CreatedAt,
                     r.UpdatedAt,
-                    UserCount = _context.UserRoles.Count(ur => ur.RoleId == r.RoleId),
+                    UserCount = _context.Users.Count(u => u.RoleId == r.RoleId),
                     IsProtected = r.RoleId == AdminRoleId
                 })
                 .ToListAsync();
@@ -100,7 +100,7 @@ namespace IdentityManagementSystem.API.Controllers
             if (role == null)
                 return NotFound(new { message = "نقش یافت نشد." });
 
-            if (await _context.UserRoles.AnyAsync(ur => ur.RoleId == id))
+            if (await _context.Users.AnyAsync(u => u.RoleId == id))
                 return Conflict(new { message = "این نقش به کاربرانی اختصاص داده شده و قابل حذف نیست. در صورت نیاز آن را غیرفعال کنید." });
 
             try

@@ -34,14 +34,6 @@ namespace IdentityManagementSystem.API.Data
             {
                 entity.ToTable("UserLog", "Log");
                 entity.HasKey(ul => ul.LogId);
-                entity.Property(ul => ul.LogId).HasColumnName("log_id");
-                entity.Property(ul => ul.UserId).HasColumnName("userid");
-                entity.Property(ul => ul.Action).HasColumnName("action");
-                entity.Property(ul => ul.ActionTime).HasColumnName("action_time");
-                entity.Property(ul => ul.IpAddress).HasColumnName("ip_address").HasMaxLength(45);
-                entity.Property(ul => ul.UserAgent).HasColumnName("user_agent").HasMaxLength(255);
-                entity.Ignore(ul => ul.ActionResult);
-                entity.Ignore(ul => ul.LogLevel);
             });
             modelBuilder.Entity<RequestHistory>().ToTable("RequestHistory", "Sec");
             modelBuilder.Entity<UserAccess>().ToTable("UserAccess", "Sec");

@@ -131,8 +131,13 @@ namespace IdentityManagementSystem.API.Models
 
         [MaxLength(512)]
         public string? UserAgent { get; set; }
-        public string? ActionResult { get; internal set; }
-        public string? LogLevel { get; internal set; }
+        // موفق بودن عملیات (ستون bit در دیتابیس)
+        public bool ActionResult { get; set; } = true;
+
+        [MaxLength(20)]
+        public string LogLevel { get; set; } = "INFO";
+
+        public string? Description { get; set; }
     }
 
 
@@ -300,6 +305,8 @@ namespace IdentityManagementSystem.API.Models
         public int RoleId { get; set; }
         public string RoleName { get; set; } = string.Empty;
         public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime? UpdatedAt { get; set; }
     }
 
     public class SmsLog

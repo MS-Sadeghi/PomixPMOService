@@ -27,11 +27,12 @@ namespace IdentityManagementSystem.API.Services.Logging
                 {
                     UserId = userId,
                     Action = action,
-                    ActionResult = actionResult,
+                    ActionResult = !string.Equals(logLevel, "Error", StringComparison.OrdinalIgnoreCase),
+                    Description = actionResult,
                     ActionTime = DateTime.UtcNow,
                     IpAddress = ip,
                     UserAgent = userAgent,
-                    LogLevel = logLevel
+                    LogLevel = logLevel.ToUpperInvariant()
                 };
 
                 _context.UserLogs.Add(log);

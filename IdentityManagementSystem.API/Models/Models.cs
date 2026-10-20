@@ -13,35 +13,17 @@ namespace IdentityManagementSystem.API.Models
         public string Name { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
 
-        // نقش‌ها در جدول Sec.UserRole نگهداری می‌شوند؛ نقش اصلی = اولین رکورد
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        // فقط foreign key
+        public int RoleId { get; set; }
 
-        [NotMapped]
-        public Role? Role => UserRoles.OrderBy(ur => ur.UserRoleId).Select(ur => ur.Role).FirstOrDefault();
-
-        [NotMapped]
-        public int RoleId => Role?.RoleId ?? 0;
-
+        // navigation property
+        public Role Role { get; set; } = null!;
         public string? MobileNumber { get; set; }
 
 
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLogin { get; set; }
         public bool IsActive { get; set; } = true;
-    }
-
-    [Table("UserRole", Schema = "Sec")]
-    public class UserRole
-    {
-        [Key]
-        public long UserRoleId { get; set; }
-        public long UserId { get; set; }
-        public int RoleId { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public string? CreatedBy { get; set; }
-
-        public User? User { get; set; }
-        public Role? Role { get; set; }
     }
 
     public class RoleViewModel
@@ -289,7 +271,7 @@ namespace IdentityManagementSystem.API.Models
         public DateTime? ReadDate { get; set; }
     }
 
-    [Table("RefreshToken", Schema = "Sec")]
+    [Table("RefreshTokens", Schema = "Sec")]
     public class RefreshToken
     {
         [Key]
@@ -318,8 +300,6 @@ namespace IdentityManagementSystem.API.Models
         public int RoleId { get; set; }
         public string RoleName { get; set; } = string.Empty;
         public bool IsActive { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime? UpdatedAt { get; set; }
     }
 
     public class SmsLog

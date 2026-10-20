@@ -11,7 +11,6 @@ namespace IdentityManagementSystem.API.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
-        public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<Request> Request { get; set; }
         public DbSet<Cartable> Cartable { get; set; }
         public DbSet<CartableItem> CartableItems { get; set; }
@@ -26,11 +25,11 @@ namespace IdentityManagementSystem.API.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>().ToTable("User", "Sec");
+            modelBuilder.Entity<User>().ToTable("Users", "Sec");
             modelBuilder.Entity<Request>().ToTable("Request", "Define");
             modelBuilder.Entity<RequestStatus>().ToTable("RequestStatus", "Define");
             modelBuilder.Entity<Cartable>().ToTable("Cartable", "WF");
-            modelBuilder.Entity<CartableItem>().ToTable("CartableItem", "WF");
+            modelBuilder.Entity<CartableItem>().ToTable("CartableItems", "WF");
             modelBuilder.Entity<UserLog>(entity =>
             {
                 entity.ToTable("UserLog", "Log");
@@ -47,12 +46,11 @@ namespace IdentityManagementSystem.API.Data
             modelBuilder.Entity<RequestHistory>().ToTable("RequestHistory", "Sec");
             modelBuilder.Entity<UserAccess>().ToTable("UserAccess", "Sec");
             modelBuilder.Entity<ShahkarLog>().ToTable("ShahkarLog", "Log"); // اضافه شده
-            modelBuilder.Entity<RefreshToken>().ToTable("RefreshToken", "Sec");
-            modelBuilder.Entity<Role>().ToTable("Role", "Sec");
-            modelBuilder.Entity<UserRole>().ToTable("UserRole", "Sec");
+            modelBuilder.Entity<RefreshToken>().ToTable("RefreshTokens", "Sec");
+            modelBuilder.Entity<Role>().ToTable("Roles", "Sec");
             modelBuilder.Entity<SmsLog>(entity =>
             {
-                entity.ToTable("Sms", "Log");
+                entity.ToTable("SmsLogs", "Log");
                 entity.HasKey(sl => sl.Id);
                 entity.Ignore(sl => sl.UserId);
             });
@@ -64,12 +62,11 @@ namespace IdentityManagementSystem.API.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
-            modelBuilder.Entity<UserRole>()
-                .HasOne(ur => ur.User).WithMany(u => u.UserRoles)
-                .HasForeignKey(ur => ur.UserId).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<UserRole>()
-                .HasOne(ur => ur.Role).WithMany()
-                .HasForeignKey(ur => ur.RoleId).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<User>()
+                 .HasOne(u => u.Role)
+                 .WithMany()
+                 .HasForeignKey(u => u.RoleId)
+                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Request>()
                 .HasIndex(r => r.DocumentNumber)

@@ -31,7 +31,16 @@ public class PomixClient : IPomixClient
             service = serviceName
         };
 
-        var response = await _httpClient.PostAsJsonAsync("", request);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.PostAsJsonAsync("", request);
+        }
+        catch (TaskCanceledException)
+        {
+            // انقضای زمان انتظار (HttpClient.Timeout) - سرویس Pomix پاسخ نداده است
+            throw new TimeoutException($"Pomix service '{serviceName}' did not respond within {_httpClient.Timeout.TotalSeconds:0} seconds.");
+        }
 
         var responseText = await response.Content.ReadAsStringAsync();
 

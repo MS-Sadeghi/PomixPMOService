@@ -30,6 +30,39 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 || HttpContext.Session.GetString("UserRole") == "ادمین";
         }
 
+        // پیام خطای واقعی API را به کاربر نشان می‌دهد تا علت (نشست منقضی، نبود دسترسی، داده تکراری و ...) معلوم باشد
+        private string ApiFailureMessage(System.Net.HttpStatusCode status, string? body, string fallback)
+        {
+            if (status == System.Net.HttpStatusCode.Unauthorized)
+                return "نشست شما منقضی شده است. لطفاً از سامانه خارج شده و دوباره وارد شوید.";
+
+            if (status == System.Net.HttpStatusCode.Forbidden)
+                return "دسترسی ادمین برای این عملیات تأیید نشد. اگر نقش شما به‌تازگی تغییر کرده، از سامانه خارج شده و دوباره وارد شوید.";
+
+            var detail = body?.Trim();
+            if (!string.IsNullOrEmpty(detail) && detail.StartsWith("{"))
+            {
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(detail);
+                    foreach (var key in new[] { "message", "detail", "title" })
+                    {
+                        if (doc.RootElement.TryGetProperty(key, out var value) && value.ValueKind == System.Text.Json.JsonValueKind.String)
+                        {
+                            detail = value.GetString();
+                            break;
+                        }
+                    }
+                }
+                catch (System.Text.Json.JsonException) { }
+            }
+
+            if (string.IsNullOrWhiteSpace(detail) || detail!.Length > 300)
+                return $"{fallback} (کد خطا: {(int)status})";
+
+            return $"{fallback} ({detail})";
+        }
+
         #region Login
         [HttpGet]
         public IActionResult Login()
@@ -218,7 +251,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = "خطا در ایجاد کاربر." });
+                    return Json(new { success = false, message = ApiFailureMessage(response.StatusCode, errorContent, "خطا در ایجاد کاربر.") });
                 }
             }
             catch (Exception)
@@ -304,7 +337,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                     model.RoleId
                 };
 
-                var response = await _client.PutAsJsonAsync($"Auth/UpdateUser/{model.UserId}", updateData);
+                var response = await _client.PostAsJsonAsync($"Auth/UpdateUser/{model.UserId}", updateData);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -313,7 +346,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = "خطا در به‌روزرسانی کاربر." });
+                    return Json(new { success = false, message = ApiFailureMessage(response.StatusCode, errorContent, "خطا در به‌روزرسانی کاربر.") });
                 }
             }
             catch (Exception)
@@ -337,7 +370,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 }
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _client.DeleteAsync($"Auth/SoftDeleteUser/{id}");
+                var response = await _client.PostAsync($"Auth/SoftDeleteUser/{id}", null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -348,7 +381,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 else
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = "خطا در غیرفعال کردن کاربر." });
+                    return Json(new { success = false, message = ApiFailureMessage(response.StatusCode, error, "خطا در غیرفعال کردن کاربر.") });
                 }
             }
             catch (Exception)
@@ -381,7 +414,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = false, message = "خطا در فعال‌سازی کاربر." });
+                    return Json(new { success = false, message = ApiFailureMessage(response.StatusCode, errorContent, "خطا در فعال‌سازی کاربر.") });
                 }
             }
             catch (Exception)
@@ -721,7 +754,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                     return Json(new { success = false, message = "لطفاً ابتدا وارد سیستم شوید." });
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _client.DeleteAsync($"Roles/{id}");
+                var response = await _client.PostAsync($"Roles/{id}/delete", null);
 
                 if (response.IsSuccessStatusCode)
                     return Json(new { success = true });
@@ -756,7 +789,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 var payload = new { model.RoleName, model.IsActive };
                 var response = isNew
                     ? await _client.PostAsJsonAsync("Roles", payload)
-                    : await _client.PutAsJsonAsync($"Roles/{model.RoleId}", payload);
+                    : await _client.PostAsJsonAsync($"Roles/{model.RoleId}/update", payload);
 
                 if (response.IsSuccessStatusCode)
                     return Json(new { success = true });

@@ -8,6 +8,7 @@ public sealed class GlobalExceptionHandlingMiddleware
     private const string GenericErrorMessage = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.";
     private const string BadRequestMessage = "درخواست ارسال‌شده معتبر نیست.";
     private const string ForbiddenMessage = "شما مجوز انجام این عملیات را ندارید.";
+    private const string GatewayTimeoutMessage = "سرویس گزارش‌گیری (Pomix) در زمان مقرر پاسخ نداد. لطفاً بعداً دوباره تلاش کنید.";
 
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
@@ -70,6 +71,7 @@ public sealed class GlobalExceptionHandlingMiddleware
             ArgumentException => StatusCodes.Status400BadRequest,
             BadHttpRequestException => StatusCodes.Status400BadRequest,
             UnauthorizedAccessException => StatusCodes.Status403Forbidden,
+            TimeoutException => StatusCodes.Status504GatewayTimeout,
             _ => StatusCodes.Status500InternalServerError
         };
     }
@@ -80,6 +82,7 @@ public sealed class GlobalExceptionHandlingMiddleware
         {
             StatusCodes.Status400BadRequest => "Bad Request",
             StatusCodes.Status403Forbidden => "Forbidden",
+            StatusCodes.Status504GatewayTimeout => "Gateway Timeout",
             _ => "Internal Server Error"
         };
     }
@@ -90,6 +93,7 @@ public sealed class GlobalExceptionHandlingMiddleware
         {
             StatusCodes.Status400BadRequest => BadRequestMessage,
             StatusCodes.Status403Forbidden => ForbiddenMessage,
+            StatusCodes.Status504GatewayTimeout => GatewayTimeoutMessage,
             _ => GenericErrorMessage
         };
     }

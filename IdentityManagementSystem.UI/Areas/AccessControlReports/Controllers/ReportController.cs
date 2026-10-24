@@ -38,12 +38,12 @@ namespace IdentityManagementSystem.UI.Controllers
 					data = result
 				});
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 				return BadRequest(new
 				{
 					success = false,
-					message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
+					message = ex is TimeoutException ? ex.Message : "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
 				});
 			}
 		}
@@ -86,12 +86,12 @@ namespace IdentityManagementSystem.UI.Controllers
 					data = result
 				});
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 				return BadRequest(new
 				{
 					success = false,
-					message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
+					message = ex is TimeoutException ? ex.Message : "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
 				});
 			}
 		}
@@ -210,12 +210,12 @@ namespace IdentityManagementSystem.UI.Controllers
 					data = result
 				});
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 				return BadRequest(new
 				{
 					success = false,
-					message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
+					message = ex is TimeoutException ? ex.Message : "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
 				});
 			}
 		}
@@ -233,12 +233,12 @@ namespace IdentityManagementSystem.UI.Controllers
 					data = result
 				});
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 				return BadRequest(new
 				{
 					success = false,
-					message = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
+					message = ex is TimeoutException ? ex.Message : "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید."
 				});
 			}
 		}

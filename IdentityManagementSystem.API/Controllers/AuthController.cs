@@ -210,12 +210,21 @@ namespace IdentityManagementSystem.API.Controllers
         }
 
         [HttpPut("UpdateUser/{id}")]
+        [HttpPost("UpdateUser/{id}")] // برای سرورهایی (IIS/WebDAV) که PUT را مسدود می‌کنند
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdateUser(long id, [FromBody] UpdateUserRequest model)
         {
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound("کاربر یافت نشد.");
+
+            if (!string.IsNullOrEmpty(model.Username) &&
+                await _context.Users.AnyAsync(u => u.Username == model.Username && u.UserId != id))
+                return Conflict(new { message = "این نام کاربری قبلاً برای کاربر دیگری ثبت شده است." });
+
+            if (!string.IsNullOrEmpty(model.NationalId) &&
+                await _context.Users.AnyAsync(u => u.NationalId == model.NationalId && u.UserId != id))
+                return Conflict(new { message = "این کد ملی قبلاً برای کاربر دیگری ثبت شده است." });
 
             // فقط فیلدهایی که مقدار دارند را به‌روزرسانی کن
             if (!string.IsNullOrEmpty(model.Name))
@@ -248,6 +257,7 @@ namespace IdentityManagementSystem.API.Controllers
 
         // 🔴 Soft Delete (غیرفعال کردن کاربر)
         [HttpDelete("SoftDeleteUser/{id}")]
+        [HttpPost("SoftDeleteUser/{id}")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> SoftDeleteUser(long id)
         {
@@ -286,6 +296,7 @@ namespace IdentityManagementSystem.API.Controllers
 
         // ⚫ حذف واقعی از دیتابیس (اختیاری)
         [HttpDelete("HardDeleteUser/{id}")]
+        [HttpPost("HardDeleteUser/{id}")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> HardDeleteUser(long id)
         {

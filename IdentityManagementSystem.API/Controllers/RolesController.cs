@@ -65,6 +65,7 @@ namespace IdentityManagementSystem.API.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [HttpPost("{id:int}/update")] // برای سرورهایی که PUT را مسدود می‌کنند
         public async Task<IActionResult> Update(int id, [FromBody] RoleRequest model)
         {
             if (!ModelState.IsValid)
@@ -91,6 +92,7 @@ namespace IdentityManagementSystem.API.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [HttpPost("{id:int}/delete")]
         public async Task<IActionResult> Delete(int id)
         {
             if (id == AdminRoleId)

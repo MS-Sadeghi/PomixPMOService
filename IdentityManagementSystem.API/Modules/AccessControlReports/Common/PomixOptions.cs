@@ -7,6 +7,9 @@
         public string Code { get; set; } = string.Empty;
 
         public string Password { get; set; } = string.Empty;
+
+        // حداکثر زمان انتظار برای پاسخ سرویس Pomix (ثانیه)
+        public int TimeoutSeconds { get; set; } = 30;
     }
 
     public class PomixResult

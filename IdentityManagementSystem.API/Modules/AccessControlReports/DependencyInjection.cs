@@ -21,6 +21,7 @@ public static class DependencyInjection
                 .Value;
 
             client.BaseAddress = new Uri(options.BaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds > 0 ? options.TimeoutSeconds : 30);
         });
 
         services.AddScoped<GetDataHandler>();

@@ -154,6 +154,9 @@ namespace IdentityManagementSystem.API.Services.AccessControlReports
 
 		private static async Task ThrowForFailedResponseAsync(HttpResponseMessage response, string reportName)
 		{
+			if (response.StatusCode == System.Net.HttpStatusCode.GatewayTimeout)
+				throw new TimeoutException("سرویس گزارش‌گیری (Pomix) در زمان مقرر پاسخ نداد. لطفاً بعداً دوباره تلاش کنید.");
+
 			var errorContent = await response.Content.ReadAsStringAsync();
 			throw new InvalidOperationException(
 				$"دریافت گزارش «{reportName}» با خطا مواجه شد ({(int)response.StatusCode}): {errorContent}");

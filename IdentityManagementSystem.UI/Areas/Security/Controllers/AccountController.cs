@@ -64,6 +64,20 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
         }
 
         #region Login
+        // ذخیره‌ی توکن‌ها و اطلاعات کاربر در نشست؛ برای ورود عادی و ورود یکپارچه (SSO) یکسان است.
+        private void SetLoginSession(LoginResponse loginResponse)
+        {
+            HttpContext.Session.SetString("JwtToken", loginResponse.Tokens!.AccessToken);
+            HttpContext.Session.SetString("RefreshToken", loginResponse.Tokens.RefreshToken ?? "");
+
+            HttpContext.Session.SetString("UserRole", loginResponse.Role?.RoleName ?? "");
+            HttpContext.Session.SetString("UserRoleId", loginResponse.Role?.RoleId.ToString() ?? "0");
+            HttpContext.Session.SetString("UserName", loginResponse.Name ?? "");
+            HttpContext.Session.SetString("UserLastName", loginResponse.LastName ?? "");
+            HttpContext.Session.SetString("UserId", loginResponse.UserId.ToString());
+            HttpContext.Session.SetString("Username", loginResponse.Username ?? "");
+        }
+
         [HttpGet]
         public IActionResult Login()
         {
@@ -104,15 +118,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                     return Json(new { success = false, message = "توکن دریافت نشد." });
                 }
 
-                HttpContext.Session.SetString("JwtToken", loginResponse.Tokens.AccessToken);
-                HttpContext.Session.SetString("RefreshToken", loginResponse.Tokens.RefreshToken ?? "");
-
-                HttpContext.Session.SetString("UserRole", loginResponse.Role?.RoleName ?? "");
-                HttpContext.Session.SetString("UserRoleId", loginResponse.Role?.RoleId.ToString() ?? "0");
-                HttpContext.Session.SetString("UserName", loginResponse.Name ?? "");
-                HttpContext.Session.SetString("UserLastName", loginResponse.LastName ?? "");
-                HttpContext.Session.SetString("UserId", loginResponse.UserId.ToString());
-                HttpContext.Session.SetString("Username", loginResponse.Username ?? "");
+                SetLoginSession(loginResponse);
 
                 return Json(new
                 {
@@ -129,6 +135,59 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
             }
         }
         #endregion
+
+        /// <summary>
+        /// ورود یکپارچه از کارت سامانه در پورتال اینترانت (docs/sso.md در مخزن اینترانت). بلیت را به API می‌دهد؛ API آن را با کلید خودش از اینترانت
+        /// تحویل می‌گیرد، کاربر فعال با همان نام کاربری را پیدا می‌کند و توکن می‌دهد. returnUrl پذیرفته نمی‌شود؛ مقصد همیشه داشبورد است.
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> Sso(string? ticket)
+        {
+            if (string.IsNullOrWhiteSpace(ticket) || ticket.Length != 43)
+                return SsoFailed("پیوند ورود معتبر نیست؛ دوباره از پورتال اینترانت روی کارت سامانه بزنید.");
+
+            try
+            {
+                var response = await _client.PostAsJsonAsync("auth/sso", new { ticket });
+                if (!response.IsSuccessStatusCode)
+                    return SsoFailed(await SsoMessageAsync(response));
+
+                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                if (loginResponse?.Tokens?.AccessToken == null)
+                    return SsoFailed("توکن دریافت نشد.");
+
+                // نشست قبلی این مرورگر (شاید کاربر دیگری) کامل پاک می‌شود.
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                HttpContext.Session.Clear();
+                SetLoginSession(loginResponse);
+                return RedirectToAction("Dashboard", "Report", new { area = "AccessControlReports" });
+            }
+            catch (Exception)
+            {
+                return SsoFailed("خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.");
+            }
+        }
+
+        private IActionResult SsoFailed(string message)
+        {
+            ViewBag.ErrorMessage = message;
+            return View("Login", new LoginViewModel());
+        }
+
+        private static async Task<string> SsoMessageAsync(HttpResponseMessage response)
+        {
+            const string fallback = "ورود یکپارچه انجام نشد. با مدیر سامانه تماس بگیرید.";
+            try
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                using var doc = System.Text.Json.JsonDocument.Parse(body);
+                if (doc.RootElement.TryGetProperty("message", out var message) && message.ValueKind == System.Text.Json.JsonValueKind.String)
+                    return message.GetString() ?? fallback;
+            }
+            catch (System.Text.Json.JsonException) { }
+            return fallback;
+        }
 
         #region Logout
         [HttpPost]

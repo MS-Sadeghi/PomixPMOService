@@ -126,6 +126,7 @@ app.Use(async (context, next) =>
 
     // مسیرهای آزاد
     if (path.StartsWith("/security/account/login") ||
+        path.StartsWith("/security/account/sso") ||
         path.StartsWith("/security/account/forgotpassword") ||
         path.StartsWith("/security/account/startforgotpassword") ||
         path.StartsWith("/security/account/verifyforgotpasswordcode") ||

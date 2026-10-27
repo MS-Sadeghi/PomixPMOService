@@ -84,6 +84,65 @@ namespace IdentityManagementSystem.API.Controllers
             });
         }
 
+        /// <summary>
+        /// ورود یکپارچه از کارت سامانه در پورتال اینترانت: بلیت یک‌بارمصرف را از سرور به اینترانت می‌دهد، کاربر فعال را با همان نام کاربری
+        /// (بدون حساسیت به بزرگی/کوچکی حروف) پیدا می‌کند و مثل ورود عادی توکن می‌دهد. نام کاربری این کاربر در اینترانت نگاشت می‌شود
+        /// و این سامانه برای آن جدول یا تنظیم جدایی ندارد. خطاها پیام‌های مشخص و بدون جزئیات داخلی دارند.
+        /// </summary>
+        [HttpPost("sso")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Sso([FromBody] SsoLoginViewModel model, [FromServices] IntranetSsoClient intranet)
+        {
+            if (!intranet.IsConfigured)
+                return StatusCode(503, new { message = "ورود یکپارچه با اینترانت در این سامانه پیکربندی نشده است." });
+            if (!IntranetSsoClient.IsWellFormed(model?.Ticket))
+                return BadRequest(new { message = "پیوند ورود معتبر نیست؛ دوباره از پورتال اینترانت روی کارت سامانه بزنید." });
+
+            IntranetSsoIdentity? identity;
+            try
+            {
+                identity = await intranet.RedeemAsync(model!.Ticket!, HttpContext.RequestAborted);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Intranet SSO redeem failed.");
+                return StatusCode(502, new { message = "ارتباط با اینترانت برقرار نشد؛ کمی بعد دوباره تلاش کنید." });
+            }
+            if (identity == null)
+                return Unauthorized(new { message = "پیوند ورود منقضی یا قبلاً استفاده شده است؛ دوباره از پورتال اینترانت روی کارت سامانه بزنید." });
+
+            var username = identity.Username.Trim().ToLower();
+            var matches = await _context.Users.Include(u => u.Role)
+                .Where(u => u.IsActive && u.Username.ToLower() == username)
+                .Take(2).ToListAsync();
+            if (matches.Count != 1)
+            {
+                _logger.LogWarning("Intranet SSO: {Count} active users match intranet username {Username}.", matches.Count, identity.Username);
+                return Unauthorized(new
+                {
+                    message = matches.Count == 0
+                        ? $"برای نام کاربری «{identity.Username}» حساب فعالی در این سامانه ثبت نشده است. با مدیر سامانه تماس بگیرید."
+                        : "بیش از یک حساب فعال با نام کاربری شما در این سامانه ثبت شده است. با مدیر سامانه تماس بگیرید."
+                });
+            }
+
+            var user = matches[0];
+            user.LastLogin = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            var tokens = await _tokenService.GenerateTokensAsync(user);
+            await LogAction(user.UserId, "Sso_Success", user.Username, $"Signed in through intranet SSO (intranet user {identity.Username})");
+
+            return Ok(new
+            {
+                user.UserId,
+                user.Username,
+                user.Name,
+                user.LastName,
+                Role = new { user.Role.RoleId, user.Role.RoleName },
+                Tokens = tokens
+            });
+        }
+
         [HttpPost("refresh")]
         [AllowAnonymous]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequestViewModel model)

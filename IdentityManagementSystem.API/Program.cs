@@ -24,6 +24,12 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<TokenService, TokenService>();
 builder.Services.Configure<ShahkarServiceOptions>(builder.Configuration.GetSection("Shahkar"));
 
+// --- ورود یکپارچه با اینترانت سازمانی (کلید فقط در User Secrets) ---
+builder.Services.Configure<IntranetSsoOptions>(builder.Configuration.GetSection("IntranetSso"));
+builder.Services.AddScoped<IntranetSsoClient>();
+builder.Services.AddHttpClient(IntranetSsoClient.HttpClientName)
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+
 // --- AccessControlReports Modules ---
 builder.Services.Configure<PomixOptions>(
     builder.Configuration.GetSection("Pomix"));

@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<SelfContained>true</SelfContained>
+		<UserSecretsId>IdentityManagementSystem-API-AccessReport</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>

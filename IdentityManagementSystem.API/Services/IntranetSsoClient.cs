@@ -42,6 +42,16 @@ namespace IdentityManagementSystem.API.Services
             && CodePattern.IsMatch(_options.ApplicationCode ?? "")
             && (_options.Key?.Length ?? 0) >= 32;
 
+        /// <summary>نام تنظیم‌هایی که خالی یا نامعتبرند (بدون مقدار آن‌ها)؛ برای لاگ، تا معلوم شود چه چیزی جا افتاده است.</summary>
+        public IReadOnlyList<string> MissingSettings()
+        {
+            var missing = new List<string>();
+            if (!Uri.TryCreate(_options.ApiBaseUrl, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp)) missing.Add("IntranetSso:ApiBaseUrl");
+            if (!CodePattern.IsMatch(_options.ApplicationCode ?? "")) missing.Add("IntranetSso:ApplicationCode");
+            if ((_options.Key?.Length ?? 0) < 32) missing.Add("IntranetSso:Key (User Secrets؛ فقط در محیط Development خوانده می‌شود، دست‌کم ۳۲ نویسه)");
+            return missing;
+        }
+
         public static bool IsWellFormed(string? ticket) => ticket is not null && TicketPattern.IsMatch(ticket);
 
         /// <summary>null یعنی بلیت نامعتبر، منقضی، استفاده‌شده یا دسترسی کاربر گرفته شده است. خطای پیکربندی (کلید نادرست) و شبکه استثنا می‌دهد.</summary>

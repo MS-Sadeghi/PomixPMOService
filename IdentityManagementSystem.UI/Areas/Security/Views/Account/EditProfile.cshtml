@@ -44,11 +44,11 @@
                 <div class="profile-content">
                     @if (ViewBag.ErrorMessage != null)
                     {
-                        <script>toastr.error('@ViewBag.ErrorMessage');</script>
+                        <script>toastr.error(@Html.Raw(Json.Serialize((object)ViewBag.ErrorMessage)));</script>
                     }
                     @if (ViewBag.SuccessMessage != null)
                     {
-                        <script>toastr.success('@ViewBag.SuccessMessage');</script>
+                        <script>toastr.success(@Html.Raw(Json.Serialize((object)ViewBag.SuccessMessage)));</script>
                     }
 
                     <form id="changePasswordForm"

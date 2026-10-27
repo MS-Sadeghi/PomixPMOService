@@ -424,8 +424,11 @@
                 const m = el.textContent.trim();
                 if (m && !shown.has(m)) { shown.add(m); showToast(m, false); }
             });
-            if ('@(!string.IsNullOrEmpty(ViewBag.ErrorMessage) ? ViewBag.ErrorMessage : "")' !== '')
-                showToast('@ViewBag.ErrorMessage', false);
+            @* پیام خطا به‌صورت رشته‌ی JSON امن داخل جاوااسکریپت می‌آید؛ در '...' نوشتن آن متن فارسی را به &#x...; تبدیل می‌کرد و توست کد خام نشان می‌داد *@
+            @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+            {
+                @:showToast(@Html.Raw(Json.Serialize((object)ViewBag.ErrorMessage)), false);
+            }
 
             const toggle = document.getElementById('Password-toggle');
             if (toggle) {

@@ -94,7 +94,10 @@ namespace IdentityManagementSystem.API.Controllers
         public async Task<IActionResult> Sso([FromBody] SsoLoginViewModel model, [FromServices] IntranetSsoClient intranet)
         {
             if (!intranet.IsConfigured)
+            {
+                _logger.LogWarning("Intranet SSO is not configured; missing or invalid: {Missing}", string.Join(", ", intranet.MissingSettings()));
                 return StatusCode(503, new { message = "ورود یکپارچه با اینترانت در این سامانه پیکربندی نشده است." });
+            }
             if (!IntranetSsoClient.IsWellFormed(model?.Ticket))
                 return BadRequest(new { message = "پیوند ورود معتبر نیست؛ دوباره از پورتال اینترانت روی کارت سامانه بزنید." });
 

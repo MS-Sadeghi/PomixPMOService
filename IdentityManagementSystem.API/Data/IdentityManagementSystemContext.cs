@@ -22,6 +22,7 @@ namespace IdentityManagementSystem.API.Data
         public DbSet<VerifyDocLog> VerifyDocLog { get; set; } // اضافه شده
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<SmsLog> SmsLogs { get; set; }
+        public DbSet<ServiceCallLog> ServiceCallLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -24,6 +24,7 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds > 0 ? options.TimeoutSeconds : 30);
         });
 
+        services.AddSingleton<ServiceCallLogger>();
         services.AddScoped<GetDataHandler>();
         services.AddScoped<GetSumHandler>();
         services.AddScoped<TrafficByTypeHandler>();

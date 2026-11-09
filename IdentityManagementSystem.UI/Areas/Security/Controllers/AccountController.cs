@@ -754,6 +754,57 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                    password.Any(ch => !char.IsLetterOrDigit(ch));
         }
 
+        #region ServiceLogs
+        [HttpGet]
+        public async Task<IActionResult> ServiceLogs(string? service, string? stage, int top = 100)
+        {
+            if (!IsAdmin())
+            {
+                TempData["ErrorMessage"] = "شما دسترسی لازم برای مشاهده‌ی لاگ سرویس‌ها را ندارید.";
+                return RedirectToAction("Dashboard", "Report", new { area = "AccessControlReports" });
+            }
+
+            var model = new ServiceLogsPageViewModel { Service = service, Stage = stage, Top = top };
+
+            try
+            {
+                var token = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["ErrorMessage"] = "لطفاً ابتدا وارد سیستم شوید.";
+                    return RedirectToAction("Login");
+                }
+
+                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var query = new List<string> { $"top={top}" };
+                if (!string.IsNullOrWhiteSpace(service)) query.Add($"service={Uri.EscapeDataString(service)}");
+                if (!string.IsNullOrWhiteSpace(stage)) query.Add($"stage={Uri.EscapeDataString(stage)}");
+
+                var response = await _client.GetAsync("ServiceLogs?" + string.Join("&", query));
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<ServiceLogsPageViewModel>();
+                    if (data != null)
+                    {
+                        model.Summary = data.Summary;
+                        model.Items = data.Items;
+                    }
+                }
+                else
+                {
+                    ViewBag.ErrorMessage = ApiFailureMessage(response.StatusCode, await response.Content.ReadAsStringAsync(), "خطا در دریافت لاگ سرویس‌ها.");
+                }
+            }
+            catch (Exception)
+            {
+                ViewBag.ErrorMessage = "خطای غیرمنتظره‌ای رخ داد. لطفاً بعداً دوباره تلاش کنید.";
+            }
+
+            return View(model);
+        }
+        #endregion
+
         #region Roles
         [HttpGet]
         public async Task<IActionResult> Roles()

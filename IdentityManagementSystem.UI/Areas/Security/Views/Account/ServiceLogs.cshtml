@@ -1,0 +1,209 @@
+@using IdentityManagementSystem.UI.Helper
+@using IdentityManagementSystem.UI.Areas.Security.Models
+@model ServiceLogsPageViewModel
+@{
+    ViewData["Title"] = "لاگ سرویس‌ها";
+    Layout = "~/Areas/AccessControlReports/Views/Shared/_AccessControlReportsLayout.cshtml";
+
+    var knownServices = new[] { "bsr-GetSum", "bsr-GetData", "bsr-TrafficByType", "bsr-TrafficByPlates", "bsr-TrafficByNationalid" };
+    var serviceOptions = knownServices.Concat(Model.Summary.Select(s => s.ServiceName)).Distinct().OrderBy(s => s).ToList();
+    var stuckBefore = DateTime.Now.AddMinutes(-2);
+
+    (string Text, string Css) StageBadge(ServiceLogItemViewModel l)
+    {
+        return l.Stage switch
+        {
+            "Completed" => ("موفق", "bg-success-transparent"),
+            "Failed" => ("خطا", "bg-danger-transparent"),
+            "TimedOut" => ("تایم‌اوت", "bg-warning-transparent"),
+            "Sent" when l.StartedAt < stuckBefore => ("ارسال شد - بدون پاسخ", "bg-danger-transparent"),
+            "Sent" => ("ارسال شد - در انتظار پاسخ", "bg-info-transparent"),
+            _ => (l.Stage, "bg-secondary-transparent")
+        };
+    }
+
+    string Seconds(int? ms) => ms.HasValue ? (ms.Value / 1000.0).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + " ثانیه" : "-";
+}
+
+<div class="my-4 page-header-breadcrumb d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+        <nav>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="javascript:void(0);">مدیریت کاربران</a></li>
+                <li aria-current="page" class="breadcrumb-item active">لاگ سرویس‌ها</li>
+            </ol>
+        </nav>
+    </div>
+    <a class="btn btn-light border btn-sm" href="@Url.Action("ServiceLogs", "Account", new { service = Model.Service, stage = Model.Stage, top = Model.Top })">
+        <i class="ti ti-refresh me-1"></i>بروزرسانی
+    </a>
+</div>
+
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">@ViewBag.ErrorMessage</div>
+}
+
+<div class="card custom-card">
+    <div class="card-header">
+        <div class="card-title">وضعیت سرویس‌ها در ۲۴ ساعت گذشته</div>
+    </div>
+    <div class="card-body">
+        @if (Model.Summary.Any())
+        {
+            <div class="table-responsive">
+                <table class="table text-nowrap mb-0">
+                    <thead>
+                        <tr>
+                            <th>سرویس</th>
+                            <th>کل درخواست</th>
+                            <th>موفق</th>
+                            <th>خطا</th>
+                            <th>تایم‌اوت</th>
+                            <th>بدون پاسخ</th>
+                            <th>میانگین زمان</th>
+                            <th>آخرین فراخوانی</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.Summary)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@s.ServiceName</td>
+                                <td>@s.Total</td>
+                                <td><span class="badge bg-success-transparent">@s.Completed</span></td>
+                                <td><span class="badge @(s.Failed > 0 ? "bg-danger-transparent" : "bg-secondary-transparent")">@s.Failed</span></td>
+                                <td><span class="badge @(s.TimedOut > 0 ? "bg-warning-transparent" : "bg-secondary-transparent")">@s.TimedOut</span></td>
+                                <td><span class="badge @(s.Stuck > 0 ? "bg-danger-transparent" : "bg-secondary-transparent")">@s.Stuck</span></td>
+                                <td>@Seconds((int?)s.AvgDurationMs)</td>
+                                <td>
+                                    <span class="d-block">@s.LastCallAt.ToPersianTime()</span>
+                                    <span class="d-block fs-12 text-muted">@s.LastCallAt.ToPersianDate()</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center text-muted py-3">در ۲۴ ساعت گذشته درخواستی به سرویس‌ها ثبت نشده است.</div>
+        }
+    </div>
+</div>
+
+<div class="card custom-card">
+    <div class="card-header d-block">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label" for="service">سرویس</label>
+                <select class="form-select" id="service" name="service">
+                    <option value="">همه</option>
+                    @foreach (var s in serviceOptions)
+                    {
+                        <option value="@s" selected="@(Model.Service == s)">@s</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="stage">وضعیت</label>
+                <select class="form-select" id="stage" name="stage">
+                    <option value="">همه</option>
+                    <option value="Sent" selected="@(Model.Stage == "Sent")">ارسال شد (بدون پاسخ)</option>
+                    <option value="Completed" selected="@(Model.Stage == "Completed")">موفق</option>
+                    <option value="Failed" selected="@(Model.Stage == "Failed")">خطا</option>
+                    <option value="TimedOut" selected="@(Model.Stage == "TimedOut")">تایم‌اوت</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="top">تعداد رکورد</label>
+                <select class="form-select" id="top" name="top">
+                    @foreach (var n in new[] { 50, 100, 200, 500 })
+                    {
+                        <option value="@n" selected="@(Model.Top == n)">@n</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="ti ti-filter me-1"></i>اعمال</button>
+            </div>
+        </form>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table text-nowrap mb-0" id="serviceLogsTable">
+                <thead>
+                    <tr>
+                        <th>زمان ارسال</th>
+                        <th>سرویس</th>
+                        <th>وضعیت</th>
+                        <th>مدت</th>
+                        <th>کد HTTP</th>
+                        <th>کد Pomix</th>
+                        <th>کاربر</th>
+                        <th>جزئیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items.Any())
+                    {
+                        foreach (var l in Model.Items)
+                        {
+                            var badge = StageBadge(l);
+                            <tr>
+                                <td>
+                                    <span class="d-block fw-semibold">@l.StartedAt.ToPersianTime()</span>
+                                    <span class="d-block fs-12 text-muted">@l.StartedAt.ToPersianDate()</span>
+                                </td>
+                                <td>@l.ServiceName</td>
+                                <td><span class="badge @badge.Css fs-12">@badge.Text</span></td>
+                                <td>@Seconds(l.DurationMs)</td>
+                                <td>@(l.HttpStatusCode?.ToString() ?? "-")</td>
+                                <td>@(l.PomixStatusCode?.ToString() ?? "-")</td>
+                                <td>@(l.Username ?? "-")</td>
+                                <td>
+                                    <button type="button" class="btn btn-light border btn-sm btn-log-details" data-target="log-@l.LogId">نمایش</button>
+                                </td>
+                            </tr>
+                            <tr id="log-@l.LogId" class="d-none">
+                                <td colspan="8" class="bg-light-subtle">
+                                    <div class="row g-2 text-wrap" style="white-space: normal;">
+                                        <div class="col-md-6">
+                                            <div class="fw-semibold mb-1">پارامترهای ارسالی (بدون رمز)</div>
+                                            <pre class="mb-0 small" dir="ltr" style="white-space: pre-wrap;">@(l.RequestParams ?? "-")</pre>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="fw-semibold mb-1">پیام خطا / پاسخ</div>
+                                            <div class="small">@(string.IsNullOrWhiteSpace(l.ErrorMessage) ? "-" : l.ErrorMessage)</div>
+                                            <div class="small text-muted mt-2">IP: @(l.IpAddress ?? "-")</div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="8" class="text-center">لاگی با این فیلتر یافت نشد.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.btn-log-details').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var row = document.getElementById(btn.dataset.target);
+                    if (!row) return;
+                    var hidden = row.classList.toggle('d-none');
+                    btn.textContent = hidden ? 'نمایش' : 'بستن';
+                });
+            });
+        });
+    </script>
+}

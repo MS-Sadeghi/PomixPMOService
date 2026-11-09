@@ -10,6 +10,16 @@
 
         // حداکثر زمان انتظار برای پاسخ سرویس Pomix (ثانیه)
         public int TimeoutSeconds { get; set; } = 30;
+
+        // سقف مجاز فراخوانی در روز (طبق محدودیت Pomix)؛ ۰ یعنی بررسی سهمیه غیرفعال است.
+        // فقط هشدار لاگ می‌دهد و هیچ فراخوانی‌ای را رد نمی‌کند.
+        public int DailyCallLimit { get; set; } = 600;
+
+        // با رسیدن مصرف روزانه به این درصد از سقف، هشدار ثبت می‌شود
+        public int QuotaWarnPercent { get; set; } = 80;
+
+        // رکوردهای Sent قدیمی‌تر از این مقدار (دقیقه) به Abandoned تبدیل می‌شوند
+        public int StaleSentMinutes { get; set; } = 5;
     }
 
     public class PomixResult

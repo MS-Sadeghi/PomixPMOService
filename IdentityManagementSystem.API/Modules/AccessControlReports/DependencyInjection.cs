@@ -25,6 +25,7 @@ public static class DependencyInjection
         });
 
         services.AddSingleton<ServiceCallLogger>();
+        services.AddHostedService<ServiceCallLogMaintenanceService>();
         services.AddScoped<GetDataHandler>();
         services.AddScoped<GetSumHandler>();
         services.AddScoped<TrafficByTypeHandler>();

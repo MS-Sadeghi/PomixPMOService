@@ -13,6 +13,8 @@ namespace IdentityManagementSystem.API.Models
         public const string StageCompleted = "Completed";
         public const string StageFailed = "Failed";
         public const string StageTimedOut = "TimedOut";
+        // Sent مانده و پاسخی نیامده (مثلاً برنامه وسط فراخوانی ری‌استارت شده)؛ توسط job نگهداری بسته می‌شود
+        public const string StageAbandoned = "Abandoned";
 
         [Key]
         public long LogId { get; set; }

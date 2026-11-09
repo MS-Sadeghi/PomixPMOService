@@ -1,8 +1,10 @@
 using IdentityManagementSystem.API.Data;
 using IdentityManagementSystem.API.Models;
+using IdentityManagementSystem.API.Modules.AccessControlReports.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace IdentityManagementSystem.API.Controllers
 {
@@ -14,13 +16,16 @@ namespace IdentityManagementSystem.API.Controllers
     [Authorize(Policy = "AdminOnly")]
     public class ServiceLogsController : ControllerBase
     {
-        private const int MaxRows = 500;
+        private const int MaxPageSize = 500;
+        private const int DefaultPageSize = 50;
 
         private readonly IdentityManagementSystemContext _context;
+        private readonly PomixOptions _pomixOptions;
 
-        public ServiceLogsController(IdentityManagementSystemContext context)
+        public ServiceLogsController(IdentityManagementSystemContext context, IOptions<PomixOptions> pomixOptions)
         {
             _context = context;
+            _pomixOptions = pomixOptions.Value;
         }
 
         [HttpGet]
@@ -29,9 +34,11 @@ namespace IdentityManagementSystem.API.Controllers
             string? stage,
             DateTime? from,
             DateTime? to,
-            int top = 100)
+            int page = 1,
+            int pageSize = DefaultPageSize)
         {
-            top = Math.Clamp(top, 1, MaxRows);
+            pageSize = Math.Clamp(pageSize, 1, MaxPageSize);
+            page = Math.Max(page, 1);
 
             var query = _context.ServiceCallLogs.AsNoTracking().AsQueryable();
 
@@ -47,9 +54,15 @@ namespace IdentityManagementSystem.API.Controllers
             if (to.HasValue)
                 query = query.Where(l => l.StartedAt < to.Value);
 
+            var totalCount = await query.CountAsync();
+            var totalPages = Math.Max((int)Math.Ceiling(totalCount / (double)pageSize), 1);
+            page = Math.Min(page, totalPages);
+
             var items = await query
                 .OrderByDescending(l => l.StartedAt)
-                .Take(top)
+                .ThenByDescending(l => l.LogId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
             // خلاصه‌ی ۲۴ ساعت اخیر به تفکیک سرویس (مستقل از فیلترها)
@@ -71,15 +84,30 @@ namespace IdentityManagementSystem.API.Controllers
                     completed = g.Count(l => l.Stage == ServiceCallLog.StageCompleted),
                     failed = g.Count(l => l.Stage == ServiceCallLog.StageFailed),
                     timedOut = g.Count(l => l.Stage == ServiceCallLog.StageTimedOut),
-                    // ارسال شده ولی بیش از ۲ دقیقه بدون پاسخ مانده است
-                    stuck = g.Count(l => l.Stage == ServiceCallLog.StageSent && l.StartedAt < stuckBefore),
+                    // ارسال شده ولی بیش از ۲ دقیقه بدون پاسخ مانده است (یا job نگهداری آن را Abandoned کرده)
+                    stuck = g.Count(l => l.Stage == ServiceCallLog.StageAbandoned
+                                         || (l.Stage == ServiceCallLog.StageSent && l.StartedAt < stuckBefore)),
                     avgDurationMs = g.Where(l => l.DurationMs.HasValue).Select(l => l.DurationMs!.Value).DefaultIfEmpty().Average(),
                     lastCallAt = g.Max(l => l.StartedAt)
                 })
                 .OrderBy(s => s.serviceName)
                 .ToList();
 
-            return Ok(new { summary, items });
+            // مصرف امروز نسبت به سقف روزانه‌ی Pomix (مستقل از فیلترها)
+            var todayCount = await _context.ServiceCallLogs
+                .CountAsync(l => l.StartedAt >= DateTime.Today);
+
+            return Ok(new
+            {
+                summary,
+                items,
+                page,
+                pageSize,
+                totalCount,
+                totalPages,
+                todayCount,
+                dailyLimit = _pomixOptions.DailyCallLimit
+            });
         }
     }
 }

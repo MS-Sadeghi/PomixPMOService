@@ -8,7 +8,14 @@ namespace IdentityManagementSystem.UI.Areas.Security.Models
         // فیلترهای فعلی
         public string? Service { get; set; }
         public string? Stage { get; set; }
-        public int Top { get; set; } = 100;
+        public int PageSize { get; set; } = 50;
+
+        // صفحه‌بندی و مصرف سهمیه (از API)
+        public int Page { get; set; } = 1;
+        public int TotalCount { get; set; }
+        public int TotalPages { get; set; } = 1;
+        public int TodayCount { get; set; }
+        public int DailyLimit { get; set; }
     }
 
     public class ServiceLogSummaryViewModel

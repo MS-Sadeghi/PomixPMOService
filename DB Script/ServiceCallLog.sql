@@ -5,6 +5,8 @@
     Completed : پاسخ موفق (200) دریافت شد
     Failed    : پاسخ خطا از Pomix یا خطای شبکه/پردازش
     TimedOut  : در زمان مقرر پاسخی نرسید
+    Abandoned : Sent که بیش از چند دقیقه بدون پاسخ مانده و job نگهداری آن را بسته است
+  (ایندکس‌های StartedAt و ServiceName+StartedAt برای صفحه‌بندی و فیلتر تاریخ از قبل وجود دارند.)
   این اسکریپت چندبار اجرا شدنی است.
 */
 IF SCHEMA_ID('Log') IS NULL EXEC('CREATE SCHEMA [Log]');

@@ -756,7 +756,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
 
         #region ServiceLogs
         [HttpGet]
-        public async Task<IActionResult> ServiceLogs(string? service, string? stage, int top = 100)
+        public async Task<IActionResult> ServiceLogs(string? service, string? stage, int page = 1, int pageSize = 50)
         {
             if (!IsAdmin())
             {
@@ -764,7 +764,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                 return RedirectToAction("Dashboard", "Report", new { area = "AccessControlReports" });
             }
 
-            var model = new ServiceLogsPageViewModel { Service = service, Stage = stage, Top = top };
+            var model = new ServiceLogsPageViewModel { Service = service, Stage = stage, PageSize = pageSize, Page = page };
 
             try
             {
@@ -777,7 +777,7 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
 
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                var query = new List<string> { $"top={top}" };
+                var query = new List<string> { $"page={page}", $"pageSize={pageSize}" };
                 if (!string.IsNullOrWhiteSpace(service)) query.Add($"service={Uri.EscapeDataString(service)}");
                 if (!string.IsNullOrWhiteSpace(stage)) query.Add($"stage={Uri.EscapeDataString(stage)}");
 
@@ -789,6 +789,12 @@ namespace IdentityManagementSystem.UI.Areas.Security.Controllers
                     {
                         model.Summary = data.Summary;
                         model.Items = data.Items;
+                        model.Page = data.Page;
+                        model.PageSize = data.PageSize;
+                        model.TotalCount = data.TotalCount;
+                        model.TotalPages = data.TotalPages;
+                        model.TodayCount = data.TodayCount;
+                        model.DailyLimit = data.DailyLimit;
                     }
                 }
                 else
